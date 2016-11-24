@@ -13,6 +13,6 @@ git add .classpath
 git add .deployment
 git add .project
 git add pom.xml
-git commit -m "$*"
 git rm --cache src/main/java/hibernate.cfg.xml
+git commit -m "$*"
 git push -u origin master
