@@ -1,0 +1,76 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+"http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+<!-- Generated 2016-11-22 19:08:13 by Hibernate Tools 5.1.0.Beta1 -->
+<hibernate-mapping>
+    <class name="entity.Assistance" table="assistance" catalog="check_a_db" optimistic-lock="version">
+        <id name="workId" type="string">
+            <column name="workId" length="50" />
+            <generator class="assigned" />
+        </id>
+        <property name="sourceSet" type="string">
+            <column name="sourceSet" length="30" />
+        </property>
+        <property name="name" type="string">
+            <column name="name" length="10" not-null="true" />
+        </property>
+        <property name="phone" type="string">
+            <column name="phone" length="11" not-null="true" />
+        </property>
+        <property name="email" type="string">
+            <column name="email" length="50" not-null="true" />
+        </property>
+        <property name="password" type="string">
+            <column name="password" length="20" not-null="true" />
+        </property>
+        <property name="usertype" type="string">
+            <column name="usertype" length="2" not-null="true" />
+        </property>
+        <property name="username" type="string">
+            <column name="username" length="20" />
+        </property>
+        <property name="agentid" type="string">
+            <column name="agentid" length="10">
+                <comment>&#203;&#249;&#202;&#244;&#180;&#250;&#192;&#237;&#201;&#204;id</comment>
+            </column>
+        </property>
+        <property name="flag" type="java.lang.Integer">
+            <column name="flag">
+                <comment>&#215;&#162;&#178;&#225;&#177;&#234;&#214;&#190; 0&#163;&#186;&#179;&#201;&#185;&#166;&#215;&#162;&#178;&#225; -1</comment>
+            </column>
+        </property>
+        <property name="lastLogTime" type="java.lang.Double">
+            <column name="last_log_time" precision="22" scale="0">
+                <comment>
+                &#201;&#207;&#180;&#206;&#195;&#187;&#211;&#208;&#203;&#248;&#182;&#168;&#202;&#228;&#200;&#235;&#195;&#220;&#194;&#235;&#181;&#196;&#202;&#177;&#188;&#228;</comment>
+            </column>
+        </property>
+        <property name="logLock" type="java.lang.Boolean">
+            <column name="log_lock">
+                <comment>&#202;&#199;&#183;&#241;&#203;&#248;&#182;&#168;</comment>
+            </column>
+        </property>
+        <property name="logNum" type="java.lang.Integer">
+            <column name="log_num">
+                <comment>
+                &#212;&#218;&#195;&#187;&#211;&#208;&#203;&#248;&#182;&#168;&#207;&#194;&#202;&#228;&#200;&#235;&#195;&#220;&#194;&#235;&#181;&#196;&#180;&#206;&#202;&#253;</comment>
+            </column>
+        </property>
+        <property name="timepoint" type="java.lang.Double">
+            <column name="timepoint" precision="22" scale="0">
+                <comment>
+                &#209;&#233;&#214;&#164;&#194;&#235;&#187;&#242;&#213;&#223;&#214;&#216;&#214;&#195;&#193;&#180;&#189;&#211;&#181;&#196;&#201;&#250;&#179;&#201;&#202;&#177;&#188;&#228;&#181;&#227;</comment>
+            </column>
+        </property>
+        <property name="verifyCode" type="string">
+            <column name="verify_code" length="6">
+                <comment>&#209;&#233;&#214;&#164;&#194;&#235;</comment>
+            </column>
+        </property>
+        <property name="resetId" type="string">
+            <column name="reset_id" length="10">
+                <comment>&#214;&#216;&#214;&#195;id</comment>
+            </column>
+        </property>
+    </class>
+</hibernate-mapping>
