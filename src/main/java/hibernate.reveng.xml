@@ -33,4 +33,10 @@
 		match-catalog="check_a_db">
 	</table-filter>
 	<table-filter match-name="assistance" match-catalog="check_a_db"></table-filter>
+	<table-filter match-name="weixin_bind_assistance"
+		match-catalog="check_a_db">
+	</table-filter>
+	<table-filter match-name="weixin_bind_connect_person"
+		match-catalog="check_a_db">
+	</table-filter>
 </hibernate-reverse-engineering>

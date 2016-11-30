@@ -88,12 +88,14 @@ public class Check_MainController {
 		Owner owner = cOp.new Owner();
 		owner.work_id = agentid;
 		
-		String caid = (String) cOp.OpSelect(CheckAcManage.ENTRER_CaModel, null,owner);//处理进入对账就模式操作
-		if (caid != null) {
+//		String caid = (String) cOp.OpSelect(CheckAcManage.ENTRER_CaModel, null,owner);//处理进入对账就模式操作
+		 jsonObject = (JSONObject) cOp.OpSelect(CheckAcManage.ENTRER_CaModel, who,owner);//处理进入对账就模式操作
+		if (jsonObject.getString("caid") != null) {
 			oLog_Service.AddLog(OpLog_Service.utype_as, who, OpLog_Service.ENTRER_CaModel, OpLog_Service.result_success);//插入操作日志
 			jsonObject.element("flag", 0);
 			jsonObject.element("errmsg", "进入对账模式成功");
-			OneKeyData_return(response, jsonObject, "caid", caid);;//返回进入对账模式操作的结果
+			//OneKeyData_return(response, jsonObject, "caid", caid);;//返回进入对账模式操作的结果
+			Common_return_en(response,jsonObject);
 		}
 		else{
 			oLog_Service.AddLog(OpLog_Service.utype_as, who, OpLog_Service.ENTRER_CaModel, OpLog_Service.result_failed);
@@ -164,8 +166,11 @@ public class Check_MainController {
 		}
 		
 		/*初始化工作*/
-		cOp.dao_List.tDao.DeleteOoriderByElement("owner", agentid);//清空属于自己的货款表
-		cOp.dao_List.bDao.DeleteBinputTbByElement("owner", agentid);//请款属于自己的出纳表
+		//cOp.dao_List.tDao.DeleteOoriderByElement("owner", agentid);//清空属于自己的货款表
+		//cOp.dao_List.bDao.DeleteBinputTbByElement("owner", agentid);//请款属于自己的出纳表
+		//转移货款表到备份区
+		
+		//转移出纳表到备份区
 		cOp.auccount.ResetPayRecord(agentid);//重置付款工作区的记录
 		/*初始化工作*/
 		
@@ -184,13 +189,27 @@ public class Check_MainController {
 		}
 		else{
 				String savedir_A = request.getServletContext().getRealPath("/" + CheckAcManage.SaveDirName_Orider);
-				Import_Object iObjecta = cOp.new Import_Object('A', mfileA,agentid,savedir_A,orifilename);
-				cOp.OpSelect(CheckAcManage.IMPORT,iObjecta,null);//上传货款表
+				Import_Object iObjecta = cOp.new Import_Object('A', mfileA,agentid,savedir_A,orifilename,caid);
+				JSONObject re_json_a = (JSONObject) cOp.OpSelect(CheckAcManage.IMPORT,iObjecta,null);//上传货款表
+				if (re_json_a.getInt("flag") == -1) {
+					oLog_Service.AddLog(OpLog_Service.utype_as,workId,OpLog_Service.IMPORT, OpLog_Service.result_failed);
+					Common_return_en(response, re_json_a);
+					return;
+				}
 				
 				String savedir_B = request.getServletContext().getRealPath("/" + CheckAcManage.SaveDirName_BankInput);
-				Import_Object iObjectb = cOp.new Import_Object('B', mfileB,agentid,savedir_B,binputfilename);
-				cOp.OpSelect(CheckAcManage.IMPORT,iObjectb,null);//上传出纳表
-
+				Import_Object iObjectb = cOp.new Import_Object('B', mfileB,agentid,savedir_B,binputfilename,caid);
+				JSONObject re_json_b = (JSONObject) cOp.OpSelect(CheckAcManage.IMPORT,iObjectb,null);//上传出纳表
+				if (re_json_b.getInt("flag") == -1) {
+					oLog_Service.AddLog(OpLog_Service.utype_as,workId,OpLog_Service.IMPORT, OpLog_Service.result_failed);
+					Common_return_en(response, re_json_b);
+					return;
+				}
+				
+				int flaga = re_json_a.getInt("flag");
+				int flagb = re_json_b.getInt("flag");
+				
+				cOp.Import_AfterWork(flaga, flagb, agentid, mfileA, mfileB, orifilename, binputfilename, savedir_A,savedir_B,caid);
 				oLog_Service.AddLog(OpLog_Service.utype_as,workId,OpLog_Service.IMPORT, OpLog_Service.result_success);
 				/*返回*/
 				JSONObject re_json = new JSONObject();
@@ -423,7 +442,8 @@ public class Check_MainController {
 		exportlist.add("export_BInputFailConnect");
 		
 		String dir = request.getServletContext().getRealPath("/报表中心/");
-		String filename = caid + "_对账结果.xlsx";
+		String chinese_caid = ChangeCaidToChinese(caid);
+		String filename = chinese_caid + "_对账结果.xlsx";
 
 		cOp.formProduce.CreateForm(exportlist, agent_id, userType, dir, filename);
 		/*产生报表*/
@@ -445,6 +465,55 @@ public class Check_MainController {
 		}
 		
 		Common_return_en(response,jmesg);
+	}
+	
+	/**
+	 * 将对账caid 转换成中文
+	 * @param caid
+	 * @return
+	 */
+	public String ChangeCaidToChinese(String caid) {
+		String date = caid.substring(0, 8);
+		String owner = caid.substring(8);
+		String chinese_owner = null;
+		if (owner.equals("gd0001")) {
+			chinese_owner = "广东代理商";
+			caid = date + chinese_owner;
+		}
+		else if (owner.equals("gx0001")) {
+			chinese_owner = "广西代理商";
+			caid = date + chinese_owner;
+		}
+		else if (owner.equals("ah0001")) {
+			chinese_owner = "安徽代理商";
+			caid = date + chinese_owner;
+		}
+		else if (owner.equals("hb0001")) {
+			chinese_owner = "湖北代理商";
+			caid = date + chinese_owner;
+		}
+		else if (owner.equals("hn0001")) {
+			chinese_owner = "湖南代理商";
+			caid = date + chinese_owner;
+		}
+		else if (owner.equals("jx0001")) {
+			chinese_owner = "江西代理商";
+			caid = date + chinese_owner;	
+		}
+		else if (owner.equals("xc0001")) {
+			chinese_owner = "江西代理商";
+			caid = date + chinese_owner;
+		}
+		else if (owner.equals("xj0001")) {
+			chinese_owner = "新疆代理商";
+			caid = date + chinese_owner;
+		}
+		else {
+			chinese_owner = "未知代理商";
+			caid = date + chinese_owner;
+		}
+		
+		return caid;
 	}
 	
 	/**

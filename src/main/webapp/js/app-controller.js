@@ -149,11 +149,10 @@ var signUpCtrl = ['$scope', '$state', 'AccountService', '$uibModal', '$timeout',
                 return false;
             }
 
-           /* if (registerForm.hasClass('ng-invalid')) {
+            /*if (registerForm.hasClass('ng-invalid')) {
                 ctrl.errMsg = '申请表有误';
                 return false;
             }*/
-            
             regSubmitBtn.attr('disabled');
             ctrl.errMsg = '申请注册中……';
 
@@ -232,7 +231,7 @@ var resetPwdCtrl = ['$scope', '$state', 'AccountService', '$uibModal', '$interva
                 return false;
             }
 
-            var wait = 60;
+            var wait = 180;
             var remain = wait;
             resetPwdVCRecvBtn.prop('disabled', true);
             var timer = interval(function () {

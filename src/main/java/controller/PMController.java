@@ -22,6 +22,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 //import org.apache.log4j.Logger;
 import org.apache.xmlbeans.impl.common.IOUtil;
+import org.apache.xmlbeans.impl.xb.xsdschema.Public;
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
 import org.springframework.stereotype.Controller;
@@ -43,6 +44,7 @@ import check_Asys.OpLog_Service;
 import check_Asys.Person_Manage;
 import check_Asys.Person_Manage.Login_Mange;
 import check_Asys.Person_Manage.Register_Manage;
+import check_Asys.Person_Manage.Weixin_Managr;
 import check_Asys.Person_Manage.DB_Operator;
 import dao.Assistance_Dao;
 import dao.ConnectPerson_Dao;
@@ -53,6 +55,7 @@ import entity.Backup;
 import entity.ConnectPerson;
 import entity.OpLog;
 import entity.OriOrder;
+import entity.WeixinBindConnectPerson;
 import file_op.AnyFile_Op;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
@@ -262,6 +265,154 @@ public class PMController {
 		}
 	}
 	
+	/**
+	 * GetWeiXinMes
+	 */
+	@RequestMapping(value="/getweixinmes")
+	public void GetWeiXinMes(HttpServletRequest request,HttpServletResponse response) {
+		logger.info("***Get getweixinmes request***");
+		JSONObject re_json = new JSONObject();
+		Weixin_Managr wManagr = pManage.new Weixin_Managr();
+		String action = null;
+		action = request.getParameter("action");
+		logger.info("action：" + action);
+		
+		if (action.equals("query")) {
+			String weixinid = null;
+			try {
+				weixinid = AES.aesEncrypt(request.getParameter("weixinid"),AES.key);
+				logger.info(weixinid);
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+				logger_error.error("获取微信参数失败:" + e);
+				re_json.element("flag", -1);
+				re_json.element("errmsg", "获取微信参数失败:" + e);
+				Common_return(response,re_json);
+				return;
+			}
+			
+/*			List<WeixinBindConnectPerson> fwxbc = pManage.weixinbc_Dao.FindBySpeElement_S("weixinid", weixinid);
+			if (fwxbc.size() == 0) {
+				logger.warn("微信无效，没有找到相应的微信绑定对账联系人信息");
+				re_json.element("flag", -1);
+				re_json.element("errmsg", "微信无效，没有找到相应的微信绑定对账联系人信息");
+				Common_return(response,re_json);
+			}
+			else {
+				String cp_username = fwxbc.get(0).getUsername();
+				ConnectPerson fPerson = pManage.cDao.findById(ConnectPerson.class, cp_username);
+				if (fPerson == null) {
+					logger.error("用户名无效，找不到相应对账联系人");
+					re_json.element("flag", -1);
+					re_json.element("errmsg", "用户名无效，没有找到相应的对账联系人");
+					Common_return(response,re_json);
+				}
+				else {
+					re_json.element("flag", 0);
+					re_json.element("errmsg", "找到对应的对账联系人");
+					OneKeyData_return_enData(response, re_json, "connectp", fPerson);
+				}
+			}*/
+			
+			re_json = wManagr.Is_WeixinBind(weixinid);
+			Common_return(response, re_json);		
+		}
+		else if (action.equals("delete")) {
+			String username = null;
+			try {
+				username = AES.aesEncrypt(request.getParameter("username"),AES.key);
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+				logger_error.error("获取参数失败" + e);
+				
+				re_json.element("flag", -1);
+				re_json.element("errmsg", "获取参数失败" + e);
+				Common_return(response,re_json);
+				return;
+			}
+		
+		/*	WeixinBindConnectPerson fwxbc = pManage.weixinbc_Dao.findById(WeixinBindConnectPerson.class, username);
+			if (fwxbc == null) {
+				logger_error.error("无法定位微信绑定对账联系人信息");
+				re_json.element("flag", -1);
+				re_json.element("errmsg", "无法定位微信绑定对账联系人信息");
+				Common_return(response,re_json);
+			}
+			else {
+				if(pManage.weixinbc_Dao.delete(fwxbc)){
+					re_json.element("flag", 0);
+					re_json.element("errmsg", "已删除相应的对账联系人信息");
+					Common_return(response,re_json);					
+				}
+				else {
+					re_json.element("flag", -1);
+					re_json.element("errmsg", "删除失败");
+					Common_return(response,re_json);	
+				}
+			}*/
+			
+			re_json = wManagr.Delet_ConnectpWeixin(username);
+			Common_return(response, re_json);
+		}
+		else if (action.equals("insert")) {
+			String weixinid = null;
+			String username = null;
+			
+			try {
+				username = AES.aesEncrypt(request.getParameter("username"),AES.key);
+				weixinid = AES.aesEncrypt(request.getParameter("weixinid"),AES.key);
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+				logger_error.error("获取参数失败" + e);
+				re_json.element("flag", -1);
+				re_json.element("errmsg", "已删除相应的对账联系人信息");
+				Common_return(response,re_json);	
+				return;
+			}
+			
+	/*		WeixinBindConnectPerson fwxbc = pManage.weixinbc_Dao.findById(WeixinBindConnectPerson.class, username);
+			if (fwxbc == null) {
+				logger.info("微信绑定用户信息不存在");
+				WeixinBindConnectPerson in_wxc = new WeixinBindConnectPerson();
+				in_wxc.setUsername(username);
+				in_wxc.setWeixinid(weixinid);
+				if(pManage.weixinbc_Dao.add(in_wxc)){
+					re_json.element("flag", 0);
+					re_json.element("errmsg", "添加微信绑定对账联系人记录成功");
+					Common_return(response,re_json);	
+				}
+				else {
+					re_json.element("flag", -1);
+					re_json.element("errmsg", "添加微信绑定对账联系人记录失败");
+					Common_return(response,re_json);	
+				}
+			}
+			else {
+				fwxbc.setUsername(username);
+				fwxbc.setWeixinid(weixinid);
+				if(pManage.weixinbc_Dao.update(fwxbc)){
+					re_json.element("flag", 0);
+					re_json.element("errmsg", "更新微信绑定对账联系人成功");
+					Common_return(response,re_json);					
+				}
+				else {
+					re_json.element("flag", -1);
+					re_json.element("errmsg", "更新微信绑定对账联系人失败");
+					Common_return(response,re_json);	
+				}
+			}*/
+			re_json = wManagr.InOrUdWeixinMes(username,weixinid);
+			Common_return(response, re_json);
+		}
+		else {
+			logger_error.error("未知action:【" + action + "】");
+			
+		}
+		
+	}
 	
 	/**
 	 * ResetPwdLink 接受重设密码的请求，并且转发请求到重设密码页面
@@ -533,7 +684,6 @@ public class PMController {
 	 * @throws ServletException
 	 * @author zhangxinming
 	 */
-	
     @RequestMapping(value="/login")
     public void Asssistance_login(Assistance as , Model model,HttpServletRequest request,HttpServletResponse response) throws ServletException{
     	logger.info("***Get Asssistance_login request***");   	
@@ -541,6 +691,8 @@ public class PMController {
     	String password = null;
     	String lgtype = null;
     	int newpay_num = 0;
+    	
+    	
         try {
 			String request_s = IOUtils.toString(request.getInputStream());
 			String request_s_de = AES.aesDecrypt(request_s, AES.key);
@@ -563,23 +715,26 @@ public class PMController {
         
         Login_Mange login_Mange = pManage.new Login_Mange();
         
-        int isillegal = login_Mange.LgEnter_Select(lgtype, work_id, password);
+        JSONObject jsonObject = login_Mange.LgEnter_Select(work_id, password);
+        int isillegal = jsonObject.getInt("flag");
+        String role = jsonObject.getString("role");
+        
         if (isillegal == 0) {
         	String agentid = (String) pManage.aS_Dao.findById(Assistance.class, work_id).getAgentid();
         	HttpSession session = request.getSession();//创建session
     		System.out.println("login success");
-			session.setAttribute("usertype", lgtype);
+			session.setAttribute("usertype", role);
     		session.setAttribute("workId", work_id);
     		session.setAttribute("agentid", agentid);
     		session.setMaxInactiveInterval(0);
     		
     		newpay_num = pManage.pCDao.GetPayRecordsTb(agentid).size();
     		
-    		Asssistance_login_return(0,work_id,password,lgtype,newpay_num,response);
-    		if (lgtype.equals("bu")) {
+    		Asssistance_login_return(0,work_id,password,role,newpay_num,response);
+    		if (role.equals("bu")) {
     			oLog_Service.AddLog(OpLog_Service.utype_as, work_id, OpLog_Service.Log, OpLog_Service.result_success);
 			}
-    		else if (lgtype.equals("bm")) {
+    		else if (role.equals("bm")) {
     			oLog_Service.AddLog(OpLog_Service.utype_ma, work_id, OpLog_Service.Log, OpLog_Service.result_success);
 			}
     		else{
@@ -588,11 +743,11 @@ public class PMController {
     		
 		}
         else{
-        	Asssistance_login_return(isillegal,work_id,password,lgtype,newpay_num,response);
-    		if (lgtype.equals("bu")) {
+        	Asssistance_login_return(isillegal,work_id,password,role,newpay_num,response);
+    		if (role.equals("bu")) {
     			oLog_Service.AddLog(OpLog_Service.utype_as, work_id, OpLog_Service.Log, OpLog_Service.result_failed);
 			}
-    		else if (lgtype.equals("bm")) {
+    		else if (role.equals("bm")) {
     			oLog_Service.AddLog(OpLog_Service.utype_ma, work_id, OpLog_Service.Log, OpLog_Service.result_failed);
 			}
     		else{
@@ -694,7 +849,7 @@ public class PMController {
     	String company = null;
     	String agent = null;
     	String real_name = null;
-    	char register_way = 0;
+    	String register_way = null;
     	String companyid = null;
     	String weixin = null;
     	String password = null;
@@ -708,7 +863,7 @@ public class PMController {
 	    	company =  new String(AES.aesDecrypt(request.getParameter("company"),AES.key).getBytes("GBK"),"GBK");//公司名称
 	    	agent = AES.aesDecrypt(request.getParameter("agent"),AES.key);//所属代理商id
 	    	real_name = new String(AES.aesDecrypt(request.getParameter("real_name"),AES.key).getBytes("GBK"),"GBK");//真实姓名
-	    	register_way = AES.aesDecrypt(request.getParameter("register_way"),AES.key).charAt(0);//注册方式
+	    	register_way = AES.aesDecrypt(request.getParameter("register_way"),AES.key);//注册方式
 	    	weixin = AES.aesDecrypt(request.getParameter("weixin"),AES.key);//微信号
 	    	companyid = AES.aesDecrypt(request.getParameter("companyid"),AES.key);//公司id
 	    	password = AES.aesDecrypt(request.getParameter("password"),AES.key);//密码
@@ -842,14 +997,14 @@ public class PMController {
 		Common_return_en(response,re_jsonobject);
     }
    
+   
     /**
      * Connectp_login 对账联系人登录 
      * @author  客户接口
      * @param request
      * @param response
      * @author zhangxinming
-     */
-    
+     */   
     @RequestMapping(value="/ConnectPLogin")
     public void Connectp_login(HttpServletRequest request,HttpServletResponse response){
     	logger.info("***Get ConnectPLogin request***");
@@ -867,7 +1022,7 @@ public class PMController {
 		}
 		
 		Login_Mange login_Mange = pManage.new Login_Mange();
-		int isllegal = login_Mange.LgEnter_Select("bc", username, password);
+		int isllegal = login_Mange.LgEnter_ConnectP(username, password);
 		
 		if (isllegal == 0) {
 			re_jsonobject.element("status", isllegal);
@@ -1264,6 +1419,7 @@ public class PMController {
 		}
 		/*传递json数据给前台*/
     }
+
 
 }
 

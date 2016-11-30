@@ -5,6 +5,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -26,10 +27,15 @@ import dao.BackUp_Dao;
 import dao.ConnectPerson_Dao;
 import dao.OpLog_Dao;
 import dao.PayRecordCache_Dao;
+import dao.Weixinba_Dao;
+import dao.Weixinbc_Dao;
+import encrypt_decrpt.AES;
 import entity.Agent;
 import entity.Assistance;
 import entity.Backup;
 import entity.ConnectPerson;
+import entity.WeixinBindAssistance;
+import entity.WeixinBindConnectPerson;
 import file_op.AnyFile_Op;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
@@ -43,6 +49,7 @@ import sun.util.logging.resources.logging;
 public class Person_Manage {
 	
 	private static Logger logger = LogManager.getLogger(Person_Manage.class);
+	private static Logger logger_error = LogManager.getLogger("error");
 	public SessionFactory mFactory;
 	
 	/*连接数据库表的dao*/
@@ -52,6 +59,8 @@ public class Person_Manage {
 	public Agent_Dao agent_Dao;//代理商dao
 	public OpLog_Dao opLog_Dao;//操作日志dao
 	public BackUp_Dao bUp_Dao;//备份sqldao
+	public Weixinbc_Dao weixinbc_Dao;
+	public Weixinba_Dao weixinba_Dao;
 	/*连接数据库表的dao*/
 	
 	/*查看资源的定义*/
@@ -110,25 +119,60 @@ public class Person_Manage {
 	public List Watch(String watch_type){
 		List re_list = null;
 		List re_list_locked = null;
+		List<Object> re_list_new = new ArrayList<>();
+		List<Object> re_list_locked_new = new ArrayList<>();
 		if (watch_type.equals("reg_cp")) {//查看新注册的对账联系人
 			logger.info("查看新注册的对账联系人");
 			re_list = cDao.GetTotalTbByElement("flag",REG_NEW);
+			
+			for (int i = 0; i < re_list.size(); i++) {
+				ConnectPerson cPerson = (ConnectPerson) re_list.get(i);
+				cPerson.setAgent(ChangeAgentToChinese(cPerson.getAgent()));
+				cPerson.setRegisterWay(ChangeRegTypeToChinese(cPerson.getRegisterWay()));
+				re_list_new.add(cPerson);
+			}
 		}
 		else if (watch_type.equals("reg_as")) {//查看新注册的财务人员
 			logger.info("查看新注册的财务人员");
 			re_list = aS_Dao.GetTotalTbByElement("flag", REG_NEW);
+			
+			for (int i = 0; i < re_list.size(); i++) {
+				Assistance cPerson = (Assistance) re_list.get(i);
+				cPerson.setAgentid((ChangeAgentToChinese(cPerson.getAgentid())));
+				re_list_new.add(cPerson);
+			}
 		}
 		else if (watch_type.equals("reged_cp")) {//查看已注册的对账联系人
 			logger.info("查看已注册的对账联系人");
 			re_list = cDao.GetTotalTbByElement("flag",REG_SUCCESS);
+			
+			for (int i = 0; i < re_list.size(); i++) {
+				ConnectPerson cPerson = (ConnectPerson) re_list.get(i);
+				cPerson.setAgent(ChangeAgentToChinese(cPerson.getAgent()));
+				cPerson.setRegisterWay(ChangeRegTypeToChinese(cPerson.getRegisterWay()));
+				re_list_new.add(cPerson);
+			}
+			
 			re_list_locked = cDao.GetTotalTbByElement("flag", LOCKED);
-			re_list.addAll(re_list_locked);
+			for (int i = 0; i < re_list_locked.size(); i++) {
+				ConnectPerson cPerson = (ConnectPerson) re_list_locked.get(i);
+				cPerson.setAgent(ChangeAgentToChinese(cPerson.getAgent()));
+				cPerson.setRegisterWay(ChangeRegTypeToChinese(cPerson.getRegisterWay()));
+				re_list_locked_new.add(cPerson);
+			}
+			re_list_new.addAll(re_list_locked_new);
 		}
 		else if (watch_type.equals("reged_as")) {//查看已注册的财务人员
 			logger.info("查看已注册的财务人员");
 			re_list = aS_Dao.GetTotalTbByElement("flag", REG_SUCCESS);
+			for (int i = 0; i < re_list.size(); i++) {
+				Assistance cPerson = (Assistance) re_list.get(i);
+				cPerson.setAgentid((ChangeAgentToChinese(cPerson.getAgentid())));
+				re_list_new.add(cPerson);
+			}
+			
 			re_list_locked = aS_Dao.GetTotalTbByElement("flag", LOCKED);
-			re_list.addAll(re_list_locked);
+			re_list_new.addAll(re_list_locked);
 		}
 		else if (watch_type.equals("op_log")) {//查看操作日志
 			logger.info("查看操作日志");
@@ -138,7 +182,7 @@ public class Person_Manage {
 			logger.error("未知的查看类型" + watch_type);
 		}
 		
-		return re_list;
+		return re_list_new;
 	}
 	
 	/**
@@ -259,9 +303,9 @@ public class Person_Manage {
 		public Login_Mange() {
 		}
 		
-		public int LgEnter_Select(String lgway,String username,String password ){
-			int isllegal = -1;
-			switch (lgway) {
+		public JSONObject LgEnter_Select(String username,String password ){
+			JSONObject jsonObject = new JSONObject();
+		/*	switch (lgway) {
 			case "bm"://总监登录
 				isllegal = BU_Lg_isllegal(username, password,"bm");//登录合法性判断
 				break;
@@ -276,8 +320,9 @@ public class Person_Manage {
 			default:
 				
 				break;
-			}	
-			return isllegal;
+			}*/
+			jsonObject = BU_Lg_isllegal(username, password);
+			return jsonObject;
 		}
 		
 	
@@ -306,23 +351,31 @@ public class Person_Manage {
 	        }
 		}
 		
-		public int BU_Lg_isllegal(String username,String password,String usertype) {
+		public JSONObject BU_Lg_isllegal(String username,String password) {
+			JSONObject jsonObject = new JSONObject();
+			
 			logger.info(username + ":" + password);
 			Assistance f_as = aS_Dao.findById(Assistance.class, username);
 			
 		//	aS_Dao.Close_Connect();
 			if (f_as == null || f_as.getFlag() == -2) {
 				logger.info("用户名或密码错误");
-				return -1;
+				jsonObject.element("flag", -1);
+				//return -1;
+				return jsonObject;
 			}
 			else{
 				if (f_as.getFlag() == -1) {
 					logger.info("注册审核中");
-					return -3;
+					jsonObject.element("flag", -3);
+					//return -1;
+					return jsonObject;
 				}
 				if (f_as.getFlag() == -3) {
 					logger.info("该账户已被锁定，请联系系统管理员");
-					return -4;
+					jsonObject.element("flag", -4);
+					//return -1;
+					return jsonObject;
 				}
 				
 				Date date = new Date();
@@ -343,14 +396,19 @@ public class Person_Manage {
 				
 				if (f_as.getLogLock() == true) {
 					logger.info("用户被锁定");
-					return -4;
+					jsonObject.element("flag", -4);
+					//return -1;
+					return jsonObject;
 				}
 				else{
 					
 					f_as.setLastLogTime(cur_time);
-					if (f_as.getPassword().equals(password) && f_as.getUsertype().equals(usertype)){
+					if (f_as.getPassword().equals(password)){
 						f_as.setLogNum(0);				
-						return 0;
+						jsonObject.element("flag", 0);
+						jsonObject.element("role", f_as.getUsertype());
+						//return -1;
+						return jsonObject;
 					}
 					else{
 						logger.info("用户名或密码错误");
@@ -358,20 +416,22 @@ public class Person_Manage {
 							logger.info("输入次数超过6次，用户被锁定");
 							f_as.setLogLock(true);
 							aS_Dao.update(f_as);
-							return -4;
+							jsonObject.element("flag", -4);
+							//return -1;
+							return jsonObject;
 						}
 						else {
 							f_as.setLogNum(f_as.getLogNum() + 1);
 							aS_Dao.update(f_as);
 						}
 						
-						return -2;
+						jsonObject.element("flag", -2);
+						//return -1;
+						return jsonObject;
 					}						
 				}
 			
-			}
-
-				
+			}	
 		}
 		// TODO Auto-generated constructor stub
 	}
@@ -546,6 +606,178 @@ public class Person_Manage {
 				}
 			}
 			return re_jObject;
+		}
+	}
+
+	/**
+	 * Weixin_Managr 微信信息管理类
+	 * @author Simon
+	 *
+	 */
+	public class Weixin_Managr{
+		
+		/**
+		 * Is_WeixinBind对账联系人是否绑定微信账号
+		 */
+		public JSONObject Is_WeixinBind(String weixinid){
+			List<WeixinBindConnectPerson> fwxbc = weixinbc_Dao.FindBySpeElement_S("weixinid", weixinid);
+			JSONObject re_json = new JSONObject();
+			
+			if (fwxbc.size() == 0) {
+				logger.warn("微信无效，没有找到相应的微信绑定对账联系人信息");
+				re_json.element("flag", -1);
+				re_json.element("errmsg", "微信无效，没有找到相应的微信绑定对账联系人信息");
+			}
+			else {
+				String cp_username = fwxbc.get(0).getUsername();
+				ConnectPerson fPerson = cDao.findById(ConnectPerson.class, cp_username);
+				if (fPerson == null) {
+					logger.error("用户名无效，找不到相应对账联系人");
+					re_json.element("flag", -1);
+					re_json.element("errmsg", "用户名无效，没有找到相应的对账联系人");
+				}
+				else {
+					re_json.element("flag", 0);
+					re_json.element("errmsg", "找到对应的对账联系人");
+					
+					JSONObject aes_object = JSONObject.fromObject(fPerson);
+					String aes_object_s = aes_object.toString();
+					String en_s = null;
+					try {
+						en_s = AES.aesEncrypt(aes_object_s,AES.key);
+					} catch (Exception e1) {
+						// TODO Auto-generated catch block
+						e1.printStackTrace();
+					}
+					re_json.element("connectp", en_s);
+				}
+			}
+			
+			return re_json;
+		}
+
+		/**
+		 * Delet_ConnectpWeixin 删除对账联系人的微信信息
+		 * @return
+		 */
+		public JSONObject Delet_ConnectpWeixin(String username){
+			JSONObject re_json = new JSONObject();
+			WeixinBindConnectPerson fwxbc = weixinbc_Dao.findById(WeixinBindConnectPerson.class, username);
+			if (fwxbc == null) {
+				logger_error.error("无法定位微信绑定对账联系人信息");
+				re_json.element("flag", -1);
+				re_json.element("errmsg", "无法定位微信绑定对账联系人信息");
+			}
+			else {
+				if(weixinbc_Dao.delete(fwxbc)){
+					re_json.element("flag", 0);
+					re_json.element("errmsg", "已删除相应的对账联系人信息");					
+				}
+				else {
+					re_json.element("flag", -1);
+					re_json.element("errmsg", "删除失败");	
+				}
+			}
+			
+			return re_json;
+		}
+		
+		/**
+		 * InOrUdWeixinMes 插入或者更新对账联系的微信信息
+		 * @return
+		 */
+		public JSONObject InOrUdWeixinMes(String username,String weixinid){
+			JSONObject re_json = new JSONObject();
+			WeixinBindConnectPerson fwxbc = weixinbc_Dao.findById(WeixinBindConnectPerson.class, username);
+			if (fwxbc == null) {
+				logger.info("微信绑定用户信息不存在");
+				WeixinBindConnectPerson in_wxc = new WeixinBindConnectPerson();
+				in_wxc.setUsername(username);
+				in_wxc.setWeixinid(weixinid);
+				if(weixinbc_Dao.add(in_wxc)){
+					re_json.element("flag", 0);
+					re_json.element("errmsg", "添加微信绑定对账联系人记录成功");	
+				}
+				else {
+					re_json.element("flag", -1);
+					re_json.element("errmsg", "添加微信绑定对账联系人记录失败");
+				}
+			}
+			else {
+				fwxbc.setUsername(username);
+				fwxbc.setWeixinid(weixinid);
+				if(weixinbc_Dao.update(fwxbc)){
+					re_json.element("flag", 0);
+					re_json.element("errmsg", "更新微信绑定对账联系人成功");			
+				}
+				else {
+					re_json.element("flag", -1);
+					re_json.element("errmsg", "更新微信绑定对账联系人失败");	
+				}
+			}
+			
+			return re_json;
+		}
+	}
+
+	/**
+	 * 将代理商 转换成中文
+	 * @param caid
+	 * @return
+	 */
+	public String ChangeAgentToChinese(String agent) {
+		String chinese_agent = null;
+		if (agent.equals("gd0001")) {
+			chinese_agent = "广东代理商";
+			
+		}
+		else if (agent.equals("gx0001")) {
+			chinese_agent = "广西代理商";
+			
+		}
+		else if (agent.equals("ah0001")) {
+			chinese_agent = "安徽代理商";
+			
+		}
+		else if (agent.equals("hb0001")) {
+			chinese_agent = "湖北代理商";
+			
+		}
+		else if (agent.equals("hn0001")) {
+			chinese_agent = "湖南代理商";
+			
+		}
+		else if (agent.equals("jx0001")) {
+			chinese_agent = "江西代理商";
+				
+		}
+		else if (agent.equals("xc0001")) {
+			chinese_agent = "江西代理商";
+			
+		}
+		else if (agent.equals("xj0001")) {
+			chinese_agent = "新疆代理商";
+			
+		}
+		else {
+			chinese_agent = "未知代理商";
+			
+		}
+		
+		return chinese_agent;
+	}
+
+	/**
+	 * ChangeRegTypeToChinese 
+	 * @param regtype
+	 * @return
+	 */
+	public String ChangeRegTypeToChinese(String regtype){
+		if (regtype.equals("C")) {
+			return "公司";
+		}
+		else{
+			return "个体户";
 		}
 	}
 }

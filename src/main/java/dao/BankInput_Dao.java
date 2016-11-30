@@ -390,6 +390,36 @@ public class BankInput_Dao {
 		}	
 	}
 	
+	/**
+	 * GetMaxID 查找最大id的记录的id
+	 * @return
+	 */
+	public int GetMaxID(){
+		String hql_getmaxid = "SELECT binput from BankInput binput where id = (SELECT max(id) FROM BankInput)";
+		
+		try {
+			
+			session = sessionFactory.openSession();
+			Query query = session.createQuery(hql_getmaxid);
+			java.util.List<BankInput> bInputs = query.list();
+			session.close();
+			
+			if (bInputs.size() > 0) {
+				return bInputs.get(0).getId();
+			}
+			else {
+				logger.warn("BankInput 表为空");
+				return 0;
+			}
+			
+		
+		} catch (RuntimeException e) {
+			// TODO: handle exception
+			logger.error("查询最大id失败" + e);
+			return -1;
+		}	
+	}
+	
 	public void Close_Connect(){
 		
 	/*	try {

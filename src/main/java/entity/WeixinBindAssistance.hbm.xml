@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+"http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+<!-- Generated 2016-11-30 8:55:15 by Hibernate Tools 5.1.0.Beta1 -->
+<hibernate-mapping>
+    <class name="entity.WeixinBindAssistance" table="weixin_bind_assistance" catalog="check_a_db" optimistic-lock="version">
+        <id name="username" type="string">
+            <column name="username" length="50" />
+            <generator class="assigned" />
+        </id>
+        <property name="weixinid" type="string">
+            <column name="weixinid" length="150" unique="true">
+                <comment>&#206;&#162;&#208;&#197;id</comment>
+            </column>
+        </property>
+    </class>
+</hibernate-mapping>

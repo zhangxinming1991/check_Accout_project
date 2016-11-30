@@ -2,12 +2,15 @@ package check_Asys;
 
 import java.io.File;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.Validate;
 import org.apache.commons.logging.impl.Log4JLogger;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -27,6 +30,7 @@ import dao.BankInput_Dao;
 import dao.CaresultHistory_Dao;
 import dao.ConnectPerson_Dao;
 import dao.CusSdStore_Backup_Dao;
+import dao.OpLog_Dao;
 import dao.Ori_BackUp_Dao;
 import dao.PayRecordCache_Dao;
 import dao.PayRecordHistory_Dao;
@@ -38,6 +42,7 @@ import entity.Agent;
 import entity.BankInput;
 import entity.ConnectPerson;
 import entity.CusSecondstore;
+import entity.OpLog;
 import entity.OriOrder;
 import entity.PayRecord;
 import entity.PayRecordHistory;
@@ -55,6 +60,7 @@ import net.sf.json.JSONObject;
  */
 public class CheckAcManage {
 	private static Logger logger = LogManager.getLogger(CheckAcManage.class);
+	private static Logger logger_error = LogManager.getLogger("error");
 	public AutoCheckAuccount auccount;
 	public CheckARseult cARseult;//对账结果
 	public Dao_List dao_List;
@@ -101,7 +107,7 @@ public class CheckAcManage {
 		Object re_object = null;
 		if (operation.equals(IMPORT)) {//上传货款表及出纳表
 			Import_Object select = (Import_Object) object;
-			Import(select.import_type,select.file,select.operator,select.savepath,select.filename);
+			return Import(select.import_type,select.file,select.operator,select.savepath,select.filename,select.caid);
 		}
 		else if(operation.equals(MAP)){
 			Map_Object map_Object = (Map_Object) object;
@@ -126,7 +132,37 @@ public class CheckAcManage {
 		}
 		else if (operation.equals(ENTRER_CaModel)) {
 			//Enter_CaModel(owner.work_id);
-			re_object = auccount.Enter_CaModel(owner.work_id);
+			String who = (String) object;
+			String caid = auccount.Enter_CaModel(owner.work_id);
+			
+			/*查找上次上传的时间和上传的结果*/
+			List<OpLog> fLogs = dao_List.opLog_Dao.FindBySpeElement_S_ByOwner("content", OpLog_Service.IMPORT, who);
+			
+			JSONObject jsonObject = new JSONObject();
+			if (fLogs.size() == 0) {
+				jsonObject.element("caid", caid);
+				jsonObject.element("flag", 0);
+				jsonObject.element("lastUploadResult", "没有上传记录");
+			}
+			else {
+				String time = fLogs.get(fLogs.size() - 1).getTime();
+				String result = fLogs.get(fLogs.size() - 1).getResult();
+				String curym = new SimpleDateFormat("yyyy/MM").format(new Date());
+				if (time.contains(curym)) {
+					jsonObject.element("caid", caid);
+					jsonObject.element("flag", 0);
+					jsonObject.element("lastUploadResult", result);
+					jsonObject.element("lastUploadTime", time.replace('/', '-'));
+				}
+				else {
+					jsonObject.element("caid", caid);
+					jsonObject.element("flag", 0);
+					jsonObject.element("lastUploadResult", "本月没有上传记录");
+				}
+			}	
+			/*查找上次上传的时间和上传的结果*/
+			
+			re_object = jsonObject;
 		}
 		else if (operation.equals(CANCEL_CaAgain)) {
 			String caid = (String)object;
@@ -141,7 +177,6 @@ public class CheckAcManage {
 		
 		return re_object;
 	}
-	
 	
 	/*统一返利客户*/
 	public void FreeBackToCustom(String owner){
@@ -158,80 +193,179 @@ public class CheckAcManage {
 		auccount.Enter_CaModel(owner);
 	}
 	
-	/*导入功能*/
-	public void Import(char import_type,MultipartFile rfile,String owner,String savedir,String filename){
-		ED_Code eCode = new ED_Code();
+	/**
+	 * Import_Initial 导入的初始化工作
+	 * @param import_type 导入类型
+	 * @param owner 拥有者
+	 */
+	public void Import_Initial(String caid,char import_type,String owner){
+		if (auccount.CreateCaid(owner).equals(caid)) {//本月对账
+			if (import_type == 'A') {
+				auccount.TransferCus_WareaToBackup(owner);
+				auccount.TransferOri_WareaToBackup(owner);//转移货款表到备份区
+			}
+			else if (import_type == 'B') {
+				auccount.TransferBinput_WareaToBackup(owner);//转移出纳到备份区
+			}
+			else {
+				logger_error.error("导入类型未知");
+			}			
+		}
+		else {//历史对账
+			if (import_type == 'A') {
+				dao_List.tDao.DeleteOoriderByElement("owner", owner);
+				dao_List.sDao.DeleteTbByElement("owner", owner);
+			}
+			else if (import_type == 'B') {
+				dao_List.bDao.DeleteBinputTbByElement("owner", owner);
+			}
+			else {
+				logger_error.error("导入类型未知");
+			}	
+		}
+
+	}
+	
+	/**
+	 * Import_AfterWork 根据导入操作的结果，进行不同的后续操作
+	 * @param flag
+	 */
+	public void Import_AfterWork(int flaga,int flagb,String owner,MultipartFile rfilea,MultipartFile rfileb,String filenamea,String filenameb,String savedira,String savedirb,String caid){
+		if (auccount.CreateCaid(owner).equals(caid)) {//本月对账
+
+			if (flaga == 0 && flagb == 0) {//两个表上传成功
+				logger.info("本月对账,删除备份区的货款记录和出纳记录");
+				dao_List.cBackup_Dao.DeleteTbByElement("owner", owner);
+				dao_List.oUp_Dao.DeleteOBackupByElement("owner", owner);
+				dao_List.bInput_Backup_Dao.DeleteBInputBupByElement("owner", owner);
+			}
+		}
 		
-		AnyFile_Op aOp = new AnyFile_Op();
+		if (flaga == 0 && flagb == 0) {//两个表上传成功
+			logger.info("货款表和出纳表上传成功");
 		
-		long filesize = rfile.getSize();
-	//	String fileName = eCode.ISO_To_UTF8(rfile.getOriginalFilename());//将文件名字符串转成utf-8格式
-		String fileName = filename;//将文件名字符串转成utf-8格式
-		AnyFileElement aElement = aOp.new AnyFileElement(fileName, savedir, (int)filesize);
+			AnyFile_Op aOp = new AnyFile_Op();
+			long filesizea = rfilea.getSize();
+			long filesizeb = rfileb.getSize();
+			//	String fileName = eCode.ISO_To_UTF8(rfile.getOriginalFilename());//将文件名字符串转成utf-8格式
+			AnyFileElement aElementa = aOp.new AnyFileElement(filenamea, savedira, (int)filesizea);
+			AnyFileElement aElementb = aOp.new AnyFileElement(filenameb, savedirb, (int)filesizeb);
+			
+			File dira = aOp.CreateDir(savedira);//创建保存目录
+			File dirb = aOp.CreateDir(savedirb);//创建保存目录
+			
+			File wFilea = aOp.CreateFile(aElementa.dirname, aElementa.filename);//创建保存的文件	
+			byte read_ba[] = aOp.ReadFile(rfilea);//读取上传的文件的内容
+			aOp.WriteFile(aElementa,read_ba,wFilea);//将文件保存到服务器指定目录中
+			
+			File wFileb = aOp.CreateFile(aElementb.dirname, aElementb.filename);//创建保存的文件
+			byte read_bb[] = aOp.ReadFile(rfileb);//读取上传的文件的内容
+			aOp.WriteFile(aElementb,read_bb,wFileb);//将文件保存到服务器指定目录中
+		}
+		else {
+			logger_error.error("导入类型未知");
+		}
+	}
+	
+	/**
+	 * Import 
+	 * @param import_type
+	 * @param rfile
+	 * @param owner
+	 * @param savedir
+	 * @param filename
+	 */
+	public JSONObject Import(char import_type,MultipartFile rfile,String owner,String savedir,String filename,String caid){
+		JSONObject re_js = new JSONObject();
 		
-		File dir = aOp.CreateDir(savedir);//创建保存目录
-		File wFile = aOp.CreateFile(aElement.dirname, aElement.filename);//创建保存的文件	
-		
-		byte read_b[] = aOp.ReadFile(rfile);//读取上传的文件的内容
-		aOp.WriteFile(aElement,read_b,wFile);//将文件保存到服务器指定目录中
+		Import_Initial(caid,import_type,owner);
 		
 		if (import_type == 'A') {//导入原始账单
 			logger.info("import Account");
-			auccount.ResetCustomToCaDuring(owner);//重置客户表
 			
 			/*解析excel表内容*/
 			Excel_RW excel_RW = new Excel_RW();//解析excel内容
-			ArrayList<Excel_Row> totalA_table = excel_RW.ReadExcel_Table(aElement.dirname + "/" + aElement.filename);
+			ArrayList<Excel_Row> totalA_table = null;
+			try {
+				totalA_table = excel_RW.ReadExcel_Table(rfile.getInputStream());
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 			
 			Agent fagent = dao_List.agent_Dao.findById(Agent.class, owner);
-			ArrayList<OriOrder> in_orders = excel_RW.Table_To_Ob_OriOrders(totalA_table,fagent);//将excel表转换成对象
-			/*解析excel表内容*/
+			JSONObject re_TT = excel_RW.Table_To_Ob_OriOrders(totalA_table,fagent);//将excel表转换成对象
+			/*解析excel表内容*/	
+			if (re_TT.getInt("flag") == -1) {
+				re_js.element("flag", -1);
+				re_js.element("errmsg", re_TT.getString("errmsg"));
+				return re_js;
+			}
+			JSONArray jsonArray = (JSONArray) re_TT.get("orders");
+			OriOrder[]orders = (OriOrder[]) JSONArray.toArray(jsonArray, OriOrder.class);
 			
 			/*写入数据库*/
-			for (int i = 0; i < in_orders.size(); i++) {
-				OriOrder in_order = in_orders.get(i);
+			for (OriOrder order:orders) {
 				
 				/*填补对账联系人信息*/
-				List<ConnectPerson> fPersons = dao_List.cPerson_Dao.FindBySpeElement("companyid", in_order.getCuscompanyid(), owner);
+				List<ConnectPerson> fPersons = dao_List.cPerson_Dao.FindBySpeElement("companyid", order.getCuscompanyid(), owner);
 				if (fPersons.isEmpty() !=  true) {
-					in_order.setCustomname(fPersons.get(0).getRealName());
-					in_order.setCustomphone(fPersons.get(0).getPhone());
-					in_order.setCustomweixin(fPersons.get(0).getWeixin());
+					order.setCustomname(fPersons.get(0).getRealName());
+					order.setCustomphone(fPersons.get(0).getPhone());
+					order.setCustomweixin(fPersons.get(0).getWeixin());
 				}
 				/*填补对账联系人信息*/
 				
 				/*填补代理商财务信息*/
 				Agent agent = dao_List.agent_Dao.findById(Agent.class, owner);
-				in_order.setAsname(agent.getAgentConnectpname());
-				in_order.setAsphone(agent.getAgentCpphone());
-				in_order.setAsemail(agent.getAgentCpemail());
+				order.setAsname(agent.getAgentConnectpname());
+				order.setAsphone(agent.getAgentCpphone());
+				order.setAsemail(agent.getAgentCpemail());
 				/*填补代理商财务信息*/
-
-				dao_List.tDao.add(in_order);
-				auccount.ConnectAccountWithCustom(in_order);
+				
+				order.setConnectBank(null);
+				dao_List.tDao.add(order);
+				auccount.ConnectAccountWithCustom(order);  //添加或者刷新客户合同信息
 			}
 			/*写入数据库*/
-			
+			re_js.element("flag", 0);
+			re_js.element("errmsg", "导入货款表成功");
+			return re_js;
 		}
 		else if (import_type == 'B') {//导入银行记录
 			logger.info("import bank");
 			auccount.ResetCustomAccoutMsg(owner);
 			/*解析excel文件*/
 			Excel_RW excel_RW = new Excel_RW();//解析excel内容
-			ArrayList<Excel_Row> totalA_table = excel_RW.ReadExcel_Table(aElement.dirname + "/" + aElement.filename);
+			ArrayList<Excel_Row> totalA_table = null;
+			try {
+				totalA_table = excel_RW.ReadExcel_Table(rfile.getInputStream());
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 			ArrayList<BankInput> bankInputs = excel_RW.Table_To_Ob_BankIn(totalA_table,owner);
 			/*解析excel文件*/
 			
 			/*写入数据库*/
+			int offsetid = dao_List.bDao.GetMaxID();
 			for (int i = 0; i < bankInputs.size(); i++) {
 				BankInput bankInput = bankInputs.get(i);
+				offsetid = offsetid + 1;
+				bankInput.setId(offsetid);
 				dao_List.bDao.add(bankInput);
 				auccount.ConnectBankinputWithCustom(bankInput);//获取客户的合同信息
 			}
 			/*写入数据库*/
+			re_js.element("flag", 0);
+			re_js.element("errmsg", "导入出纳表成功");
+			return re_js;
 		}
 		else {
 			logger.info("[Import]:unknow import");
+			re_js.element("flag", -1);
+			re_js.element("errmsg", "未知导入类型");
+			return re_js;
 		}
 	}
 	
@@ -365,7 +499,7 @@ public class CheckAcManage {
 			System.out.println(lbank.size());
 			for (int i = 0; i < lbank.size(); i++) {
 				BankInput bInput = (BankInput) lbank.get(i);
-				logger.info("***开启" + bInput.getId() + "付款记录的关联***");
+				logger.info("***开启" + bInput.getId() + "出纳记录的关联***");
 				if (bInput.getIsConnect() == true) {//使用合同号去关联货款表
 					logger.info("使用合同号去关联出纳" + bInput.getPayer());
 					jmesg = auccount.ConnectBankWithAccount(bInput,owner);
@@ -512,13 +646,15 @@ public class CheckAcManage {
 		public MultipartFile file;
 		public String savepath;//保存目录
 		public String filename;
+		public String caid;
 		
-		public Import_Object(char import_type,MultipartFile file,String operator,String savepath,String filename) {
+		public Import_Object(char import_type,MultipartFile file,String operator,String savepath,String filename,String caid) {
 			this.import_type = import_type;
 			this.file = file;
 			this.operator = operator;
 			this.savepath = savepath;
 			this.filename = filename;
+			this.caid = caid;
 		}
 	}
 	
@@ -559,6 +695,7 @@ public class CheckAcManage {
 		public Ori_BackUp_Dao oUp_Dao;
 		public BInput_Backup_Dao bInput_Backup_Dao;
 		public CusSdStore_Backup_Dao cBackup_Dao;
+		public OpLog_Dao opLog_Dao;
 		
 		public Dao_List(SessionFactory wFactory){
 			  tDao = new Total_Account_Dao(wFactory); 
@@ -574,6 +711,7 @@ public class CheckAcManage {
 			  oUp_Dao = new Ori_BackUp_Dao(wFactory);
 			  bInput_Backup_Dao = new BInput_Backup_Dao(wFactory);
 			  cBackup_Dao = new CusSdStore_Backup_Dao(wFactory);
+			  opLog_Dao = new OpLog_Dao(wFactory);
 		}
 	}
 	

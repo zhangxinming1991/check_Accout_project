@@ -7,9 +7,11 @@ import org.apache.logging.log4j.Logger;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
+import org.hibernate.query.Query;
 
 import com.sun.org.apache.bcel.internal.generic.NEW;
 
+import entity.BankInput;
 import entity.PayRecordCache;
 
 /**
@@ -165,6 +167,36 @@ public class PayRecordCache_Dao {
 			logger.error("根据owner=" + owner + "|" + filed1 + "!=" + value1 + "删除整张PayRecordCache失败" + e);
 		}
 
+	}
+	
+	/**
+	 * GetMaxID 查找最大id的记录的id
+	 * @return
+	 */
+	public int GetMaxID(){
+		String hql_getmaxid = "SELECT precord from PayRecordCache precord where id = (SELECT max(id) FROM BankInput)";
+		
+		try {
+			
+			session = sessionFactory.openSession();
+			Query query = session.createQuery(hql_getmaxid);
+			java.util.List<PayRecordCache> pCaches = query.list();
+			session.close();
+			
+			if (pCaches.size() > 0) {
+				return pCaches.get(0).getId();
+			}
+			else {
+				logger.warn("pCaches 表为空");
+				return 0;
+			}
+			
+		
+		} catch (RuntimeException e) {
+			// TODO: handle exception
+			logger.error("查询最大id失败" + e);
+			return -1;
+		}	
 	}
 	
 

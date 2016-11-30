@@ -25,6 +25,7 @@ import sun.util.logging.resources.logging;
  */
 public class Total_Account_Dao {
 	private static Logger logger = LogManager.getLogger(Total_Account_Dao.class);
+	private static Logger logger_error = LogManager.getLogger("error");
 	protected SessionFactory sessionFactory;
 	protected Session session;
 	protected Transaction transaction;
@@ -51,7 +52,7 @@ public class Total_Account_Dao {
 			endTransaction();			
 		} catch (RuntimeException e) {
 			// TODO: handle exception
-			logger.info(e+ "add failed:" + in_order.getCustomname() + ":" + in_order.getOrderNum());
+			logger_error.error(e+ "add failed:" + in_order.getCustomname() + ":" + in_order.getOrderNum());
 		}
 	}
 	

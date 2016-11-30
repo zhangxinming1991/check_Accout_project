@@ -6,6 +6,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.text.ParseException;
@@ -50,6 +51,8 @@ import entity.Agent;
 import entity.BankInput;
 import entity.OriOrder;
 import entity.PayRecord;
+import net.sf.json.JSONArray;
+import net.sf.json.JSONObject;
 
 /**
  * Excel_RW 读写excel的接口
@@ -59,6 +62,7 @@ import entity.PayRecord;
  */
 public class Excel_RW {
 	private static Logger logger = LogManager.getLogger(Excel_RW.class);
+	private static Logger logger_error = LogManager.getLogger("error");
 	public Sheet wsheet;
 	public Sheet rsheet;
 	
@@ -444,15 +448,12 @@ public class Excel_RW {
 		}
 	}
 	
-	public ArrayList<Excel_Row> ReadExcel_Table(String filename) {
+	public ArrayList<Excel_Row> ReadExcel_Table(InputStream inputStream) {
 		try {
 			
 			ArrayList<Excel_Row> excel_table = new ArrayList<>();
 			
-			FileInputStream file = new FileInputStream(new File(filename));
-			BufferedInputStream in = new BufferedInputStream(file);
-			
-			XSSFWorkbook wb = new XSSFWorkbook(file);
+			XSSFWorkbook wb = new XSSFWorkbook(inputStream);
 			XSSFSheet st = wb.getSheetAt(0);
 			
 			Iterator<Row> rowIterator = st.iterator();
@@ -507,36 +508,78 @@ public class Excel_RW {
 	}
 
 	//将excel表中的一行解析为OriOrder中的各个成员
-	public OriOrder Row_To_Ob_OriOrder(int row_id,ArrayList<Excel_Row> table,Agent agent){
-		logger.info("Row_To_Ob at : " + row_id);
+	public JSONObject Row_To_Ob_OriOrder(int row_id,ArrayList<Excel_Row> table,Agent agent){
+		logger.info("Row_To_Ob at : " + (row_id+1) + "行");
+		JSONObject jsonObject = new JSONObject();
+		String errmsg = "";
 		OriOrder order = new OriOrder();
+		jsonObject.element("order", order);
 		Excel_Row re_row = table.get(row_id);
-
+		
+		String client = re_row.list.get(Ori_Excel_Format.client_name);
+		if (client == null) {
+			errmsg = "导入货款表格式有误：" + (row_id+1) + "行用户名为空";
+			logger_error.error(errmsg);
+			jsonObject.element("errmsg", errmsg);
+			jsonObject.element("flag", -1);
+			return jsonObject;
+		}
 		order.setClient(re_row.list.get(Ori_Excel_Format.client_name));//设置客户名称
 		order.setCuscompanyid(re_row.list.get(Ori_Excel_Format.client_id));//设置客户身份证或者组织机构代码证
 		order.setOrderNum(re_row.list.get(Ori_Excel_Format.contract));//设置合同号
 		order.setProductTime(re_row.list.get(Ori_Excel_Format.product_time));//发货时间
 		order.setOwnerProduct(re_row.list.get(Ori_Excel_Format.owner_product));//货款主体
-		order.setTotal(Double.valueOf(re_row.list.get(Ori_Excel_Format.total_money)).doubleValue());//设置总额
-		order.setDebt(Double.valueOf(re_row.list.get(Ori_Excel_Format.debet_money)).doubleValue());//设置在外金额
+		
+		String total_money = re_row.list.get(Ori_Excel_Format.total_money);
+		String debet_money = re_row.list.get(Ori_Excel_Format.debet_money);
+		if (total_money == null || debet_money == null) {
+			errmsg = "导入货款表格式有误:第" + (row_id+1) + "行 总额或者在外金额为非数字类型";
+			logger_error.error(errmsg);
+			jsonObject.element("errmsg", errmsg);
+			jsonObject.element("flag", -1);
+			return jsonObject;
+		}
+		order.setTotal(Double.valueOf(total_money).doubleValue());//设置总额
+		order.setDebt(Double.valueOf(debet_money).doubleValue());//设置在外金额
 		order.setOwner(agent.getAgentId());//设置货款记录所属者
 		order.setAsname(agent.getAgentConnectpname());
 		order.setAsphone(agent.getAgentCpphone());
 		order.setAsemail(agent.getAgentCpemail());
 		order.setProvince(re_row.list.get(Ori_Excel_Format.province));
 		order.setInput(0d);
-		return order;
+		
+		errmsg = "导入货款表成功";
+		jsonObject.element("errmsg", errmsg);
+		jsonObject.element("flag", 0);
+		jsonObject.element("OriOrder", order);
+		return jsonObject;
 	}
 	
 	//将整个货款excel表解析为OriOrders
-	public ArrayList<OriOrder> Table_To_Ob_OriOrders(ArrayList<Excel_Row> excel_table,Agent agent) {
-		ArrayList<OriOrder> orders = new ArrayList<OriOrder>();
+	public JSONObject Table_To_Ob_OriOrders(ArrayList<Excel_Row> excel_table,Agent agent) {
+		JSONObject jsonObject = new JSONObject();
+		JSONArray jsonArray = new JSONArray();
+		//ArrayList<OriOrder> orders = new ArrayList<OriOrder>();
 		
 		for (int i = 1; i < excel_table.size(); i++) {
-			orders.add(Row_To_Ob_OriOrder(i,excel_table,agent));
+			JSONObject re_js = Row_To_Ob_OriOrder(i,excel_table,agent);
+
+			if (re_js.getInt("flag") == 0) {
+				//OriOrder in_ori = (OriOrder) re_js.get("OriOrder");
+				OriOrder in_ori = (OriOrder) JSONObject.toBean(re_js.getJSONObject("OriOrder"), OriOrder.class);
+				//orders.add(in_ori);
+				jsonArray.add(in_ori);
+			}
+			else {
+				logger_error.error("获取货款表的第" + (i+1) + "行数据失败");
+				jsonObject = re_js;
+				return jsonObject;
+			}
 		}
 		
-		return orders;
+		jsonObject.element("flag", 0);
+		jsonObject.element("orders", jsonArray);
+		return jsonObject;
 	}
 	
 	//将excel表中的一行解析为BankInput中的各个成员

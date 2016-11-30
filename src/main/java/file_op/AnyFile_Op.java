@@ -39,6 +39,28 @@ public class AnyFile_Op{
 		return read_b;
 	}
 	
+	public byte [] ReadFileToStream(MultipartFile mfile){
+		if (mfile.getOriginalFilename().equals("")) {
+			return null;
+		}
+		
+		long filesize = mfile.getSize();
+		byte read_b[] = new byte[(int)filesize];
+        /*读取上传的文件的内容*/
+		InputStream inputStream;
+		try {
+			inputStream = mfile.getInputStream();
+			inputStream.read(read_b); 
+			inputStream.close();
+			System.out.println(ED_Code.ByteArray_Act_Len(read_b));
+		/*读取上传的文件的内容*/
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return read_b;
+	}
+	
 	public boolean WriteFile(AnyFileElement aF_Element,byte []read_b,File file){
 		FileOutputStream out = null;
 		

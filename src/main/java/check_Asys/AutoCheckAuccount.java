@@ -337,6 +337,7 @@ public class AutoCheckAuccount {
 		
 		JSONArray jconnectbArray;
 		if (fOrder.getConnectBank() == null) {
+			logger.info("不存在ConnectBank");
 			jconnectbArray = new JSONArray();
 		}
 		else {
@@ -523,8 +524,9 @@ public class AutoCheckAuccount {
 		}
 		else{
 			//List<PayRecord> fpList = pDao.FindBySpeElement_S_limit("caid", caid);
-			List<OriOrderBackup> orderBackups = oUp_Dao.GetOriBackupByElment("owner", owner);
-			if (orderBackups.isEmpty() != true) {//从历史对账中回到本月对账,（不一定成立，还要判断backup区是否为空，不为空成立）
+		//	List<OriOrderBackup> orderBackups = oUp_Dao.GetOriBackupByElment("owner", owner);
+		//	if (orderBackups.isEmpty() != true) {//从历史对账中回到本月对账,（不一定成立，还要判断backup区是否为空，不为空成立）
+			if (fCrHistories.get(0).getLastcaid() == false) {
 				logger.info("从历史对账中回到本月对账");
 				
 				TransferPrecord_WAreaToHArea(owner);//将付款区记录转移到付款历史区
@@ -637,7 +639,7 @@ public class AutoCheckAuccount {
 			fOrder.setInput(input);
 			fOrder.setDebt(debet);
 			fOrder.setUpdateTime(null);
-			fOrder.setConnectBank(null);
+//			fOrder.setConnectBank(null);
 			tDao.update(fOrder);
 		}
 	}
@@ -985,34 +987,46 @@ public class AutoCheckAuccount {
 			//ResetCustomToCaDuring(owner);//重置客户表
 			
 			Excel_RW excel_RW = new Excel_RW();//解析excel内容
-			ArrayList<Excel_Row> totalA_table = excel_RW.ReadExcel_Table(savedirA + "/" + filenameA);
+			InputStream inputStream = null;
+			try {
+				inputStream = new FileInputStream(new File(savedirA + "/" + filenameA));
+			} catch (FileNotFoundException e) {
+				// TODO Auto-generated catch block
+				logger_error.error("读取货款表出错：" + e);
+				e.printStackTrace();
+				return -3;
+			}
+			ArrayList<Excel_Row> totalA_table = excel_RW.ReadExcel_Table(inputStream);
 	
 			Agent fagent = agent_Dao.findById(Agent.class, owner);
-			ArrayList<OriOrder> in_orders = excel_RW.Table_To_Ob_OriOrders(totalA_table,fagent);//将excel表转换成对象
+			JSONObject jsonObject = excel_RW.Table_To_Ob_OriOrders(totalA_table,fagent);//将excel表转换成对象
+			
+			OriOrder[] in_orders = (OriOrder[]) JSONArray.toArray(jsonObject.getJSONArray("orders"), OriOrder.class);
 			/*解析excel表内容*/
 			
 			/*写入数据库*/
-			for (int i = 0; i < in_orders.size(); i++) {
-				OriOrder in_order = in_orders.get(i);
+			for (OriOrder order:in_orders) {
+
 				
 				/*填补对账联系人信息*/
-				List<ConnectPerson> fPersons = cPerson_Dao.FindBySpeElement("companyid", in_order.getCuscompanyid(), owner);
+				List<ConnectPerson> fPersons = cPerson_Dao.FindBySpeElement("companyid", order.getCuscompanyid(), owner);
 				if (fPersons.isEmpty() !=  true) {
-					in_order.setCustomname(fPersons.get(0).getRealName());
-					in_order.setCustomphone(fPersons.get(0).getPhone());
-					in_order.setCustomweixin(fPersons.get(0).getWeixin());
+					order.setCustomname(fPersons.get(0).getRealName());
+					order.setCustomphone(fPersons.get(0).getPhone());
+					order.setCustomweixin(fPersons.get(0).getWeixin());
 				}
 				/*填补对账联系人信息*/
 				
 				/*填补代理商财务信息*/
 				Agent agent = agent_Dao.findById(Agent.class, owner);
-				in_order.setAsname(agent.getAgentConnectpname());
-				in_order.setAsphone(agent.getAgentCpphone());
-				in_order.setAsemail(agent.getAgentCpemail());
+				order.setAsname(agent.getAgentConnectpname());
+				order.setAsphone(agent.getAgentCpphone());
+				order.setAsemail(agent.getAgentCpemail());
 				/*填补代理商财务信息*/
-
-				tDao.add(in_order);
-				ConnectAccountWithCustom(in_order);
+				
+				order.setConnectBank(null);
+				tDao.add(order);
+				ConnectAccountWithCustom(order);
 			}
 			/*写入数据库*/
 		}
@@ -1024,7 +1038,16 @@ public class AutoCheckAuccount {
 			ResetCustomAccoutMsg(owner);
 			/*解析excel文件*/
 			Excel_RW excel_RW = new Excel_RW();//解析excel内容
-			ArrayList<Excel_Row> totalA_table = excel_RW.ReadExcel_Table(savedirB + "/" + filenameB);
+			InputStream inputStream = null;
+			try {
+				inputStream = new FileInputStream(new File(savedirB + "/" + filenameB));
+			} catch (FileNotFoundException e) {
+				// TODO Auto-generated catch block
+				logger_error.error("读取出纳表出错：" + e);
+				e.printStackTrace();
+				return -4;
+			}
+			ArrayList<Excel_Row> totalA_table = excel_RW.ReadExcel_Table(inputStream);
 			ArrayList<BankInput> bankInputs = excel_RW.Table_To_Ob_BankIn(totalA_table,owner);
 			/*解析excel文件*/
 			

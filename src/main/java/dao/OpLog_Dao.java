@@ -9,6 +9,7 @@ import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
 
 import entity.OpLog;
+import entity.PayRecord;
 
 /**
  * OpLog_Dao 连接数据库操作历史表的服务dao
@@ -99,7 +100,25 @@ public class OpLog_Dao {
 		return oplogs;
 	}
 	
+	/*根据指定字段进行查找，字段类型为字符串类型*/
+	public java.util.List<OpLog> FindBySpeElement_S_ByOwner(String filed,String value,String owner){
+		String fdclient_hql = "select order from OpLog order where " +  filed + " = :value" + " and " + "username = :owner";;
+		try {
+			
+			session = sessionFactory.openSession();
+			java.util.List<OpLog> payRecords = session.createQuery(fdclient_hql)
+													.setParameter("value", value)
+													.setParameter("owner", owner)
+													.list();
+			session.close();
 	
+			return payRecords;
+		} catch (RuntimeException e) {
+			// TODO: handle exception
+			logger.error("根据" + filed + "=" + value + "查找日志记录失败" + e);
+			return null;
+		}
+	}
 	
 	public void Close_Connect(){
 		

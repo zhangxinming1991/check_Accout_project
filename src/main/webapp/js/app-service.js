@@ -235,7 +235,7 @@ app.factory('AccountService', ['$rootScope', '$cookies', '$q', 'HttpReqService',
         return Req.req(ReqUrl.rstPwdSendvc,form);
     };
     svc.resetPwd=function (form) {
-        return Req.req(ReqUrl.rstPwd,form);
+        return Req.req(ReqUrl.rstPwd, form);
     };
 
 // 代理商列表获取，为注册时提供自动补全输入以及避免输入不存在的代理商
