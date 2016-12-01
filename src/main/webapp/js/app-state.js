@@ -7,8 +7,21 @@ app.config(['$stateProvider', '$urlRouterProvider', 'stateHelperProvider', funct
     $urlRouterProvider.when('/u/fw', '/u/fw/v');
     $urlRouterProvider.when('/u/fs', '/u/fs/a');
     $urlRouterProvider.when('/u/fw/p--', ['$state', function (state) {
+        console.error('should NOT reach here');
         var thisDate = new Date();
-        state.go('u.fw.p', {year: thisDate.getFullYear(), month: thisDate.getMonth() + 1});
+        var year = thisDate.getFullYear();
+        //月份是基于0计算的
+        var month = thisDate.getMonth() + 1;
+        //然而日期不是，holy shit for the api
+        var date = thisDate.getDate();
+        if (date < appConf.checkClosingDate) {
+            month -= 1;
+        }
+        if (month <= 0) {
+            month = 12;
+            year -= 1;
+        }
+        state.go('u.fw.p', {year: year, month: month});
     }]);
     $urlRouterProvider.otherwise('/index');
 
@@ -18,9 +31,10 @@ app.config(['$stateProvider', '$urlRouterProvider', 'stateHelperProvider', funct
         .state({
             name: 'index',
             url: '/index',
-            template: '<img class="row" src="welcome.jpg">',
+            // template: '<img class="row" src="welcome.jpg">',
+            template: '<div class="homepage-img" style="position:fixed; top:0px; left:0px; width:100%; overflow-y:hidden; overflow-x:hidden; margin:auto;"></div><div class="copyright">&copy;Sany 版权所有</div>',
             controller: function () {
-                console.log('ctrl-> state-index-ctrl');
+                // console.log('ctrl-> state-index-ctrl');
                 anyModal.modal('hide');
                 loginModal.modal('show');
             }
@@ -73,49 +87,49 @@ app.config(['$stateProvider', '$urlRouterProvider', 'stateHelperProvider', funct
                         // }
                     },
                     children: [
-                        // // 财务人员“订单”
-                        // {
-                        //     name: 'o',
-                        //     url: '/o',
-                        //     views: {
-                        //         //ui-view=content content对于不同的一级导航(对应state u.fw.o, u.fw.n, u.fw.t）右侧内容视图部分用不同的template文件填充。
-                        //         "content@u": {
-                        //             templateUrl: 'fw-c-o.html',
-                        //             controller: fwoCtrl,
-                        //             controllerAs:'fwoCtrl'
-                        //         },
-                        //         // //因为ui-view=grid在fw-c-o.html中，而该文件的加载是在state: u.fw.o中完成的，因此必须用@指定绝对路径的state为u.w.o，否则相当于在其上级状态（state:u.fw）中替换ui-view=grid的视图占位符（ui-view），而实际上state:u.fw中没有名为grid的视图占位符。
-                        //         // "grid@u.fw.o": {
-                        //         //     templateUrl: 'fw-c-o-grid.html',
-                        //         //     controller: fwoGridCtrl
-                        //         // }
-                        //     }
-                        // },
-                        // // 财务人员“待办”
-                        // {
-                        //     name: 'n',
-                        //     url: '/n',
-                        //     views: {
-                        //         "content@u": {
-                        //             templateUrl: 'fw-c-n-grid.html',
-                        //             controller: fwnCtrl
-                        //         }
-                        //     }
-                        // },
-                        // // 财务人员->待关联出纳
-                        // {
-                        //     name: 't',
-                        //     url: '/t',
-                        //     views: {
-                        //         "content@u": {
-                        //             templateUrl: 'fw-c-t-grid.html',
-                        //             controller: fwtCtrl,
-                        //             // controllerAs:'fwtCtrl'
-                        //             controllerAs:'ctrl'
-                        //             // controller:'FwtCtrl as fwtCtrl'
-                        //         }
-                        //     }
-                        // }
+                        /*// 财务人员“订单”
+                         {
+                         name: 'o',
+                         url: '/o',
+                         views: {
+                         //ui-view=content content对于不同的一级导航(对应state u.fw.o, u.fw.n, u.fw.t）右侧内容视图部分用不同的template文件填充。
+                         "content@u": {
+                         templateUrl: 'fw-c-o.html',
+                         controller: fwoCtrl,
+                         controllerAs:'fwoCtrl'
+                         },
+                         // //因为ui-view=grid在fw-c-o.html中，而该文件的加载是在state: u.fw.o中完成的，因此必须用@指定绝对路径的state为u.w.o，否则相当于在其上级状态（state:u.fw）中替换ui-view=grid的视图占位符（ui-view），而实际上state:u.fw中没有名为grid的视图占位符。
+                         // "grid@u.fw.o": {
+                         //     templateUrl: 'fw-c-o-grid.html',
+                         //     controller: fwoGridCtrl
+                         // }
+                         }
+                         },
+                         // 财务人员“待办”
+                         {
+                         name: 'n',
+                         url: '/n',
+                         views: {
+                         "content@u": {
+                         templateUrl: 'fw-c-n-grid.html',
+                         controller: fwnCtrl
+                         }
+                         }
+                         },
+                         // 财务人员->待关联出纳
+                         {
+                         name: 't',
+                         url: '/t',
+                         views: {
+                         "content@u": {
+                         templateUrl: 'fw-c-t-grid.html',
+                         controller: fwtCtrl,
+                         // controllerAs:'fwtCtrl'
+                         controllerAs:'ctrl'
+                         // controller:'FwtCtrl as fwtCtrl'
+                         }
+                         }
+                         }*/
 
                         // 上传
                         {
@@ -221,9 +235,12 @@ app.run(['$rootScope', '$state', 'AccountService', function (rootsgop, state, Ac
     rootsgop.$on("$stateChangeStart", function (event, toState, toParams, fromState, fromParams) {
         if (toState.name.indexOf('u.') === 0 // auth needed
             && !AccSvc.isAuthenticated()) {
-            // User isn’t authenticated
-            state.transitionTo("index");
-            event.preventDefault();
+            AccSvc.signInBySessionStorage().then(function (ok) {
+            }, function (fail) {
+                // User isn’t authenticated
+                state.transitionTo("index");
+                event.preventDefault();
+            })
         }
     });
 }]);

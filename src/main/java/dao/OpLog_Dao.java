@@ -100,6 +100,19 @@ public class OpLog_Dao {
 		return oplogs;
 	}
 	
+	/*获取整张数据表*/
+	public java.util.List GetOpLogTb_ByPage(int offset,int pagesize){
+		
+		session = sessionFactory.openSession();
+		String hql_select_all = "from OpLog";
+		java.util.List oplogs =  (java.util.List) session.createQuery(hql_select_all)
+				.setFirstResult(offset)
+				.setMaxResults(pagesize)
+				.list();
+		session.close();
+		return oplogs;
+	}
+	
 	/*根据指定字段进行查找，字段类型为字符串类型*/
 	public java.util.List<OpLog> FindBySpeElement_S_ByOwner(String filed,String value,String owner){
 		String fdclient_hql = "select order from OpLog order where " +  filed + " = :value" + " and " + "username = :owner";;

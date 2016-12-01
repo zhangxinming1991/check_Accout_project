@@ -280,7 +280,7 @@ public class PMController {
 		if (action.equals("query")) {
 			String weixinid = null;
 			try {
-				weixinid = AES.aesEncrypt(request.getParameter("weixinid"),AES.key);
+				weixinid = AES.aesDecrypt(request.getParameter("weixinid"),AES.key);
 				logger.info(weixinid);
 			} catch (Exception e) {
 				// TODO Auto-generated catch block
@@ -321,7 +321,7 @@ public class PMController {
 		else if (action.equals("delete")) {
 			String username = null;
 			try {
-				username = AES.aesEncrypt(request.getParameter("username"),AES.key);
+				username = AES.aesDecrypt(request.getParameter("username"),AES.key);
 			} catch (Exception e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -361,8 +361,8 @@ public class PMController {
 			String username = null;
 			
 			try {
-				username = AES.aesEncrypt(request.getParameter("username"),AES.key);
-				weixinid = AES.aesEncrypt(request.getParameter("weixinid"),AES.key);
+				username = AES.aesDecrypt(request.getParameter("username"),AES.key);
+				weixinid = AES.aesDecrypt(request.getParameter("weixinid"),AES.key);
 			} catch (Exception e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -626,8 +626,7 @@ public class PMController {
 	         mex.printStackTrace();
 	      }
 	}
-	
-	
+		
 	/**
 	 * Signout 注销登录
 	 * @category 所有用户接口
@@ -827,7 +826,6 @@ public class PMController {
     	Common_return_en(response, re_jsonobject);
     }
       
-   
     /**
      * Conectp_register 对账联系人注册  客户注册接口
      * @param request
@@ -1110,14 +1108,16 @@ public class PMController {
 		JSONObject jstr = JSONObject.fromObject(request_s_de);
 		String watch_type = jstr.getString("watch_type");//具体查看的类型
 		
-    	List re_list = pManage.Watch(watch_type);//进入查看处理
+		int pagenum = 2;
+		int offset = (pagenum-1)*10;
+		int pagesize = 10;
+    	List re_list = pManage.Watch(watch_type,offset,pagesize);//进入查看处理
     	
     	/*返回数据到前台*/
     	re_jsonobject.element("flag", 0);
     	re_jsonobject.element("errmsg", "查看成功");
     	OneKeyData_return_enall(response, re_jsonobject, "data", re_list);
     	/*返回数据到前台*/
-    	
     }
     
     /**
@@ -1382,6 +1382,7 @@ public class PMController {
      */
     public void Common_return(HttpServletResponse response,JSONObject re_json){
 		response.setCharacterEncoding("utf-8");
+		response.addHeader("Access-Control-Allow-Origin", "*");	
     	JSONObject re_object =  re_json;//传递参数中的最外层对象
 		
 		/*传递json数据给前台*/

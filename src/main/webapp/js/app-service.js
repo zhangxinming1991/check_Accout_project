@@ -119,7 +119,7 @@ app.factory('AccountService', ['$rootScope', '$cookies', '$q', 'HttpReqService',
         }
     }
 
-// 登录
+// 登陆
     svc.signIn = function signIn(formUser) {
 
         var deferred = Q.defer();
@@ -168,11 +168,11 @@ app.factory('AccountService', ['$rootScope', '$cookies', '$q', 'HttpReqService',
         return deferred.promise;
     };
 
-    svc.isAuthenticated=function () {
-        return rootsgop.loggedInUser!==undefined;
+    svc.isAuthenticated = function () {
+        return rootsgop.loggedInUser !== undefined;
     };
 
-// 浏览器标签页内自动登录
+// 浏览器标签页内自动登陆
     svc.signInBySessionStorage = function () {
         var deferred = Q.defer();
         try {
@@ -196,7 +196,7 @@ app.factory('AccountService', ['$rootScope', '$cookies', '$q', 'HttpReqService',
             if (storage && storage.uid && storage.upwd) {
                 return svc.signIn(storage);
             } else {
-                deferred.reject({msg: '未设置自动登录'});
+                deferred.reject({msg: '未设置自动登陆'});
             }
         } catch (expt) {
             console.error(expt);
@@ -231,10 +231,10 @@ app.factory('AccountService', ['$rootScope', '$cookies', '$q', 'HttpReqService',
     };
 
     //找回密码相关
-    svc.rstPwdSendVC=function (form) {
-        return Req.req(ReqUrl.rstPwdSendvc,form);
+    svc.rstPwdSendVC = function (form) {
+        return Req.req(ReqUrl.rstPwdSendvc, form);
     };
-    svc.resetPwd=function (form) {
+    svc.resetPwd = function (form) {
         return Req.req(ReqUrl.rstPwd, form);
     };
 
@@ -369,40 +369,40 @@ app.factory('AccountService', ['$rootScope', '$cookies', '$q', 'HttpReqService',
     return svc;
 }]);
 
-//
-// app.factory('OrderService', ['$http', '$q', function ($http, $q) {
-//     console.log('construct OrderService');
-//
-//     var svc = {};
-//
-//     svc.orders = function () {
-//         var deferred = $q.defer();
-//         try {
-//             var reqBody = {
-//                 "table_name": "ori_account",//查看资源名称
-//                 "watch_type": 'T'//方式
-//             };
-//             $http.post(ReqUrl.fwOrders, reqBody).then(function (resPkg) {
-//                 var resBody = resPkg.data;
-//                 if (!resBody.flag) {
-//                     deferred.resolve(resBody.data);
-//                 } else {
-//                     deferred.reject({msg: resBody.errmsg || '无详更细信息'});
-//                 }
-//             }, function (err) {
-//                 deferred.reject({msg: '网络或系统错误'});
-//             });
-//             return deferred.promise;
-//         }
-//         catch (expt) {
-//             console.error(expt);
-//             deferred.reject({msg: '网络或系统错误'});
-//         }
-//         return deferred.promise;
-//     };
-//
-//     return svc;
-// }]);
+/*
+ app.factory('OrderService', ['$http', '$q', function ($http, $q) {
+ console.log('construct OrderService');
+
+ var svc = {};
+
+ svc.orders = function () {
+ var deferred = $q.defer();
+ try {
+ var reqBody = {
+ "table_name": "ori_account",//查看资源名称
+ "watch_type": 'T'//方式
+ };
+ $http.post(ReqUrl.fwOrders, reqBody).then(function (resPkg) {
+ var resBody = resPkg.data;
+ if (!resBody.flag) {
+ deferred.resolve(resBody.data);
+ } else {
+ deferred.reject({msg: resBody.errmsg || '无详更细信息'});
+ }
+ }, function (err) {
+ deferred.reject({msg: '网络或系统错误'});
+ });
+ return deferred.promise;
+ }
+ catch (expt) {
+ console.error(expt);
+ deferred.reject({msg: '网络或系统错误'});
+ }
+ return deferred.promise;
+ };
+
+ return svc;
+ }]);*/
 
 app.factory('FncRmindService', ['$q', 'HttpReqService', function (Q, Req) {
     var svc = {};
@@ -414,7 +414,9 @@ app.factory('FncRmindService', ['$q', 'HttpReqService', function (Q, Req) {
             var item = resdata[k];
             item.checkResult = item.checkResult || 'V'; // 设置V标志，为“无”，表示没有设置状态
             item.result = item.checkResult;
-            item.payTime = item.uploadTime;
+            item.payTime = item.payTime || item.uploadTime;
+            // 字符串时间转Date类型
+            // item.payTime = new Date(item.payTime);
             item.mcontract_data = item.manyPay;
             if (payWaysInItems.indexOf(item.payWay) < 0) {
                 payWaysInItems.push(item.payWay);
@@ -501,10 +503,15 @@ app.factory('ChkRsltSvc', ['HttpReqService', '$rootScope', function (Req, rootsg
 // 对账操作环境准备
     svc.initCheckingEnv = function () {
         return Req.req(ReqUrl.prepareChkEnv, {}, function (resbody) {
-            svc.caid = resbody.caid;
+            svc.caid = resbody.caid || resbody.data.caid;
+            var obj = {
+                caid: svc.caid
+                , lastUploadTime: resbody.lastUploadTime || resbody.data.lastUploadTime
+                , lastUploadResult: resbody.lastUploadResult || resbody.data.lastUploadResult
+            };
             sessionStorage.setItem('caid', svc.caid);
             rootsgop.caid = svc.caid;
-            return resbody.caid;
+            return obj;
         });
     };
 
@@ -523,6 +530,7 @@ app.factory('ChkRsltSvc', ['HttpReqService', '$rootScope', function (Req, rootsg
         return Req.req(ReqUrl.reCheck, {caid: svc.caid, year: year, month: month});
     };
 
+    // 历史对账操作
     svc.recheck2 = function (year, month) {
         return Req.req(ReqUrl.recheck2, {year: year, month: month}, function (resbody) {
             var caid = resbody.caid;
@@ -544,6 +552,8 @@ app.factory('ChkRsltSvc', ['HttpReqService', '$rootScope', function (Req, rootsg
             var item = resdata[i]["basicObject"];
             item.connect = resdata[i]["connectObject"];
             item.inputTime = item.inputTime || item.uploadTime;
+            // 字符串时间转Date类型
+            // item.inputTime = new Date(item.inputTime);
             resdata[i] = item;
         }
         return resdata;
@@ -591,7 +601,7 @@ app.factory('ChkRsltSvc', ['HttpReqService', '$rootScope', function (Req, rootsg
 
     // 获取被导出对账结果报表的文件URL
     svc.checkResultExport = function () {
-        return Req.req(ReqUrl.checkResultExport, {caid:svc.caid}, function (resbody) {
+        return Req.req(ReqUrl.checkResultExport, {caid: svc.caid}, function (resbody) {
             return resbody["cares_url"];
         });
     };
@@ -650,7 +660,7 @@ app.factory('MgmtSvc', ['HttpReqService', function (Req) {
         return Req.req(ReqUrl.dbbackups, undefined, function (resbody) {
             var resdata = resbody.data;
             resdata.forEach(function (ele) {
-                var tm = ele.filename.substr(0,ele.filename.indexOf('.sql')).split('_');
+                var tm = ele.filename.substr(0, ele.filename.indexOf('.sql')).split('_');
                 ele.timeStr = tm[0] + '年' + tm[1] + '月' + tm[2] + '日 ' + tm[3] + '时' + tm[4] + '分' + tm[5] + '秒';
             });
             return resdata;

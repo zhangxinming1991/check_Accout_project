@@ -26,6 +26,7 @@
                         <span class="glyphicon glyphicon-cloud-download" title="下载结果"></span>
                         下载结果
                     </p>
+                    <br>
                     <p class="btn btn-danger" ng-click="recheck(year, m)">
                         <span class="glyphicon glyphicon-trash" title="重新对账（谨慎）"></span>
                         重新对账
@@ -81,6 +82,7 @@
                         <span class="glyphicon glyphicon-cloud-download" title="下载结果"></span>
                         下载结果
                     </a>
+                    <br style="height: 5px">
                     <a class="btn btn-danger" ng-click="recheck(year, m)">
                         <span class="glyphicon glyphicon-trash"></span>
                         重新对账
@@ -89,7 +91,7 @@
                 <div ng-show="!historyResults[m]">
                     <p>无结果</p>
                     <p ng-show="year<=thisDate.getFullYear()&&m<=(thisDate.getMonth()+1)" class="btn btn-primary"
-                       title="进入该月对账流程，补上结果" ng-click="recheck(year, m, true)">补充对账</p>
+                       title="进入该月对账流程" ng-click="recheck(year, m, true)">我要对账</p>
                 </div>
             </td>
 

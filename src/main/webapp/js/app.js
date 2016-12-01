@@ -13,7 +13,7 @@ var ReqUrl = {
     //找回密码->发送验证码
     , rstPwdSendvc: '/check_Accout/PMController/getresetpwdverifycode'
     //提交找回密码申请
-    , rstPwd:'/check_Accout/PMController/forgetandsendmail'
+    , rstPwd: '/check_Accout/PMController/forgetandsendmail'
 
     // 财务人员->订单
     //   fwOrders:'/check_Accout/Check_MainController/upload_success',
@@ -103,4 +103,10 @@ String.format = function () {
         str = str.replace(re, arguments[i]);
     }
     return str;
+};
+
+var appConf = {
+    //关账时间，月初5号
+    checkClosingDate: 5
+    , tmFmtLong: 'yyyy-MM-dd HH:mm:ss'
 };

@@ -126,6 +126,28 @@ public class PayRecord_Dao {
 	}
 	
 	/*根据指定字段进行查找，字段类型为字符串类型*/
+	public java.util.List<PayRecord> FindBySpeElement_S_Page(String filed,String value,int offset,int pageszie){
+		String fdclient_hql = "select order from PayRecord order where " +  filed + " = :value";
+		try {
+			
+			session = sessionFactory.openSession();
+			java.util.List<PayRecord> payRecords = session.createQuery(fdclient_hql)
+					.setParameter("value", value)
+					.setFirstResult(offset)
+					.setMaxResults(pageszie)
+					.list();
+			session.close();
+	
+			return payRecords;
+		
+		} catch (RuntimeException e) {
+			// TODO: handle exception
+			logger.error("根据" + filed + "=" + value + "查找付款记录失败" + e);
+			return null;
+		}
+	}
+	
+	/*根据指定字段进行查找，字段类型为字符串类型*/
 	public java.util.List<PayRecord> FindBySpeElement_S_limit(String filed,String value){
 		String fdclient_hql = "select order from PayRecord order where " +  filed + " = :value";
 		try {

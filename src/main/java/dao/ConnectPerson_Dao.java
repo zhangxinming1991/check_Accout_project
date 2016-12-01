@@ -149,6 +149,16 @@ public class ConnectPerson_Dao {
 		return cPersons;
 	}
 	
+	public List<ConnectPerson> GetTotalTbByElement_ByPage(String filed1,Object value1,int pagenum,int pagesize){
+		session = sessionFactory.openSession();
+		String hql_select_all = "from ConnectPerson where " + filed1 + " = :value1";
+		List<ConnectPerson> cPersons =   (List<ConnectPerson>) session.createQuery(hql_select_all)
+				.setParameter("value1", value1)
+				.list();
+		session.close();
+		return cPersons;
+	}
+	
 	public void Close_Connect(){
 		
 	/*	try {

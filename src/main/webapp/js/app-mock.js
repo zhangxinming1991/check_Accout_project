@@ -48,7 +48,7 @@ app.config(function ($provide) {
     });
 });
 
-app.run(['$httpBackend', '$timeout', '$q', function (bkd, timeout, Q) {
+app.run(['$httpBackend', '$timeout', '$q', '$filter', function (bkd, timeout, Q, $filter) {
     function uuid(len, radix) {
         var chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'.split('');
         var uuid = [], i;
@@ -104,8 +104,8 @@ app.run(['$httpBackend', '$timeout', '$q', function (bkd, timeout, Q) {
         return Math.round(Math.random() * (b - a)) + a;
     }
 
-    function randIn(items, undefinedAllowed) {
-        return items[randInRange(0, undefinedAllowed ? items.length : ( items.length - 1))];
+    function randIn(items) {
+        return items[randInRange(0, ( items.length - 1))];
     }
 
     // sign in
@@ -174,11 +174,15 @@ app.run(['$httpBackend', '$timeout', '$q', function (bkd, timeout, Q) {
     });
 
     // 发送验证码
-    bkd.whenPOST(ReqUrl.rstPwdSendvc).respond(function () {
+    bkd.whenPOST(ReqUrl.rstPwdSendvc, function (reqbody) {
+        return reqboy.username && reqboy.verify_way;
+    }).respond(function () {
         return [200, {flag: failOrNot()}];
     });
     // 重置密码请求
-    bkd.whenPOST(ReqUrl.rstPwd).respond(function () {
+    bkd.whenPOST(ReqUrl.rstPwd, function (reqboy) {
+        return reqboy.username && reqboy.verify_code;
+    }).respond(function () {
         return [200, {flag: failOrNot()}];
     });
 
@@ -218,12 +222,13 @@ app.run(['$httpBackend', '$timeout', '$q', function (bkd, timeout, Q) {
         var t =
         {
             orderNum: '用户上传-',
-            payer: '中国铁路',
-            payTime: '2016-08-09',
+            payer: '终端用户',
+            actualPayer: '实际付款人',
             // payMoney: 10000,
             receiver: '三一公司',
             payAccount: '621xxxxxx',
             linkCer: 'http://thumb.webps.cn/to/img/3/TB1K3oZLXXXXXXrXFXXXXXXXXXX_!!0-item_pic.jpg',
+            // linkCer: 'welcome.jpg',
             // creditPicture: 'http://imgsrc.baidu.com/baike/pic/item/96dda144ad345982df652f2f0ef431adcaef84a4.jpg',
             checkResult: '',
             comment: '图片不是很清晰',
@@ -232,13 +237,15 @@ app.run(['$httpBackend', '$timeout', '$q', function (bkd, timeout, Q) {
         if (itemsLimit === undefined)itemsLimit = 20;
         for (var i = 0; i < itemsLimit; i++) {
             var tc = angular.copy(t);
+            tc.id = uuid(4, 16);
             tc.orderNum += i;
+            tc.payTime = $filter('date')(new Date(randInRange(2014, 2016), randInRange(1, 12), randInRange(1, 28), randInRange(0, 23), randInRange(0, 59), randInRange(0, 59)), 'yyyy-MM-dd HH:mm:ss');
             tc.manyPay = [];
             tc.payWay = randPayWay();
             var payAmount = 0;
             for (var j = 0; j < randInRange(1, 3); j++) {
                 tc.manyPay[j] = {
-                    contract: '合同号好长好长好长好长………………………',
+                    contract: '合同号...',
                     money: 10000
                 };
                 payAmount += tc.manyPay[j].money;
@@ -288,7 +295,7 @@ app.run(['$httpBackend', '$timeout', '$q', function (bkd, timeout, Q) {
         return reqbody.table_name == 'payrecord';
     }).respond(function () {
         console.log('mock backend-> 待审付款通知');
-        return [200, {flag: failOrNot(), data: notifications()}, {}];
+        return [200, {flag: failOrNot(), data: notifications(10)}, {}];
     });
     //
     // bkd.whenPOST(ReqUrl.fwFncBankTrans, function (reqbody) {
@@ -408,8 +415,11 @@ app.run(['$httpBackend', '$timeout', '$q', function (bkd, timeout, Q) {
             resbody.data.push(tc);
         }
         sleep(1000);
-        console.log('repond client now');
-        return [200, resbody, {}];
+        resbody.lastUploadTime = $filter('date')(new Date(), 'yyyy-MM-dd HH:mm:ss');
+        // resbody.lastUploadResult = randIn(['成功', '失败']);
+        console.log('respond client now', resbody);
+        resbody = Encrypt(resbody);
+        return [200, resbody];
     });
 
     // //出纳
@@ -452,13 +462,17 @@ app.run(['$httpBackend', '$timeout', '$q', function (bkd, timeout, Q) {
         return [200, resbody, {}];
     });
 
-    bkd.whenPOST(ReqUrl.attachToTransCandidates, /.*"map_op":"find_map".*/).respond(function (method, url, reqbody) {
+    bkd.whenPOST(ReqUrl.attachToTransCandidates, function reqbody() {
+        return reqbody.map_op == "find_map" && reqbody.pay_id;
+    }).respond(function (method, url, reqbody) {
         // reqbody = JSON.parse(reqbody);
         console.log("mock backend->待关联付款通知的出纳候选集", reqbody);
         return [200, {flag: failOrNot(), data: transcash(5)}, {}];
     });
 
-    bkd.whenPOST(ReqUrl.attachToTrans, /.*"map_op":"cer_map".*/).respond(function (method, url, reqBody) {
+    bkd.whenPOST(ReqUrl.attachToTrans, function (reqbody) {
+        return reqbody.map_op == "cer_map";
+    }).respond(function (method, url, reqBody) {
         // reqBody = JSON.parse(reqBody);
         console.log('mock backend -> 关联付款通知到出纳', reqBody);
         return [200, {flag: failOrNot()}, {}];
@@ -643,7 +657,20 @@ app.run(['$httpBackend', '$timeout', '$q', function (bkd, timeout, Q) {
     });
 
     function newCaid() {
-        session.caid = uuid(8);
+        var thisDate = new Date();
+        var year = thisDate.getFullYear();
+        //月份是基于0计算的
+        var month = thisDate.getMonth() + 1;
+        //然而日期不是，holy shit for the api
+        var date = thisDate.getDate();
+        if (date < appConf.checkClosingDate) {
+            month -= 1;
+        }
+        if (month <= 0) {
+            month = 12;
+            year -= 1;
+        }
+        session.caid = year + '-' + month + '-' + uuid(4);
         return session.caid;
     }
 
@@ -667,14 +694,22 @@ app.run(['$httpBackend', '$timeout', '$q', function (bkd, timeout, Q) {
         console.log('mock backend->预览付款通知数据（用户上传）');
         var resdata = {
             flag: failOrNot(),
-            data: notifications()
+            data: notifications(10)
         };
         return [200, resdata, {}];
     });
 
+
     bkd.whenPOST(ReqUrl.prepareChkEnv).respond(function () {
-        var resdata = {flag: failOrNot(), caid: newCaid()};
-        console.log('mock backend->准备对账环境， 返回caid：' + resdata.caid);
+        var resdata = {
+            flag: failOrNot()
+            , data: {
+                caid: newCaid()
+                , lastUploadTime: $filter('date')(new Date(), 'yyyy-MM-dd HH:mm:ss')
+                , lastUploadResult: randIn(['成功', '失败'])
+            }
+        };
+        console.log('mock backend->准备对账环境， 返回' + resdata.caid);
         return [200, resdata];
     });
 

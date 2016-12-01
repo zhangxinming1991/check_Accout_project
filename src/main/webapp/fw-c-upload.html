@@ -1,5 +1,5 @@
 <!--文件上传-->
-<div class="" ng-controller="UploadCtrl as ctrl"
+<div class="" ng-controller="UploadCtrl as uploadCtrl"
      ng-init="uploadInfo={}">
     <div class="panel">
         <div class="panel-heading panel-title text-center">上传货款表和出纳表
@@ -19,9 +19,13 @@
                             </div>
                         </div>-->
             <div class="form-group">
+                最近上传：{{lastUpload.time?lastUpload.time+'（'+lastUpload.result+'）' : '无'}}
+            </div>
+            <div class="form-group">
                 <label class="control-label ">货款表：</label>
                 <!--<label class="control-label">文件：</label>-->
-                <button class="btn btn-info " type="file" ngf-select ng-model="uploadCfg.fileA" ngf-max-size="10MB" required
+                <button class="btn btn-info " type="file" ngf-select ng-model="uploadCfg.fileA" ngf-max-size="10MB"
+                        required
                         accept=".xls,.xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel">
                     选择货款表
                 </button>
@@ -30,11 +34,13 @@
             <div class="form-group">
                 <label class="control-label ">出纳表：</label>
                 <!--<label class="control-label">文件：</label>-->
-                <button class="btn btn-info " type="file" ngf-select ng-model="uploadCfg.fileB" ngf-max-size="10MB" required
+                <button class="btn btn-info " type="file" ngf-select ng-model="uploadCfg.fileB" ngf-max-size="10MB"
+                        required
                         accept=".xls,.xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel">
                     选择出纳表
                 </button>
                 <span class="text-success" ng-bind="uploadCfg.fileB.name"></span>
+                <br>
             </div>
             <div>
                 <button class="btn btn-primary" ng-click="formSubmit()" ng-disabled="uploadForm.$invalid">上传</button>

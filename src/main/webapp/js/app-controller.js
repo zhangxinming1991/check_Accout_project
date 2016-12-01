@@ -18,6 +18,9 @@ var signOutEntry = $('div[ng-show="loggedInUser"]');
 var regLogEntry = $('div[ng-hide="loggedInUser"]');
 var anyModal = $('.modal');
 
+var ng = angular;
+
+
 // 首页
 app.controller('indexCtrl', ['$scope', '$state', '$rootScope', function ($scope, $state, rootsgop) {
     //console.log('indexCtrl');
@@ -35,16 +38,13 @@ app.controller('indexCtrl', ['$scope', '$state', '$rootScope', function ($scope,
 
     anyModal.on('hidden.bs.modal', function () {
         // regLogModal.on('shown.bs.modal', function () {
-        // console.info('hidden...', $(this));
         $(this).find('div.with-errors').html('');
     });
     // $('.modal').modal('hide');
 
     // anyModal.on('hidden.bs.modal', function () {
-    //     console.info('hidden', $(this).attr('id'));
     // });
     // anyModal.on('shown.bs.modal', function () {
-    //     console.info('shown', $(this).attr('id'))
     // });
 
     rootsgop.$on('$stateChangeSuccess', function (event, toState) {
@@ -63,7 +63,7 @@ app.controller('indexCtrl', ['$scope', '$state', '$rootScope', function ($scope,
     });
 }]);
 
-// 登录
+// 登陆
 var signInCtrl = ['$scope', '$state', 'AccountService',
     function (sgop, $state, AccountService) {
         //console.log('sign in ctrl 登陆');
@@ -73,17 +73,17 @@ var signInCtrl = ['$scope', '$state', 'AccountService',
         sgop.submitForm = function () {
             var formUser = sgop.formUser;
 
-            if (loginForm.hasClass('ng-invalid')) {
-                ctrl.errMsg = '登陆表单有误';
-                return false;
-            }
+            /*if (loginForm.hasClass('ng-invalid')) {
+             ctrl.errMsg = '登陆表单有误';
+             return false;
+             }*/
             if (!(formUser && formUser.upwd && formUser.uid)) {
-                ctrl.errMsg = '用户名、密码不能为空';
+                ctrl.errMsg = '登陆名、密码不能为空';
                 return false;
             }
 
             loginSubmitBtn.attr('disabled', true);
-            ctrl.errMsg = '登录中……';
+            ctrl.errMsg = '登陆中……';
             // // remove stored sign info
             // AccountService.removeStoredSignLocalInfo();
             AccountService.signIn(formUser).then(function (userInfo) {
@@ -149,10 +149,10 @@ var signUpCtrl = ['$scope', '$state', 'AccountService', '$uibModal', '$timeout',
                 return false;
             }
 
-            /*if (registerForm.hasClass('ng-invalid')) {
-                ctrl.errMsg = '申请表有误';
-                return false;
-            }*/
+            /* if (registerForm.hasClass('ng-invalid')) {
+             ctrl.errMsg = '申请表有误';
+             return false;
+             }*/
             regSubmitBtn.attr('disabled');
             ctrl.errMsg = '申请注册中……';
 
@@ -209,12 +209,11 @@ app.controller('SignUpCtrl', signUpCtrl);
 
 var resetPwdCtrl = ['$scope', '$state', 'AccountService', '$uibModal', '$interval', '$timeout',
     function (sgop, $state, AccSvc, msgbox, interval, timeout) {
-        console.log('ctrl->resetPwdCtrl 找回密码');
+        // console.log('ctrl->resetPwdCtrl 找回密码');
 
         var ctrl = this;
 
         resetPwdModal.on('shown.bs.modal', function () {
-            // console.info('rst modal shown', ctrl.form);
             ctrl.form.vc = '';        // failed to reset
         });
         ctrl.vcRecv = function () {
@@ -311,13 +310,13 @@ var uCtrl = ['$scope', '$state', 'AccountService', '$timeout', '$uibModal', 'Fnc
 
     regLogModal.modal('hide');
     //
-    // //如果未登录
+    // //如果未登陆
     // if (sgop.loggedInUser === undefined) {
     //     // todo go login?  auto-login? popup-login?
     //     var reLoged = false;
     //     // console.log('trying to re-login by: ',sessionStorage, sessionStorage.getItem('formUser'));
     //     AccSvc.signInBySessionStorage().then(function () {
-    //         //console.info('自动登录（session storage）');
+    //         //console.log('自动登陆（session storage）');
     //         reLoged = true;
     //     }, function (fail) {
     //     });
@@ -358,9 +357,21 @@ var fwCtrl = ['$scope', '$state', '$timeout', '$uibModal', 'FncRmindService', 'C
     function (sgop, state, timeout, msgbox, NotifSvc, ChkSvc, rootsgop) {
         //console.log('fw info ctrl');
 
+        sgop.lastUpload = {};
+
         sgop.checkingEnv = function () {
-            ChkSvc.initCheckingEnv().then(function (caid) {
-                state.go('u.fw.p');
+            ChkSvc.initCheckingEnv().then(function (data) {
+                sgop.lastUpload = {
+                    time: data.lastUploadTime
+                    , result: data.lastUploadResult
+                };
+                console.info('caid   ', data)
+                var caid = data.caid;
+                var dash1 = caid.indexOf('-');
+                var stateParams = {};
+                stateParams.year = caid.substring(0, dash1);
+                stateParams.month = caid.substring(dash1 + 1, caid.indexOf('-', dash1 + 1));
+                state.go('u.fw.p', stateParams);
             }, function (errMsgObj) {
                 var boxInst = showMsg({
                     msgbox: msgbox,
@@ -373,127 +384,132 @@ var fwCtrl = ['$scope', '$state', '$timeout', '$uibModal', 'FncRmindService', 'C
         };
 
     }];
-//
-// // 财务人员导航数据获取
-// var fwNavCtrl = ['$scope', '$state', 'OrderService',
-//     function ($scope, $state, OrderService) {
-//         console.log('fwNavCtrl,', $scope);
-//
-//     }];
+/*
+ // 财务人员导航数据获取
+ var fwNavCtrl = ['$scope', '$state', 'OrderService',
+ function ($scope, $state, OrderService) {
+ console.log('fwNavCtrl,', $scope);
+
+ }];*/
 
 function ensureErrMsg(errMsgObj) {
     return errMsgObj.msg || errMsgObj.errmsg || '无更详细信息';
 }
-//
-// // 财务人员账单
-// var fwoCtrl = ['$scope', '$state', '$stateParams', 'OrderService', function (sgop, $state, $stateParams, OrderService) {
-//     console.log('fwoGridCtrl, params: ', $stateParams);
-//
-//     // [caution] 变量与Uploadctrl中有重复！！
-//
-//     var self = this;
-//
-//     function tryRefreshGrid() {
-//         sgop.isLoading = true;
-//         OrderService.orders().then(function (orders) {
-//             sgop.orders = orders;
-//             // self.orders = orders;
-//             // isNonEmptyGrid => 蕴含已获得数据反馈，数据或许空或许不空
-//             sgop.isNonEmptyGrid = orders.length > 0;
-//         }, function (errMsgObj) {
-//             sgop.errMsg = '请求数据失败：' + ensureErrMsg(errMsgObj);
-//             sgop.canShowError = true;
-//         }).finally(function () {
-//             sgop.isLoading = false;
-//         });
-//     };
-//     // init grid
-//     tryRefreshGrid();
-//
-//     sgop.$on('EvtUploadOrderSucc', function (evt, newOrders) {
-//         console.log('event: EvtUploadOrderSucc caught', evt, newOrders);
-//         // clear status text
-//         // evt.stopPropagation();
-//
-//         clearStatus();
-//
-//         sgop.isNonEmptyGrid = newOrders.length > 0;
-//         sgop.orders = newOrders;
-//         // self.orders = newOrders;
-//     });
-//
-//     // 'reset' scope
-//     function clearStatus() {
-//         // 都是为加载grid而定义的变量
-//         sgop.isLoading = undefined;
-//         sgop.canShowError = undefined;
-//         sgop.isNonEmptyGrid = undefined;
-//         sgop.errMsg = '';
-//
-//         // sgop.orders = undefined;
-//     }
-// }];
+/*
+ // 财务人员账单
+ var fwoCtrl = ['$scope', '$state', '$stateParams', 'OrderService', function (sgop, $state, $stateParams, OrderService) {
+ console.log('fwoGridCtrl, params: ', $stateParams);
+
+ // [caution] 变量与Uploadctrl中有重复！！
+
+ var self = this;
+
+ function tryRefreshGrid() {
+ sgop.isLoading = true;
+ OrderService.orders().then(function (orders) {
+ sgop.orders = orders;
+ // self.orders = orders;
+ // isNonEmptyGrid => 蕴含已获得数据反馈，数据或许空或许不空
+ sgop.isNonEmptyGrid = orders.length > 0;
+ }, function (errMsgObj) {
+ sgop.errMsg = '请求数据失败：' + ensureErrMsg(errMsgObj);
+ sgop.canShowError = true;
+ }).finally(function () {
+ sgop.isLoading = false;
+ });
+ };
+ // init grid
+ tryRefreshGrid();
+
+ sgop.$on('EvtUploadOrderSucc', function (evt, newOrders) {
+ console.log('event: EvtUploadOrderSucc caught', evt, newOrders);
+ // clear status text
+ // evt.stopPropagation();
+
+ clearStatus();
+
+ sgop.isNonEmptyGrid = newOrders.length > 0;
+ sgop.orders = newOrders;
+ // self.orders = newOrders;
+ });
+
+ // 'reset' scope
+ function clearStatus() {
+ // 都是为加载grid而定义的变量
+ sgop.isLoading = undefined;
+ sgop.canShowError = undefined;
+ sgop.isNonEmptyGrid = undefined;
+ sgop.errMsg = '';
+
+ // sgop.orders = undefined;
+ }
+ }];*/
 
 // 文件上传
-var uploadCtrl = ['$scope', 'Upload', '$timeout', '$state', '$rootScope',
-    function (sgop, Upld, timeout, $state, rootsgop) {
+var uploadCtrl = ['$scope', 'Upload', '$timeout', '$state', '$rootScope', '$filter',
+    function (sgop, Upld, timeout, $state, rootsgop, $filter) {
         //console.log('file upload ctrl');
 
         // for SomeController as ctrl; let var ctrl = this;
 
-        // sgop.uploadFileSelect = function (selectedFile) {
-        //     var info = sgop.uploadInfo;
-        //     try {
-        //         if (selectedFile) {
-        //             info.fileName = selectedFile.name;
-        //             console.log('uploading file: ', selectedFile, sgop.uploadFileType);
-        //             info.isUploading = true;
-        //             // 使用timeout让控制器有时间先更新UI显示正准备上传的信息
-        //             timeout(function () {
-        //                 Upld.upload({
-        //                     url: ReqUrl.fwOrderUpload,
-        //                     data: {"file": selectedFile, "import_select": sgop.uploadFileType}
-        //                 }).then(function (resPkg) {
-        //                     console.log('response recved', resPkg);
-        //                     var resbody = resPkg.data;
-        //                     if (isOkResBody(resbody)) {
-        //                         info.uploadResult = true;
-        //                         //todo refresh data <- upload
-        //                         console.log('trying to refresh grid of orders after successful uploading file');
-        //
-        //                         if (sgop.uploadFileType == 'A') {
-        //                             sgop.$emit('EvtUploadOrderSucc', resbody.data);
-        //                         }
-        //                     } else {
-        //                         info.uploadResult = false;
-        //                         info.errMsg = '上传失败，' + (resbody.errmsg || '无更详细信息');
-        //                     }
-        //                     info.isUploading = false;
-        //                 }, function (errPkg) {
-        //                     console.error('upload err', errPkg);
-        //                     info.errMsg = '网络或系统错误';
-        //                     info.uploadResult = false;
-        //                 }, function (evt) {
-        //                     console.log('evt', evt);
-        //                     info.progressMax = parseInt(evt.total);
-        //                     info.progress = parseInt(evt.loaded);
-        //                 }).catch(function (ex) {
-        //                     console.log('catch exception:', ex);
-        //                     info.isUploading = false;
-        //                     info.uploadResult = false;
-        //                     info.errMsg = '网络或系统错误';
-        //                 }).finally(function () {
-        //                     info.isUploading = false;
-        //                 });
-        //             }, 50);
-        //         } else {
-        //             info.errMsg = '请（正确）选择文件';
-        //         }
-        //     } catch (expt) {
-        //         console.error(expt);
-        //         info.errMsg = '上传失败，网络或系统错误';
-        //     }
-        // };
+        /*        var data = stateParams;
+         sgop.lastUpload = {
+         time:data.lastUploadTime
+         };*/
+
+        /*sgop.uploadFileSelect = function (selectedFile) {
+         var info = sgop.uploadInfo;
+         try {
+         if (selectedFile) {
+         info.fileName = selectedFile.name;
+         console.log('uploading file: ', selectedFile, sgop.uploadFileType);
+         info.isUploading = true;
+         // 使用timeout让控制器有时间先更新UI显示正准备上传的信息
+         timeout(function () {
+         Upld.upload({
+         url: ReqUrl.fwOrderUpload,
+         data: {"file": selectedFile, "import_select": sgop.uploadFileType}
+         }).then(function (resPkg) {
+         console.log('response recved', resPkg);
+         var resbody = resPkg.data;
+         if (isOkResBody(resbody)) {
+         info.uploadResult = true;
+         //todo refresh data <- upload
+         console.log('trying to refresh grid of orders after successful uploading file');
+
+         if (sgop.uploadFileType == 'A') {
+         sgop.$emit('EvtUploadOrderSucc', resbody.data);
+         }
+         } else {
+         info.uploadResult = false;
+         info.errMsg = '上传失败，' + (resbody.errmsg || '无更详细信息');
+         }
+         info.isUploading = false;
+         }, function (errPkg) {
+         console.error('upload err', errPkg);
+         info.errMsg = '网络或系统错误';
+         info.uploadResult = false;
+         }, function (evt) {
+         console.log('evt', evt);
+         info.progressMax = parseInt(evt.total);
+         info.progress = parseInt(evt.loaded);
+         }).catch(function (ex) {
+         console.log('catch exception:', ex);
+         info.isUploading = false;
+         info.uploadResult = false;
+         info.errMsg = '网络或系统错误';
+         }).finally(function () {
+         info.isUploading = false;
+         });
+         }, 50);
+         } else {
+         info.errMsg = '请（正确）选择文件';
+         }
+         } catch (expt) {
+         console.error(expt);
+         info.errMsg = '上传失败，网络或系统错误';
+         }
+         };*/
 
         sgop.formSubmit = function () {
             var info = sgop.uploadInfo;
@@ -511,6 +527,7 @@ var uploadCtrl = ['$scope', 'Upload', '$timeout', '$state', '$rootScope',
                         var resbody = JSON.parse(Decrypt(resPkg.data));
                         console.log('decrypted: ', resbody);
                         if (isOkResBody(resbody)) {
+                            sgop.lastUpload.time = resbody.lastUploadTime || resbody.data.lastUploadTime || $filter('date')(new Date(), appConf.tmFmtLong);
                             info.uploadResult = true;
                         } else {
                             info.uploadResult = false;
@@ -546,16 +563,16 @@ var fwcCtrl = ['$scope', '$stateParams', '$rootScope', function (sgop, statePara
 
     sgop.targetDate = stateParams;
 
-    // 禁止浏览器回退到对账流程的上一步
-    sgop.$on('$stateChangeStart',
-        function (event, toState, toParams, fromState, fromParams) {
-            // 可以从最后一步（对账结果）返回到对账流程第一步，即允许“重新对账”
-            if (fromState.name.indexOf('u.fw.p') > -1 && toState.name.indexOf('u.fw.p') > -1 && !(fromState.name == 'u.fw.p.m.x' && toState.name == 'u.fw.p') && toState.name.length < fromState.name.length) {
-                //console.log('禁止浏览器回退');
-                event.preventDefault();
-                window.history.forward();
-            }
-        });
+    /*    // 禁止浏览器回退到对账流程的上一步
+     sgop.$on('$stateChangeStart',
+     function (event, toState, toParams, fromState, fromParams) {
+     // 可以从最后一步（对账结果）返回到对账流程第一步，即允许“重新对账”
+     if (fromState.name.indexOf('u.fw.p') > -1 && toState.name.indexOf('u.fw.p') > -1 && !(fromState.name == 'u.fw.p.m.x' && toState.name == 'u.fw.p') && toState.name.length < fromState.name.length) {
+     //console.log('禁止浏览器回退');
+     event.preventDefault();
+     window.history.forward();
+     }
+     });*/
 
     sgop.$on('$stateChangeSuccess', function (event, toState, toParams, fromState, fromParams) {
         // console.log('state changed: ', fromState, toState);
@@ -885,27 +902,6 @@ var fwvCtrl = ['$scope', 'Lightbox', '$uibModal', 'FncRmindService', function (s
         });
     }());
 
-
-    // 显示凭证图片
-    sgop.showPicture = function (url) {
-        //console.log('pic url: ', url);
-        // picModal.open({
-        //     templateUrl: 'showPicTpl.html',
-        //     controller: ['$scope','$uibModalInstance', function (sgop,picModal) {
-        //         sgop.imgUrl = url;
-        //         sgop.closePicModal=function () {
-        //             picModal.dismiss();
-        //         };
-        //     }],
-        //     // size:'220px × 117',
-        //     resovle: {
-        //         // "imgUrl": function () {
-        //         //     return url;
-        //         // }
-        //     },
-        // });
-        picModal.openModal([url], 0);
-    };
 
     // 多合同的付款分配详细信息
     sgop.showCM = function (item) {
@@ -1431,3 +1427,240 @@ var fslCtrl = ['$scope', '$timeout', 'MgmtSvc', '$uibModal', function (sgop, tim
     //console.log('fslCtrl->查看用户操作日志');
     refreshGridFnc(MgmtSvc.fetchLogs, sgop)();
 }];
+
+
+// directives
+app.directive('onFinishRenderEvent', ['$timeout', function (timeout) {
+    return {
+        restict: 'A'
+        , link: function (scope, ele, attr) {
+            if (scope.$last === true) {
+                timeout(function () {
+                    scope.$emit(attr.onFinishRenderEvent);
+                });
+            }
+        }
+    }
+}])
+    .directive('stDateRange', ['$timeout', function ($timeout) {
+        return {
+            restrict: 'E',
+            require: '^stTable',
+            scope: {
+                before: '=',
+                after: '='
+            },
+            templateUrl: 'stDateRange.html',
+
+            link: function (scope, element, attr, table) {
+                scope.afterOpt = {
+                    showWeeks: false
+                    , maxDate: new Date()
+                };
+                scope.beforeOpt = {
+                    showWeeks: false
+                };
+
+                var inputs = element.find('input');
+                var inputBefore = ng.element(inputs[0]);
+                var inputAfter = ng.element(inputs[1]);
+                var predicateName = attr.predicate;
+
+                var trySearch = function () {
+                    var query = {};
+                    // if (!scope.isBeforeOpen && !scope.isAfterOpen) {
+                    // magic condition…… this indicates the closing of datepicker popup dialog
+                    if (scope.isBeforeOpen ^ scope.isAfterOpen) {
+                        $timeout(function () {
+                            if (scope.before) {
+                                query.before = scope.before;
+                                scope.afterOpt.maxDate = query.before;
+                            }
+                            if (scope.after) {
+                                query.after = scope.after;
+                                scope.beforeOpt.minDate = scope.after;
+                            }
+                            scope.$apply(function () {
+                                // console.info('q, p', query, predicateName);
+                                table.search(query, predicateName);
+                            })
+                        });
+                    }
+                };
+
+                [inputBefore, inputAfter].forEach(function (input) {
+                    input.bind('blur', trySearch);
+                });
+
+                function toggle(indicator, another) {
+                    return function ($event) {
+                        $event.preventDefault();
+                        $event.stopPropagation();
+
+                        if (!indicator) {
+                            another = false;
+                        }
+                        indicator = !indicator;
+                    }
+                }
+
+                scope.openBefore = function ($event) {
+                    $event.preventDefault();
+                    $event.stopPropagation();
+                    // if open, close another first
+                    if (!scope.isBeforeOpen) {
+                        scope.isAfterOpen = false;
+                    }
+                    scope.isBeforeOpen = !scope.isBeforeOpen;
+                };
+                scope.openAfter = function ($event) {
+                    $event.preventDefault();
+                    $event.stopPropagation();
+                    // if open, close another first
+                    if (!scope.isAfterOpen) {
+                        scope.isBeforeOpen = false;
+                    }
+                    scope.isAfterOpen = !scope.isAfterOpen;
+                };
+            }
+        }
+    }])
+    .directive('stNumberRange', ['$timeout', function ($timeout) {
+        return {
+            restrict: 'E',
+            require: '^stTable',
+            scope: {
+                lower: '=',
+                higher: '='
+            },
+            templateUrl: 'stNumberRange.html',
+            link: function (scope, element, attr, table) {
+                var inputs = element.find('input');
+                var inputLower = ng.element(inputs[0]);
+                var inputHigher = ng.element(inputs[1]);
+                var predicateName = attr.predicate;
+
+                [inputLower, inputHigher].forEach(function (input, index) {
+
+                    input.bind('blur', function () {
+                        var query = {};
+
+                        if (scope.lower) {
+                            query.lower = scope.lower;
+                        }
+
+                        if (scope.higher) {
+                            query.higher = scope.higher;
+                        }
+
+                        scope.$apply(function () {
+                            // console.info('q, p', query, predicateName)
+                            table.search(query, predicateName)
+                        });
+                    });
+                });
+            }
+        };
+    }])
+    .filter('rmdsFilter', ['$filter', function ($filter) {
+        var filterFilter = $filter('filter');
+        var standardComparator = function standardComparator(obj, text) {
+            // console.info('stdcmp obj, txt', obj, text);
+            text = ('' + text).toLowerCase();
+            return ('' + obj).toLowerCase().indexOf(text) > -1;
+        };
+
+        return function (array, expression) {
+            // console.info('arr, expr', array, expression);
+            function customComparator(actual, expected) {
+                // console.info('act, expect', actual, expected);
+                // console.info('type act', typeof actual);
+
+                var isBeforeActivated = expected.before;
+                var isAfterActivated = expected.after;
+                var isLower = expected.lower;
+                var isHigher = expected.higher;
+                var higherLimit;
+                var lowerLimit;
+                var itemDate;
+                var queryDate;
+
+
+                if (ng.isObject(expected)) {
+
+                    //date range
+                    if (expected.before || expected.after) {
+                        try {
+                            if (isBeforeActivated) {
+                                higherLimit = expected.before;
+
+                                itemDate = new Date(actual);
+                                queryDate = new Date(higherLimit);
+
+                                if (itemDate > queryDate) {
+                                    return false;
+                                }
+                            }
+
+                            if (isAfterActivated) {
+                                lowerLimit = expected.after;
+
+
+                                itemDate = new Date(actual);
+                                queryDate = new Date(lowerLimit);
+
+                                if (itemDate < queryDate) {
+                                    return false;
+                                }
+                            }
+
+                            return true;
+                        } catch (e) {
+                            return false;
+                        }
+
+                    } else if (isLower || isHigher) {
+                        //number range
+                        if (isLower) {
+                            higherLimit = expected.lower;
+
+                            if (actual > higherLimit) {
+                                return false;
+                            }
+                        }
+
+                        if (isHigher) {
+                            lowerLimit = expected.higher;
+                            if (actual < lowerLimit) {
+                                return false;
+                            }
+                        }
+
+                        return true;
+                    }
+                    //etc
+
+                    return true;
+
+                }
+                return standardComparator(actual, expected);
+            }
+
+            var output = filterFilter(array, expression, customComparator);
+            return output;
+        };
+    }]);
+
+
+// capture links with [rel='lightbox]
+app.run(['$rootScope', function (rootsgop) {
+    rootsgop.$on('fwcnGridDone', function () {
+        if (!/android|iphone|ipod|series60|symbian|windows ce|blackberry/i.test(navigator.userAgent)) {
+            jQuery(function ($) {
+                $("a[rel^='lightbox']").picbox({/* Put custom options here */}, null, function (el) {
+                    return (this == el) || ((this.rel.length > 8) && (this.rel == el.rel));
+                });
+            });
+        }
+    });
+}]);

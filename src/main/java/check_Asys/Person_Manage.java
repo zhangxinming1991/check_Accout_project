@@ -87,6 +87,8 @@ public class Person_Manage {
 		agent_Dao = new Agent_Dao(mFactory);
 		opLog_Dao = new OpLog_Dao(mFactory);
 		bUp_Dao = new BackUp_Dao(mFactory);
+		weixinbc_Dao = new Weixinbc_Dao(mFactory);
+		weixinba_Dao = new Weixinba_Dao(mFactory);
 	}
 	
 	/**
@@ -116,7 +118,7 @@ public class Person_Manage {
 	 * @return
 	 * @author zhangxinming
 	 */
-	public List Watch(String watch_type){
+	public List Watch(String watch_type,int offset,int pagesize){
 		List re_list = null;
 		List re_list_locked = null;
 		List<Object> re_list_new = new ArrayList<>();
@@ -176,7 +178,10 @@ public class Person_Manage {
 		}
 		else if (watch_type.equals("op_log")) {//查看操作日志
 			logger.info("查看操作日志");
-			re_list = opLog_Dao.GetOpLogTb();
+		//	re_list = opLog_Dao.GetOpLogTb();
+			
+			re_list = opLog_Dao.GetOpLogTb_ByPage(offset, pagesize);
+			re_list_new.addAll(re_list);
 		}
 		else {
 			logger.error("未知的查看类型" + watch_type);
@@ -631,6 +636,7 @@ public class Person_Manage {
 			else {
 				String cp_username = fwxbc.get(0).getUsername();
 				ConnectPerson fPerson = cDao.findById(ConnectPerson.class, cp_username);
+				Agent agent = agent_Dao.findById(Agent.class, fPerson.getAgent());
 				if (fPerson == null) {
 					logger.error("用户名无效，找不到相应对账联系人");
 					re_json.element("flag", -1);
@@ -641,6 +647,10 @@ public class Person_Manage {
 					re_json.element("errmsg", "找到对应的对账联系人");
 					
 					JSONObject aes_object = JSONObject.fromObject(fPerson);
+					aes_object.element("agent_name",  agent.getAgentName());
+					aes_object.element("real_name", fPerson.getRealName());
+					aes_object.element("register_way", fPerson.getRegisterWay());
+					aes_object.element("contract_mes", fPerson.getContractMes());
 					String aes_object_s = aes_object.toString();
 					String en_s = null;
 					try {

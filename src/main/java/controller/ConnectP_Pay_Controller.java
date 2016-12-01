@@ -53,6 +53,7 @@ import net.sf.json.JSONObject;
 public class ConnectP_Pay_Controller {
 	
 	private static Logger logger = LogManager.getLogger(ConnectP_Pay_Controller.class);
+	private static Logger logger_error = LogManager.getLogger("error");
 	/*全局变量*/
 	public final static SessionFactory wFactory = new Configuration().configure().buildSessionFactory();
 	public final static ConnectP_PayService cps = new ConnectP_PayService(wFactory);
@@ -103,7 +104,7 @@ public class ConnectP_Pay_Controller {
 			ED_Code.printHexString(owner.getBytes());
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
-			logger.error("解密上传付款信息错误");
+			logger_error.error("解密上传付款信息错误");
 			oLog_Service.AddLog(OpLog_Service.utype_cp, username, OpLog_Service.Upload_Pay, OpLog_Service.result_failed);
 			re_jsonobject.element("flag", -1);
 			re_jsonobject.element("errmsg", "解密上传付款信息错误");
@@ -205,7 +206,7 @@ public class ConnectP_Pay_Controller {
 			ED_Code.printHexString(owner.getBytes());
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
-			logger.error("解密微信上传付款信息错误" + e);
+			logger_error.error("解密微信上传付款信息错误" + e);
 			oLog_Service.AddLog(OpLog_Service.utype_cp, username, OpLog_Service.Upload_Pay_Wexin, OpLog_Service.result_failed);
 			
 			re_jsonobject.element("flag", -1);
@@ -261,13 +262,15 @@ public class ConnectP_Pay_Controller {
 			ipayRecord.setLinkCer("/check_Accout/" + "付款记录/" + owner + "/" + payer + "/" + newfilename);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
-			logger.info("获取微信服务器图片失败" + e);
+			e.printStackTrace();
+			logger_error.error("获取微信服务器图片失败" + e);
 			oLog_Service.AddLog(OpLog_Service.utype_cp, username, OpLog_Service.Upload_Pay_Wexin, OpLog_Service.result_failed);
 			
 			re_jsonobject.element("flag", -1);
 			re_jsonobject.element("errmsg", "获取微信服务器图片失败");
 			Common_return(response,re_jsonobject);
-			e.printStackTrace();
+			return;
+			
 		}
 		
 		cps.Upload_Pay(ipayRecord,null,savedir,newfilename);
@@ -318,7 +321,7 @@ public class ConnectP_Pay_Controller {
 			username = AES.aesDecrypt(request.getParameter("username"),AES.key);
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
-			logger.error("获取提交参数失败" + e);
+			logger_error.error("获取提交参数失败" + e);
 			e.printStackTrace();
 			
 			re_jsonobject.element("flag", 0);

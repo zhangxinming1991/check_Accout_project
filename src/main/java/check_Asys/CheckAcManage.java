@@ -143,6 +143,7 @@ public class CheckAcManage {
 				jsonObject.element("caid", caid);
 				jsonObject.element("flag", 0);
 				jsonObject.element("lastUploadResult", "没有上传记录");
+				jsonObject.element("lastUploadTime", "1997/00/00/_00:00:00");
 			}
 			else {
 				String time = fLogs.get(fLogs.size() - 1).getTime();
@@ -158,6 +159,7 @@ public class CheckAcManage {
 					jsonObject.element("caid", caid);
 					jsonObject.element("flag", 0);
 					jsonObject.element("lastUploadResult", "本月没有上传记录");
+					jsonObject.element("lastUploadTime", "1997/00/00/_00:00:00");
 				}
 			}	
 			/*查找上次上传的时间和上传的结果*/
@@ -375,7 +377,7 @@ public class CheckAcManage {
 	}
 	
 	/*查看功能*/
-	public List Watch(Watch_Object location,Owner owner){
+	public List Watch(Watch_Object location,Owner owner,int offset,int pagesize){
 		java.util.List list = null;
 		switch (location.watch_type) {
 		case 'T'://查看整张表
@@ -383,7 +385,9 @@ public class CheckAcManage {
 				logger.info("watch payrecord table");
 				/*根据不同的用户类型获取不同的订单数据*/
 					if (owner.user_type.equals("bu")) {//对账人员
-						list = dao_List.pDao.FindBySpeElement_S("owner", owner.work_id);
+						//list = dao_List.pDao.FindBySpeElement_S("owner", owner.work_id);
+						list = dao_List.pDao.FindBySpeElement_S_Page("owner", owner.work_id, offset, pagesize);
+						
 					}
 					else if(owner.user_type.equals("bm")){//总监
 						

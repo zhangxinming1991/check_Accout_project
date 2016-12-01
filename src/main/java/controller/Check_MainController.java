@@ -327,7 +327,9 @@ public class Check_MainController {
 		JSONObject jstr = JSONObject.fromObject(request_s_de);
 		Watch_Object wObject = cOp.Create_Watch_Object(jstr);//设置查看参数
 		
-		java.util.List list = cOp.Watch(wObject, owner);
+		int offset = 0;
+		int pagesize = 2;
+		java.util.List list = cOp.Watch(wObject, owner,offset,pagesize);
 		
 		Watch_return(list,response,wObject);//返回数据到前台
 		

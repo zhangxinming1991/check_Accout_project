@@ -4,9 +4,38 @@
     <meta charset="UTF-8">
     <title>三一重工对账通</title>
     <link rel="stylesheet" href="css/bootstrap.min.css">
+    <link rel="stylesheet" href="css/font-awesome.min.css">
     <link rel="stylesheet" href="css/dashboard.css">
     <link rel="stylesheet" href="css/progress-wizard.min.css">
+    <link type="text/css" href="css/angular-bootstrap-lightbox.min.css">
+    <link rel="stylesheet" href="css/picbox.css">
     <link rel="stylesheet" href="css/app.css">
+
+    <style>
+
+    </style>
+    <style type="text/css">
+
+        #bg {
+            position: fixed;
+            top: 0;
+            left: -50%;
+            width: 200%;
+            height: 75%;
+        }
+
+        #bg img {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            margin: auto;
+            min-width: 50%;
+            min-height: 50%;
+        }
+
+    </style>
 </head>
 <body data-ng-app="sany">
 <div ng-controller="indexCtrl">
@@ -14,13 +43,16 @@
         <div class="container-fluid" style="position: relative">
             <!--<div class="navbar-header">-->
             <div>
-                <span class="navbar-brand">三一重工对账通</span>
+                <a id="brandBlock" class="navbar-brand" href ng-click="signOut()" style="position:relative; display: inline-block; white-space: nowrap; float: left" >
+                    <span><img src="favicon.ico" width="auto" height="20px"  style="margin: 0; padding-right: 5px; float:left;"></span>
+                    三一重工对账通
+                </a>
             </div>
             <div class="">
                 <div ng-hide="loggedInUser" style="display: none">
                     <div id="navbar" class="navbar-collapse collapse">
                         <ul class="nav navbar-nav navbar-right small">
-                            <li><a id="loginBtn" data-toggle="modal" data-target="#loginModal" href="">登录</a></li>
+                            <li><a id="loginBtn" data-toggle="modal" data-target="#loginModal" href="">登陆</a></li>
                             <li><a id="registerBtn" data-toggle="modal" data-target="#registerModal" href=""
                                    class="">注册</a>
                             </li>
@@ -40,7 +72,7 @@
                         <li class="divider"></li>
                         <li>
                             <a class="" ng-click="signOut()" href>
-                                注销登录</a>
+                                注销登陆</a>
                         </li>
                     </ul>-->
                     <!--</div>-->
@@ -59,7 +91,7 @@
                         <li class="divider"></li>
                         <li>
                             <a class="" ng-click="signOut()" href>
-                                注销登录</a>
+                                注销登陆</a>
                         </li>
                         </ul>
                     </span>
@@ -75,7 +107,7 @@
                     <button type="button" class="close" data-dismiss="modal" aria-hidden="true">
                         ×
                     </button>
-                    <h2 class="text-center text-primary modal-title">登录</h2>
+                    <h2 class="text-center text-primary modal-title">登陆</h2>
                 </div>
                 <div class="modal-body">
                     <!--<form action="" class="form col-md-12 center-block">
@@ -86,7 +118,7 @@
                             <input id="psword" class="form-control input-lg" placeholder="密码" type="password">
                         </div>
                         <div class="form-group">
-                            <button id="clickLoginBtn" class="btn btn-primary btn-lg btn-block">立刻登录</button>
+                            <button id="clickLoginBtn" class="btn btn-primary btn-lg btn-block">立刻登陆</button>
                             <span><a href="">找回密码</a></span>
                             <span><a href="" class="pull-right">注册</a></span>
                         </div>
@@ -121,10 +153,11 @@
                             <!--<label class=" control-label">登陆名：</label>-->
                             <input name="uid" id="loginUid" class="form-control input-lg" type="text"
                                    ng-model="formUser.uid"
-                                   pattern="^[a-zA-Z0-9]{1,}"
-                                   placeholder="登录名" style="ime-mode: inactive" data-error="登录名格式有误"
+                                   placeholder="登陆名" style="ime-mode: inactive" data-error="登陆名格式有误"
                                    autofocus required>
                             <!--ng-class="{ 'has-error' : loginForm.uid.$invalid && !loginForm.uid.$pristine }"-->
+
+                            <!--pattern="^[a-zA-Z0-9]{1,}"-->
                         </div>
                         <div class="form-group">
                             <!--<label class=" control-label">密码：</label>-->
@@ -193,14 +226,15 @@
                                                     &lt;!&ndash;ng-class="signUpCtrl.formUser.role=='S'?'btn-primary':'btn-default'" type="button">系统管理员&ndash;&gt;
                                                     &lt;!&ndash;</button>&ndash;&gt;
                                                 </div>-->
-                        <!--登录名域-->
+                        <!--登陆名域-->
                         <div class="form-group">
-                            <!--<label  class="control-label">登录名：</label>-->
-                            <input type="text" ng-model="signUpCtrl.formUser.uid" pattern="^[a-zA-Z0-9]{1,}"
-                                   placeholder="登录名"
+                            <!--<label  class="control-label">登陆名：</label>-->
+                            <input type="text" ng-model="signUpCtrl.formUser.uid"
+                                   placeholder="登陆名"
                                    class="form-control"
                                    required>
                             <!--<div class="help-block with-errors">无效/已存在</div>-->
+                            <!--pattern="^[a-zA-Z0-9]{1,}"-->
                         </div>
                         <!--密码域-->
                         <div class="form-group">
@@ -276,7 +310,8 @@
                     <span class="h2 text-center text-primary">找回密码</span>
                 </div>
                 <div class="modal-body">
-                    <form id="resetPwdForm" role="form" data-toggle="validator" ng-init="resetPwdCtrl.form.vcRecvWay='mail';resetPwdCtrl.vcRecvBtnTip={enable:true}">
+                    <form id="resetPwdForm" role="form" data-toggle="validator"
+                          ng-init="resetPwdCtrl.form.vcRecvWay='mail';resetPwdCtrl.vcRecvBtnTip={enable:true}">
                         <div class="form-group">
                             <label class="control-label">用户名：</label>
                             <input class="form-control" ng-model="resetPwdCtrl.form.uid" placeholder="用户名" required>
@@ -293,8 +328,10 @@
                             <div class="form-inline">
                                 <input class="form-control" ng-model="resetPwdCtrl.form.vc" placeholder="验证码" required>
                                 <button id="resetPwdVCRecvBtn" ng-click="resetPwdCtrl.vcRecv()" class="btn"
-                                        uib-tooltip="{{resetPwdCtrl.vcRecvBtnTip.msg}}" tooltip-enable="resetPwdCtrl.vcRecvBtnTip.enable"
-                                        tooltip-placement="top" tooltip-is-open="resetPwdCtrl.vcRecvBtnTip.isOpen" tooltip-trigger="'none'"->获取验证码
+                                        uib-tooltip="{{resetPwdCtrl.vcRecvBtnTip.msg}}"
+                                        tooltip-enable="resetPwdCtrl.vcRecvBtnTip.enable"
+                                        tooltip-placement="top" tooltip-is-open="resetPwdCtrl.vcRecvBtnTip.isOpen"
+                                        tooltip-trigger="'none'" ->获取验证码
                                     <!--->
                                 </button>
                             </div>
@@ -321,7 +358,7 @@
 
 <script id="fw.html" type="text/ng-template">
     <div class="row">
-        <div class="sidebar col-md-2 col-sm-2">
+        <div class="sidebar col-sm-2 col-md-2 col-lg-1">
             <ul class="nav nav-sidebar">
                 <li ng-class="{active:activeState.indexOf('u.fw.v')==0}" ng-disabled="inChecking"><a
                         data-ui-sref="u.fw.v">预览付款记录</a></li>
@@ -331,7 +368,7 @@
                         data-ui-sref="u.fw.h">查看历史结果</a></li>
             </ul>
         </div>
-        <div class="col-sm-10 col-sm-offset-2 col-md-10 col-md-offset-2 main"
+        <div class="col-sm-10 col-sm-offset-2 col-md-10 col-md-offset-2 col-lg-11 col-lg-offset-1 main"
              data-ui-view=""></div>
     </div>
 </script>
@@ -361,9 +398,11 @@
     </div>
 </script>
 
+
 <script src="js/jquery.min.js"></script>
 <script src="js/bootstrap.min.js"></script>
 <script src="js/angular.min.js"></script>
+<script src="js/angular-locale_zh-cn.js"></script>
 <script src="js/angular-animate.min.js"></script>
 <script src="js/angular-sanitize.min.js"></script>
 <script src="js/ui-bootstrap-tpls.min.js"></script>
@@ -372,8 +411,8 @@
 <script src="js/smart-table.min.js"></script>
 <script src="js/angular-cookies.min.js"></script>
 <script src="js/ng-file-upload-all.min.js"></script>
-<link type="text/css" href="css/angular-bootstrap-lightbox.min.css">
 <script src="js/angular-bootstrap-lightbox.min.js"></script>
+<script src="js/picbox.js"></script>
 
 <script src="js/enc.js"></script>
 <script src="js/app.js"></script>

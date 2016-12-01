@@ -489,7 +489,6 @@ public class AutoCheckAuccount {
 	 * @return
 	 */
 	public String Enter_CaModel(String owner){
-		logger.info("sayhello");
 		logger.info("进入对账模式");
 		
 		//生成新的对账id
