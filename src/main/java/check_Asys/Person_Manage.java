@@ -125,8 +125,8 @@ public class Person_Manage {
 		List<Object> re_list_locked_new = new ArrayList<>();
 		if (watch_type.equals("reg_cp")) {//查看新注册的对账联系人
 			logger.info("查看新注册的对账联系人");
-			re_list = cDao.GetTotalTbByElement("flag",REG_NEW);
-			
+			//re_list = cDao.GetTotalTbByElement("flag",REG_NEW);
+			re_list = cDao.GetTotalTbByElement_ByPage("flag",REG_NEW,offset,pagesize);
 			for (int i = 0; i < re_list.size(); i++) {
 				ConnectPerson cPerson = (ConnectPerson) re_list.get(i);
 				cPerson.setAgent(ChangeAgentToChinese(cPerson.getAgent()));
@@ -136,8 +136,8 @@ public class Person_Manage {
 		}
 		else if (watch_type.equals("reg_as")) {//查看新注册的财务人员
 			logger.info("查看新注册的财务人员");
-			re_list = aS_Dao.GetTotalTbByElement("flag", REG_NEW);
-			
+		//	re_list = aS_Dao.GetTotalTbByElement("flag", REG_NEW);
+			re_list = aS_Dao.GetTotalTbByElement_ByPage("flag", REG_NEW,offset,pagesize);
 			for (int i = 0; i < re_list.size(); i++) {
 				Assistance cPerson = (Assistance) re_list.get(i);
 				cPerson.setAgentid((ChangeAgentToChinese(cPerson.getAgentid())));
@@ -146,8 +146,8 @@ public class Person_Manage {
 		}
 		else if (watch_type.equals("reged_cp")) {//查看已注册的对账联系人
 			logger.info("查看已注册的对账联系人");
-			re_list = cDao.GetTotalTbByElement("flag",REG_SUCCESS);
-			
+		//	re_list = cDao.GetTotalTbByElement("flag",REG_SUCCESS);
+			re_list = cDao.GetTotalTbByElement_ByPage("flag",REG_SUCCESS,offset,pagesize/2);
 			for (int i = 0; i < re_list.size(); i++) {
 				ConnectPerson cPerson = (ConnectPerson) re_list.get(i);
 				cPerson.setAgent(ChangeAgentToChinese(cPerson.getAgent()));
@@ -155,7 +155,7 @@ public class Person_Manage {
 				re_list_new.add(cPerson);
 			}
 			
-			re_list_locked = cDao.GetTotalTbByElement("flag", LOCKED);
+			re_list_locked = cDao.GetTotalTbByElement_ByPage("flag", LOCKED,offset+pagesize/2,pagesize/2);
 			for (int i = 0; i < re_list_locked.size(); i++) {
 				ConnectPerson cPerson = (ConnectPerson) re_list_locked.get(i);
 				cPerson.setAgent(ChangeAgentToChinese(cPerson.getAgent()));
@@ -166,14 +166,14 @@ public class Person_Manage {
 		}
 		else if (watch_type.equals("reged_as")) {//查看已注册的财务人员
 			logger.info("查看已注册的财务人员");
-			re_list = aS_Dao.GetTotalTbByElement("flag", REG_SUCCESS);
+			re_list = aS_Dao.GetTotalTbByElement_ByPage("flag", REG_SUCCESS,offset,pagesize/2);
 			for (int i = 0; i < re_list.size(); i++) {
 				Assistance cPerson = (Assistance) re_list.get(i);
 				cPerson.setAgentid((ChangeAgentToChinese(cPerson.getAgentid())));
 				re_list_new.add(cPerson);
 			}
 			
-			re_list_locked = aS_Dao.GetTotalTbByElement("flag", LOCKED);
+			re_list_locked = aS_Dao.GetTotalTbByElement_ByPage("flag", LOCKED,offset+pagesize/2,pagesize/2);
 			re_list_new.addAll(re_list_locked);
 		}
 		else if (watch_type.equals("op_log")) {//查看操作日志

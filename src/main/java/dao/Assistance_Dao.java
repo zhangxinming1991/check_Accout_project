@@ -113,6 +113,24 @@ public class Assistance_Dao {
 		}
 	}
 	
+	public List<Assistance> GetTotalTbByElement_ByPage(String filed1,Object value1,int offset,int pagesize){
+		try {
+					session = sessionFactory.openSession();
+		String hql_select_all = "from Assistance where " + filed1 + " = :value1";
+		List<Assistance> assistances =   (List<Assistance>) session.createQuery(hql_select_all)
+				.setParameter("value1", value1)
+				.setFirstResult(offset)
+				.setMaxResults(pagesize)
+				.list();
+		session.close();
+		return assistances;
+		} catch (RuntimeException e) {
+			// TODO: handle exception
+			logger.error("根据" + filed1 + "=" + value1 + "获取整个Assistance表" + "失败" + e);
+			return null;
+		}
+	}
+	
 	public void Close_Connect(){
 		
 	/*	try {

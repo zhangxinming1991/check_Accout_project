@@ -505,6 +505,18 @@ public class AutoCheckAuccount {
 		List<CaresultHistory> fCrHistories = cDao.FindBySpeElementLimit("caid", caid, owner);
 		if (fCrHistories.isEmpty() == true) {//如果记录为空，则插入新的对账记录(本月对账还没开始)	
 			logger.info("开始新月份的对账");
+			
+			/*查找上次对账id,重置为false*/
+			CaresultHistory fHLast = cDao.FindBySpeElement("lastcaid", true, owner).get(0);//查找瓶颈
+			if (fCrHistories == null) {
+				logger_error.error("上次对账caid不存在");
+			}
+			else {
+				fHLast.setLastcaid(false);//将上次对账的lastcaid设为false
+				cDao.update(fHLast);
+			}
+			/*查找上次对账id,重置为false*/
+			
 			CaresultHistory in_crhistory = new CaresultHistory();//记录的状态为进行中
 			in_crhistory.setCaid(caid);
 			in_crhistory.setCayear(dateys);

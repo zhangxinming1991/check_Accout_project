@@ -288,6 +288,7 @@ public class PMController {
 				logger_error.error("获取微信参数失败:" + e);
 				re_json.element("flag", -1);
 				re_json.element("errmsg", "获取微信参数失败:" + e);
+				response.addHeader("Access-Control-Allow-Origin", "*");	
 				Common_return(response,re_json);
 				return;
 			}
@@ -316,6 +317,7 @@ public class PMController {
 			}*/
 			
 			re_json = wManagr.Is_WeixinBind(weixinid);
+			response.addHeader("Access-Control-Allow-Origin", "*");	
 			Common_return(response, re_json);		
 		}
 		else if (action.equals("delete")) {
@@ -329,6 +331,7 @@ public class PMController {
 				
 				re_json.element("flag", -1);
 				re_json.element("errmsg", "获取参数失败" + e);
+				response.addHeader("Access-Control-Allow-Origin", "*");	
 				Common_return(response,re_json);
 				return;
 			}
@@ -354,6 +357,7 @@ public class PMController {
 			}*/
 			
 			re_json = wManagr.Delet_ConnectpWeixin(username);
+			response.addHeader("Access-Control-Allow-Origin", "*");	
 			Common_return(response, re_json);
 		}
 		else if (action.equals("insert")) {
@@ -369,6 +373,7 @@ public class PMController {
 				logger_error.error("获取参数失败" + e);
 				re_json.element("flag", -1);
 				re_json.element("errmsg", "已删除相应的对账联系人信息");
+				response.addHeader("Access-Control-Allow-Origin", "*");	
 				Common_return(response,re_json);	
 				return;
 			}
@@ -405,6 +410,7 @@ public class PMController {
 				}
 			}*/
 			re_json = wManagr.InOrUdWeixinMes(username,weixinid);
+			response.addHeader("Access-Control-Allow-Origin", "*");	
 			Common_return(response, re_json);
 		}
 		else {
@@ -1096,21 +1102,24 @@ public class PMController {
 		
 		String request_s = null;
 		String request_s_de = null;
+		String watch_type = null;
+		int pagenum = -1;
 		try {
 				request_s = IOUtils.toString(request.getInputStream());
 				request_s_de = AES.aesDecrypt(request_s, AES.key);//解密数据
 				logger.info("received content:" + request_s_de);
+				JSONObject jstr = JSONObject.fromObject(request_s_de);
+				watch_type = jstr.getString("watch_type");//具体查看的类型
+				pagenum = jstr.getInt("pagenum");
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+			logger_error.error("查看失败" + e);
 		}
 		
-		JSONObject jstr = JSONObject.fromObject(request_s_de);
-		String watch_type = jstr.getString("watch_type");//具体查看的类型
-		
-		int pagenum = 2;
-		int offset = (pagenum-1)*10;
 		int pagesize = 10;
+		int offset = (pagenum-1)*10;
+		
     	List re_list = pManage.Watch(watch_type,offset,pagesize);//进入查看处理
     	
     	/*返回数据到前台*/
@@ -1382,7 +1391,7 @@ public class PMController {
      */
     public void Common_return(HttpServletResponse response,JSONObject re_json){
 		response.setCharacterEncoding("utf-8");
-		response.addHeader("Access-Control-Allow-Origin", "*");	
+	//	response.addHeader("Access-Control-Allow-Origin", "*");	
     	JSONObject re_object =  re_json;//传递参数中的最外层对象
 		
 		/*传递json数据给前台*/
@@ -1420,8 +1429,6 @@ public class PMController {
 		}
 		/*传递json数据给前台*/
     }
-
-
 }
 
 
