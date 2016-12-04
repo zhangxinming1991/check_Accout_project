@@ -1,4 +1,4 @@
-// console.log('config controllers');
+// console.debug('config controllers');
 
 var msgOkTimeout = 800;
 var msgErrTimeout = 1200;
@@ -23,14 +23,14 @@ var ng = angular;
 
 // 首页
 app.controller('indexCtrl', ['$scope', '$state', '$rootScope', function ($scope, $state, rootsgop) {
-    //console.log('indexCtrl');
+    //console.debug('indexCtrl');
 
     // rebind F5(refresh) to reload current state( refresh data by javascript)
     $scope.disableKeyF5 = function (evt) {
         if ((evt.which || evt.code) === 116 && !evt.ctrlKey) {    // do not disable <Ctrl>+F5 (force refreshing)
-            //console.log('F5 pressed');
+            //console.debug('F5 pressed');
             evt.preventDefault();
-            // console.log('reloading state');
+            // console.debug('reloading state');
             $state.reload();
         }
     };
@@ -66,7 +66,7 @@ app.controller('indexCtrl', ['$scope', '$state', '$rootScope', function ($scope,
 // 登陆
 var signInCtrl = ['$scope', '$state', 'AccountService',
     function (sgop, $state, AccountService) {
-        //console.log('sign in ctrl 登陆');
+        //console.debug('sign in ctrl 登陆');
 
         var ctrl = sgop;
 
@@ -123,7 +123,7 @@ app.controller('SignInCtrl', signInCtrl);
 // 注册
 var signUpCtrl = ['$scope', '$state', 'AccountService', '$uibModal', '$timeout',
     function (sgop, $state, AccountService, msgbox, timeout) {
-        //console.log('sign up ctrl-> 注册用户');
+        //console.debug('sign up ctrl-> 注册用户');
 
         var ctrl = this;
         // for no 'controller as ctrl' grammar
@@ -209,7 +209,7 @@ app.controller('SignUpCtrl', signUpCtrl);
 
 var resetPwdCtrl = ['$scope', '$state', 'AccountService', '$uibModal', '$interval', '$timeout',
     function (sgop, $state, AccSvc, msgbox, interval, timeout) {
-        // console.log('ctrl->resetPwdCtrl 找回密码');
+        // console.debug('ctrl->resetPwdCtrl 找回密码');
 
         var ctrl = this;
 
@@ -306,7 +306,7 @@ app.controller('ResetPwdCtrl', resetPwdCtrl);
 // 对于直接通过URL访问需要授权信息页面的情况（#/u/*, #/u/fw,#/fs, #/u/sa），Javascript环境已没有任何用户登陆信息，如何自动登陆？
 // 已#/u打头的路径，需要授权信息，需检测是否已登陆，如果没有,或者自动登陆、或者弹窗登陆、或者跳转登陆页面
 var uCtrl = ['$scope', '$state', 'AccountService', '$timeout', '$uibModal', 'FncRmindService', 'ChkRsltSvc', function (sgop, state, AccSvc, timeout, msgbox, NotifSvc, ChkSvc) {
-    //console.log('uCtrl');
+    //console.debug('uCtrl');
 
     regLogModal.modal('hide');
     //
@@ -314,9 +314,9 @@ var uCtrl = ['$scope', '$state', 'AccountService', '$timeout', '$uibModal', 'Fnc
     // if (sgop.loggedInUser === undefined) {
     //     // todo go login?  auto-login? popup-login?
     //     var reLoged = false;
-    //     // console.log('trying to re-login by: ',sessionStorage, sessionStorage.getItem('formUser'));
+    //     // console.debug('trying to re-login by: ',sessionStorage, sessionStorage.getItem('formUser'));
     //     AccSvc.signInBySessionStorage().then(function () {
-    //         //console.log('自动登陆（session storage）');
+    //         //console.debug('自动登陆（session storage）');
     //         reLoged = true;
     //     }, function (fail) {
     //     });
@@ -340,7 +340,7 @@ var uCtrl = ['$scope', '$state', 'AccountService', '$timeout', '$uibModal', 'Fnc
         msgbox.open({
             templateUrl: 'fw-info.html'
             , controller: ['$scope', '$uibModalInstance', function (boxsgop, boxInst) {
-                // console.log('box ctrl');
+                // console.debug('box ctrl');
                 boxsgop.closeMsgbox = function () {
                     boxInst.dismiss();
                 };
@@ -355,17 +355,11 @@ var uCtrl = ['$scope', '$state', 'AccountService', '$timeout', '$uibModal', 'Fnc
 
 var fwCtrl = ['$scope', '$state', '$timeout', '$uibModal', 'FncRmindService', 'ChkRsltSvc', '$rootScope',
     function (sgop, state, timeout, msgbox, NotifSvc, ChkSvc, rootsgop) {
-        //console.log('fw info ctrl');
-
-        sgop.lastUpload = {};
+        // console.debug('fw info ctrl');
 
         sgop.checkingEnv = function () {
             ChkSvc.initCheckingEnv().then(function (data) {
-                sgop.lastUpload = {
-                    time: data.lastUploadTime
-                    , result: data.lastUploadResult
-                };
-                console.info('caid   ', data)
+                $.extend(sgop.lastUpload, data.lastUpload);
                 var caid = data.caid;
                 var dash1 = caid.indexOf('-');
                 var stateParams = {};
@@ -388,7 +382,7 @@ var fwCtrl = ['$scope', '$state', '$timeout', '$uibModal', 'FncRmindService', 'C
  // 财务人员导航数据获取
  var fwNavCtrl = ['$scope', '$state', 'OrderService',
  function ($scope, $state, OrderService) {
- console.log('fwNavCtrl,', $scope);
+ console.debug('fwNavCtrl,', $scope);
 
  }];*/
 
@@ -398,7 +392,7 @@ function ensureErrMsg(errMsgObj) {
 /*
  // 财务人员账单
  var fwoCtrl = ['$scope', '$state', '$stateParams', 'OrderService', function (sgop, $state, $stateParams, OrderService) {
- console.log('fwoGridCtrl, params: ', $stateParams);
+ console.debug('fwoGridCtrl, params: ', $stateParams);
 
  // [caution] 变量与Uploadctrl中有重复！！
 
@@ -422,7 +416,7 @@ function ensureErrMsg(errMsgObj) {
  tryRefreshGrid();
 
  sgop.$on('EvtUploadOrderSucc', function (evt, newOrders) {
- console.log('event: EvtUploadOrderSucc caught', evt, newOrders);
+ console.debug('event: EvtUploadOrderSucc caught', evt, newOrders);
  // clear status text
  // evt.stopPropagation();
 
@@ -446,9 +440,9 @@ function ensureErrMsg(errMsgObj) {
  }];*/
 
 // 文件上传
-var uploadCtrl = ['$scope', 'Upload', '$timeout', '$state', '$rootScope', '$filter',
-    function (sgop, Upld, timeout, $state, rootsgop, $filter) {
-        //console.log('file upload ctrl');
+var uploadCtrl = ['$scope', 'Upload', '$timeout', '$state', '$rootScope', '$filter', 'ChkRsltSvc',
+    function (sgop, Upld, timeout, $state, rootsgop, $filter, ChkSvc) {
+        // console.debug('file upload ctrl');
 
         // for SomeController as ctrl; let var ctrl = this;
 
@@ -462,7 +456,7 @@ var uploadCtrl = ['$scope', 'Upload', '$timeout', '$state', '$rootScope', '$filt
          try {
          if (selectedFile) {
          info.fileName = selectedFile.name;
-         console.log('uploading file: ', selectedFile, sgop.uploadFileType);
+         console.debug('uploading file: ', selectedFile, sgop.uploadFileType);
          info.isUploading = true;
          // 使用timeout让控制器有时间先更新UI显示正准备上传的信息
          timeout(function () {
@@ -470,12 +464,12 @@ var uploadCtrl = ['$scope', 'Upload', '$timeout', '$state', '$rootScope', '$filt
          url: ReqUrl.fwOrderUpload,
          data: {"file": selectedFile, "import_select": sgop.uploadFileType}
          }).then(function (resPkg) {
-         console.log('response recved', resPkg);
+         console.debug('response recved', resPkg);
          var resbody = resPkg.data;
          if (isOkResBody(resbody)) {
          info.uploadResult = true;
          //todo refresh data <- upload
-         console.log('trying to refresh grid of orders after successful uploading file');
+         console.debug('trying to refresh grid of orders after successful uploading file');
 
          if (sgop.uploadFileType == 'A') {
          sgop.$emit('EvtUploadOrderSucc', resbody.data);
@@ -490,11 +484,11 @@ var uploadCtrl = ['$scope', 'Upload', '$timeout', '$state', '$rootScope', '$filt
          info.errMsg = '网络或系统错误';
          info.uploadResult = false;
          }, function (evt) {
-         console.log('evt', evt);
+         console.debug('evt', evt);
          info.progressMax = parseInt(evt.total);
          info.progress = parseInt(evt.loaded);
          }).catch(function (ex) {
-         console.log('catch exception:', ex);
+         console.debug('catch exception:', ex);
          info.isUploading = false;
          info.uploadResult = false;
          info.errMsg = '网络或系统错误';
@@ -511,10 +505,14 @@ var uploadCtrl = ['$scope', 'Upload', '$timeout', '$state', '$rootScope', '$filt
          }
          };*/
 
+        var str = sessionStorage.getItem(lastUploadInfoKey);
+        rootsgop.lastUpload = rootsgop.lastUpload || {};
+        $.extend(rootsgop.lastUpload, str ? JSON.parse(str).lastUpload : {});
+
         sgop.formSubmit = function () {
             var info = sgop.uploadInfo;
             try {
-                //console.log('上传货款和账单', sgop.uploadCfg);
+                //console.debug('上传货款和账单', sgop.uploadCfg);
                 info.isUploading = true;
                 // 使用timeout让控制器有时间先更新UI显示正准备上传的信息
                 timeout(function () {
@@ -523,23 +521,26 @@ var uploadCtrl = ['$scope', 'Upload', '$timeout', '$state', '$rootScope', '$filt
                         url: ReqUrl.fwOrderUpload,
                         data: sgop.uploadCfg
                     }).then(function (resPkg) {
-                        console.log('(upload) response recved', resPkg);
+                        console.debug('(upload) response recved', resPkg);
                         var resbody = JSON.parse(Decrypt(resPkg.data));
-                        console.log('decrypted: ', resbody);
+                        console.debug('decrypted: ', resbody);
                         if (isOkResBody(resbody)) {
-                            sgop.lastUpload.time = resbody.lastUploadTime || resbody.data.lastUploadTime || $filter('date')(new Date(), appConf.tmFmtLong);
+                            sgop.lastUpload.time = resbody.lastUploadTime || resbody.data && resbody.data.lastUploadTime || $filter('date')(new Date(), appConf.tmFmtLong);
+                            sgop.lastUpload.result = '成功';
                             info.uploadResult = true;
                         } else {
+                            sgop.lastUpload.result = '失败';
                             info.uploadResult = false;
                             info.errMsg = '上传失败，' + (resbody.errmsg || '无更详细信息');
                         }
+                        sessionStorage.setItem(lastUploadInfoKey, JSON.stringify(sgop.lastUpload));
                         info.isUploading = false;
                     }, function (errPkg) {
                         //console.error('upload err', errPkg);
                         info.errMsg = '网络或系统错误';
                         info.uploadResult = false;
                     }, function (evt) {
-                        // console.log('evt', evt);
+                        // console.debug('evt', evt);
                         info.progressMax = parseInt(evt.total);
                         info.progress = parseInt(evt.loaded);
                     }).catch(function (ex) {
@@ -559,7 +560,7 @@ var uploadCtrl = ['$scope', 'Upload', '$timeout', '$state', '$rootScope', '$filt
     }];
 
 var fwcCtrl = ['$scope', '$stateParams', '$rootScope', function (sgop, stateParams, rootsgop) {
-    // console.log('fwcCtrl->', stateParams);
+    // console.debug('fwcCtrl->', stateParams);
 
     sgop.targetDate = stateParams;
 
@@ -568,14 +569,14 @@ var fwcCtrl = ['$scope', '$stateParams', '$rootScope', function (sgop, statePara
      function (event, toState, toParams, fromState, fromParams) {
      // 可以从最后一步（对账结果）返回到对账流程第一步，即允许“重新对账”
      if (fromState.name.indexOf('u.fw.p') > -1 && toState.name.indexOf('u.fw.p') > -1 && !(fromState.name == 'u.fw.p.m.x' && toState.name == 'u.fw.p') && toState.name.length < fromState.name.length) {
-     //console.log('禁止浏览器回退');
+     //console.debug('禁止浏览器回退');
      event.preventDefault();
      window.history.forward();
      }
      });*/
 
     sgop.$on('$stateChangeSuccess', function (event, toState, toParams, fromState, fromParams) {
-        // console.log('state changed: ', fromState, toState);
+        // console.debug('state changed: ', fromState, toState);
         sgop.checkProgress = {};
         switch (toState.name) {
             case 'u.fw.p':
@@ -632,28 +633,76 @@ function showMsg(msgCfg/*msgbox, title, msgHtml*/) {
 }
 
 
-// 财务人员“付款通知”（未入对账依赖数据）
-var fwnCtrl = ['$scope', 'FncRmindService', 'Lightbox', "$uibModal", '$state', 'ChkRsltSvc', '$timeout',
-    function (sgop, FncRmindService, picModal, msgBox, state, ChkRsltSvc, timeout) {
-        //console.log('fwnCtrl 待审付款通知');
+function initGridStatus(sgop) {
+    sgop.canShowError = sgop.isNonEmptyGrid = sgop.isLoading = sgop.items = sgop.errMsg = undefined;
+}
 
-        (function refreshData() {
-            sgop.isLoading = true;
-            FncRmindService.fncReminds().then(function (reminds) {
-                sgop.fncReminds = reminds;
-                sgop.isNonEmptyGrid = reminds.length > 0;
-            }, function (err) {
-                //console.warn(err);
-                sgop.canShowError = true;
-                sgop.errMsg = '请求数据失败：' + ensureErrMsg(err);
-            }).finally(function () {
-                sgop.isLoading = false;
-            });
-        }());
+function gridPage(sgop, tableState, $filter, businessFnc) {
+
+    if (tableState.pagination.lastStartIdx == tableState.pagination.start && sgop.items) {
+        console.debug('only local search & sort; items, dispItems', sgop.items, sgop.dispItems);
+        localSearchAndSort();
+        return;
+    }
+
+    function localSearchAndSort() {
+        var searchCriteria = tableState.search.predicateObject;
+        sgop.dispItems = /*angular.copy*/(sgop.items);
+        // search
+        sgop.dispItems = $filter('rmdsFilter')(sgop.dispItems, searchCriteria);
+        // sort
+        if (tableState.sort.predicate) {
+            sgop.dispItems = $filter('orderBy')(sgop.dispItems, tableState.sort.predicate, tableState.sort.reverse);
+        }
+    }
+
+    initGridStatus(sgop);
+
+    var pagination = tableState.pagination;
+
+    var start = pagination.start || 0;     // This is NOT the page number, but the index of item in the list that you want to use to display the table.
+    var numberPerPage = pagination.number;  // Number of entries showed per page.
+    var pageNum = Math.floor(start / numberPerPage) + 1; // first page with 1 not 0
+
+    sgop.isLoading = true;
+    businessFnc({pagenum: pageNum}).then(function (data) {
+
+        tableState.pagination.lastStartIdx = start;
+
+        var items = data.items || data.data;
+
+        sgop.items = items;
+        // sgop.dispItems = items;
+
+        localSearchAndSort();
+
+        var serverTotalItemCount = data.totalItemCount;
+        pagination.numberOfPages = serverTotalItemCount && Math.ceil(serverTotalItemCount / pagination.number);
+        pagination.numberOfPages = pagination.numberOfPages || data.totalpage;
+        pagination.totalItemCount = serverTotalItemCount;
+        sgop.isNonEmptyGrid = items.length > 0;
+    }, function (err) {
+        //console.warn(err);
+        sgop.canShowError = true;
+        sgop.errMsg = '请求数据失败：' + ensureErrMsg(err);
+    }).finally(function () {
+        sgop.isLoading = false;
+    });
+}
+
+// 财务人员“付款通知”（未入对账依赖数据）
+var fwnCtrl = ['$scope', 'FncRmindService', 'Lightbox', "$uibModal", '$state', 'ChkRsltSvc', '$timeout', '$filter',
+    function (sgop, FncRmindService, picModal, msgBox, state, ChkRsltSvc, timeout, $filter) {
+        //console.debug('fwnCtrl 待审付款通知');
+
+        sgop.refreshGrid = function (tableState) {
+            console.debug('table refresh with state:', tableState);
+            gridPage(sgop, tableState, $filter, FncRmindService.fncReminds);
+        };
 
         function opPaymentNotifyItem(paymentNotifyItem, logtxt, svcFnc) {
-            //console.log(logtxt);
-            //console.log('数据操作，前：', paymentNotifyItem);
+            //console.debug(logtxt);
+            //console.debug('数据操作，前：', paymentNotifyItem);
 
             var approveCfg = {
                 "id": paymentNotifyItem.id
@@ -667,7 +716,7 @@ var fwnCtrl = ['$scope', 'FncRmindService', 'Lightbox', "$uibModal", '$state', '
                     boxInst.dismiss();
                 }, msgOkTimeout)
             }, function (errMsgObj) {
-                //console.log(logtxt + '失败');
+                //console.debug(logtxt + '失败');
                 msgcfg.msgHtml = '操作<strong class="text-info">失败</strong>';
                 timeout(function () {
                     boxInst.dismiss();
@@ -709,7 +758,7 @@ var fwnCtrl = ['$scope', 'FncRmindService', 'Lightbox', "$uibModal", '$state', '
                                     ctrl.attachCfg.targetId = candidates[0].id;
                                 }
                             }, function (errMsgObj) {
-                                //console.log(errMsgObj);
+                                //console.debug(errMsgObj);
                                 ctrl.canShowError = true;
                                 ctrl.errMsg = ensureErrMsg(errMsgObj);
                             })
@@ -758,7 +807,7 @@ var fwnCtrl = ['$scope', 'FncRmindService', 'Lightbox', "$uibModal", '$state', '
 
         // 显示凭证图片
         sgop.showPicture = function (url) {
-            // console.log('pic url: ', url);
+            // console.debug('pic url: ', url);
             // picModal.open({
             //     templateUrl: 'showPicTpl.html',
             //     controller: ['$scope','$uibModalInstance', function (sgop,picModal) {
@@ -794,7 +843,7 @@ var fwnCtrl = ['$scope', 'FncRmindService', 'Lightbox', "$uibModal", '$state', '
 
         // 对账操作 lol...
         sgop.checkCashing = function () {
-            //console.log('对账操作请求发起');
+            //console.debug('对账操作请求发起');
             sgop.checkProgress.step = 3;
             var msgCfg = {
                 msgbox: msgBox,
@@ -864,7 +913,8 @@ function getRefreshFnc(sgop, svcfnc, tab) {
     return function refreshGrid() {
         sgop.$watch('initTab', function (nv, ov) {
             if (nv == tab) {
-                // console.log('initing tab-' + tab);
+                // console.debug('initing tab-' + tab);
+                initGridStatus(sgop);
                 sgop.isLoading = true;
                 svcfnc()
                     .then(function (rows) {
@@ -885,22 +935,15 @@ function getRefreshFnc(sgop, svcfnc, tab) {
 }
 
 // 预览付款通知数据
-var fwvCtrl = ['$scope', 'Lightbox', '$uibModal', 'FncRmindService', function (sgop, picModal, msgBox, NotifSvc) {
-    //console.log('fwv ctrl->预览付款通知数据');
+var fwvCtrl = ['$scope', 'Lightbox', '$uibModal', 'FncRmindService', '$filter', function (sgop, picModal, msgBox, NotifSvc, $filter) {
+    //console.debug('fwv ctrl->预览付款通知数据');
+
     sgop.checkInoperable = true;
-    (function refreshData() {
-        sgop.isLoading = true;
-        NotifSvc.viewNotifications().then(function (items) {
-            sgop.fncReminds = items;
-            sgop.isNonEmptyGrid = items.length > 0;
-        }, function (err) {
-            //console.warn(err);
-            sgop.canShowError = true;
-            sgop.errMsg = '请求数据失败：' + ensureErrMsg(err);
-        }).finally(function () {
-            sgop.isLoading = false;
-        });
-    }());
+    sgop.refreshGrid = function (tableState) {
+        console.debug('table refresh with state:', tableState);
+        gridPage(sgop, tableState, $filter, NotifSvc.viewNotifications);
+    };
+    // sgop.refreshGrid({pagination: {}});
 
 
     // 多合同的付款分配详细信息
@@ -920,14 +963,14 @@ var fwvCtrl = ['$scope', 'Lightbox', '$uibModal', 'FncRmindService', function (s
 
 // 历史对账结果查看
 var fwhCtrl = ['$scope', 'ChkRsltSvc', '$uibModal', '$state', function (sgop, ChkRsltSvc, msgbox, state) {
-    //console.log('ctrl->历史对账结果');
+    //console.debug('ctrl->历史对账结果');
 
     var thisYear = new Date().getFullYear();
     sgop.yearInput = sgop.maxYear = thisYear;
     sgop.minYear = 2000;
 
     sgop.formSubmit = function () {
-        //console.log('查询' + sgop.yearInput + '年对账历史');
+        //console.debug('查询' + sgop.yearInput + '年对账历史');
         if (sgop.yearInput) {
             refreshData();
         }
@@ -1004,7 +1047,7 @@ var fwhCtrl = ['$scope', 'ChkRsltSvc', '$uibModal', '$state', function (sgop, Ch
 
 // 对账结果
 var fwxCtrl = ['$scope', 'ChkRsltSvc', '$uibModal', '$state', '$stateParams', function (sgop, ChkRsltSvc, msgbox, state, stateParams) {
-        //console.log('fwxCtrl 报表标签组');
+        //console.debug('fwxCtrl 报表标签组');
 
         var self = this;
 
@@ -1015,7 +1058,7 @@ var fwxCtrl = ['$scope', 'ChkRsltSvc', '$uibModal', '$state', '$stateParams', fu
 
         sgop.sel = function (tab) {
             if (!sgop.tabInited[tab]) {
-                // console.log('Tab init event of tab-' + tab + ' fired');
+                // console.debug('Tab init event of tab-' + tab + ' fired');
                 sgop.initTab = tab;
                 // ('initTab' + tab);
             }
@@ -1108,7 +1151,7 @@ app.controller('X1Ctrl', ['$scope', 'ChkRsltSvc', function (sgop, ChkRsltSvc) {
         tableCaption: '无匹配合同、客户的出纳'
     };
 
-    //console.log('ctrl ' + sgop.gridCfg.tableCaption);
+    //console.debug('ctrl ' + sgop.gridCfg.tableCaption);
 
 
     getRefreshFnc(sgop, ChkRsltSvc.transactionAttachedToNeitherContractNorClient, 1)();
@@ -1120,7 +1163,7 @@ app.controller('X2Ctrl', ['$scope', 'ChkRsltSvc', function (sgop, ChkRsltSvc) {
         tableCaption: '未到账的货款'
     };
 
-    //console.log('ctrl ' + sgop.gridCfg.tableCaption);
+    //console.debug('ctrl ' + sgop.gridCfg.tableCaption);
 
     getRefreshFnc(sgop, ChkRsltSvc.ordersUnpaid, 2)();
 
@@ -1131,7 +1174,7 @@ app.controller('X3Ctrl', ['$scope', 'ChkRsltSvc', function (sgop, ChkRsltSvc) {
         tableCaption: '无匹配出纳的付款通知'
     };
 
-    //console.log('ctrl ' + sgop.gridCfg.tableCaption);
+    //console.debug('ctrl ' + sgop.gridCfg.tableCaption);
 
     getRefreshFnc(sgop, ChkRsltSvc.notificationNotAttachedToTransaction, 3)();
 
@@ -1155,7 +1198,7 @@ app.controller('X4Ctrl', ['$scope', 'ChkRsltSvc', '$uibModal', function (sgop, C
         }
     };
 
-    //console.log('ctrl ' + sgop.gridCfg.tableCaption);
+    //console.debug('ctrl ' + sgop.gridCfg.tableCaption);
 
     getRefreshFnc(sgop, ChkRsltSvc.transactionAttachedToContract, 4)();
 }]);
@@ -1166,7 +1209,7 @@ app.controller('X5Ctrl', ['$scope', 'ChkRsltSvc', function (sgop, ChkRsltSvc) {
         connectType: 'C'
     };
 
-    //console.log('ctrl ' + sgop.gridCfg.tableCaption);
+    //console.debug('ctrl ' + sgop.gridCfg.tableCaption);
 
     getRefreshFnc(sgop, ChkRsltSvc.transactionAttachedToClient, 5)();
 }]);
@@ -1189,7 +1232,7 @@ app.controller('X6Ctrl', ['$scope', 'ChkRsltSvc', '$uibModal', function (sgop, C
         }
     };
 
-    //console.log('ctrl ' + sgop.gridCfg.tableCaption);
+    //console.debug('ctrl ' + sgop.gridCfg.tableCaption);
 
     getRefreshFnc(sgop, ChkRsltSvc.notificationAttachedToTransaction, 6)();
 }]);
@@ -1212,7 +1255,7 @@ app.controller('X7Ctrl', ['$scope', 'ChkRsltSvc', '$uibModal', function (sgop, C
         }
     };
 
-    //console.log('ctrl ' + sgop.gridCfg.tableCaption);
+    //console.debug('ctrl ' + sgop.gridCfg.tableCaption);
 
     getRefreshFnc(sgop, ChkRsltSvc.ordersPaid, 7)();
 }]);
@@ -1222,7 +1265,7 @@ app.controller('X8Ctrl', ['$scope', 'ChkRsltSvc', function (sgop, ChkRsltSvc) {
         tableCaption: '无效的付款通知'
     };
 
-    //console.log('ctrl ' + sgop.gridCfg.tableCaption);
+    //console.debug('ctrl ' + sgop.gridCfg.tableCaption);
 
     getRefreshFnc(sgop, ChkRsltSvc.notificationInvalid, 8)();
 }]);
@@ -1230,14 +1273,14 @@ app.controller('X8Ctrl', ['$scope', 'ChkRsltSvc', function (sgop, ChkRsltSvc) {
 
 // 管理员
 var fsCtrl = ['$scope', function (sgop) {
-    //console.log('fsCtrl');
+    //console.debug('fsCtrl');
 }];
 
 function refreshGridFnc(svcfnc, sgop) {
     return function () {
         sgop.isLoading = true;
         svcfnc().then(function (items) {
-            // console.log('recvd:',items)
+            // console.debug('recvd:',items)
             sgop.items = items;
         }, function (errobj) {
             //console.error(errobj);
@@ -1276,42 +1319,51 @@ function approveReg(item, items, svcfnc, msgbox) {
 };
 
 // 审阅对账联系人注册申请
-var fsanCtrl = ['$scope', '$timeout', 'AccountService', '$uibModal', function (sgop, timeout, AccSvc, msgbox) {
-    console.log('fsan Ctrl->审阅对账联系人注册申请');
+var fsanCtrl = ['$scope', '$timeout', 'AccountService', '$uibModal', '$filter',
+    function (sgop, timeout, AccSvc, msgbox, $filter) {
+        console.debug('fsan Ctrl->审阅对账联系人注册申请');
 
-    refreshGridFnc(AccSvc.regPendingPaymentNotifiers, sgop)();
+        // refreshGridFnc(AccSvc.regPendingPaymentNotifiers, sgop)();
+        sgop.refreshGrid = function (tableState) {
+            console.debug('table refresh with state:', tableState);
+            gridPage(sgop, tableState, $filter, AccSvc.regPendingPaymentNotifiers);
+        };
 
-    sgop.acceptNotifier = function (item) {
-        approveReg(item, sgop.items, AccSvc.acceptNotifierReg, msgbox);
-    };
-    sgop.rejectNotifier = function (item) {
-        approveReg(item, sgop.items, AccSvc.rejectNotifierReg, msgbox);
-    };
-}];
+        sgop.acceptNotifier = function (item) {
+            approveReg(item, sgop.items, AccSvc.acceptNotifierReg, msgbox);
+        };
+        sgop.rejectNotifier = function (item) {
+            approveReg(item, sgop.items, AccSvc.rejectNotifierReg, msgbox);
+        };
+    }];
 app.controller('fsanCtrl', fsanCtrl);
 
 // 审阅代理商注册
-var fsawCtrl = ['$scope', '$timeout', 'AccountService', '$uibModal', function (sgop, timeout, AccSvc, msgbox) {
-    //console.log('fsaw Ctrl->审阅代理商注册');
+var fsawCtrl = ['$scope', '$timeout', 'AccountService', '$uibModal', '$filter',
+    function (sgop, timeout, AccSvc, msgbox, $filter) {
+        //console.debug('fsaw Ctrl->审阅代理商注册');
 
-    refreshGridFnc(AccSvc.regPendingFinancialWorker, sgop)();
-
-    // sgop.isLoading = true;
-    // AccSvc.regPendingFinancialWorker().then(function (items) {
-    //     sgop.items = items;
-    // }, function (errobj) {
-    //     console.error(errobj);
-    //     sgop.errMsg = ensureErrMsg(errobj);
-    // }).finally(function () {
-    //     sgop.isLoading = false;
-    // });
-    sgop.accept = function (item) {
-        approveReg(item, sgop.items, AccSvc.acceptFinancialWorkerReg, msgbox);
-    };
-    sgop.reject = function (item) {
-        approveReg(item, sgop.items, AccSvc.rejectFinancialWorkerReg, msgbox);
-    };
-}];
+        // refreshGridFnc(AccSvc.regPendingFinancialWorker, sgop)();
+        sgop.refreshGrid = function (tableState) {
+            console.debug('table refresh with state:', tableState);
+            gridPage(sgop, tableState, $filter, AccSvc.regPendingFinancialWorker);
+        };
+        // sgop.isLoading = true;
+        // AccSvc.regPendingFinancialWorker().then(function (items) {
+        //     sgop.items = items;
+        // }, function (errobj) {
+        //     console.error(errobj);
+        //     sgop.errMsg = ensureErrMsg(errobj);
+        // }).finally(function () {
+        //     sgop.isLoading = false;
+        // });
+        sgop.accept = function (item) {
+            approveReg(item, sgop.items, AccSvc.acceptFinancialWorkerReg, msgbox);
+        };
+        sgop.reject = function (item) {
+            approveReg(item, sgop.items, AccSvc.rejectFinancialWorkerReg, msgbox);
+        };
+    }];
 app.controller('fsawCtrl', fsawCtrl);
 
 function ctrlUser(item, svcfnc, msgbox) {
@@ -1338,32 +1390,42 @@ function ctrlUser(item, svcfnc, msgbox) {
     });
 }
 
-var fscnCtrl = ['$scope', '$timeout', 'AccountService', '$uibModal', function (sgop, timeout, AccSvc, msgbox) {
-    //console.log('fscwCtrl ->管控对账联系人');
+var fscnCtrl = ['$scope', '$timeout', 'AccountService', '$uibModal', '$filter',
+    function (sgop, timeout, AccSvc, msgbox, $filter) {
+        //console.debug('fscwCtrl ->管控对账联系人');
 
-    refreshGridFnc(AccSvc.paymentNotifiers, sgop)();
+        // refreshGridFnc(AccSvc.paymentNotifiers, sgop)();
+        sgop.refreshGrid = function (tableState) {
+            console.debug('table refresh with state:', tableState);
+            gridPage(sgop, tableState, $filter, AccSvc.paymentNotifiers);
+        };
 
-    sgop.lock = function (item) {
-        ctrlUser(item, AccSvc.lockNotifier, msgbox);
-    };
-    sgop.unlock = function (item) {
-        ctrlUser(item, AccSvc.unlockNotifier, msgbox);
-    };
-}];
+        sgop.lock = function (item) {
+            ctrlUser(item, AccSvc.lockNotifier, msgbox);
+        };
+        sgop.unlock = function (item) {
+            ctrlUser(item, AccSvc.unlockNotifier, msgbox);
+        };
+    }];
 app.controller('fscnCtrl', fscnCtrl);
 
-var fscwCtrl = ['$scope', '$timeout', 'AccountService', '$uibModal', function (sgop, timeout, AccSvc, msgbox) {
-    //console.log('fscnCtrl ->管控代理商财务员');
+var fscwCtrl = ['$scope', '$timeout', 'AccountService', '$uibModal', '$filter',
+    function (sgop, timeout, AccSvc, msgbox, $filter) {
+        //console.debug('fscnCtrl ->管控代理商财务员');
 
-    refreshGridFnc(AccSvc.financialWorkers, sgop)();
+        // refreshGridFnc(AccSvc.financialWorkers, sgop)();
+        sgop.refreshGrid = function (tableState) {
+            console.debug('table refresh with state:', tableState);
+            gridPage(sgop, tableState, $filter, AccSvc.financialWorkers);
+        };
 
-    sgop.lock = function (item) {
-        ctrlUser(item, AccSvc.lockFworker, msgbox);
-    };
-    sgop.unlock = function (item) {
-        ctrlUser(item, AccSvc.unlockFworker, msgbox);
-    };
-}];
+        sgop.lock = function (item) {
+            ctrlUser(item, AccSvc.lockFworker, msgbox);
+        };
+        sgop.unlock = function (item) {
+            ctrlUser(item, AccSvc.unlockFworker, msgbox);
+        };
+    }];
 app.controller('fscwCtrl', fscwCtrl);
 
 var fsdCtrl = ['$scope', '$timeout', 'MgmtSvc', '$uibModal', function (sgop, timeout, MgmtSvc, msgbox) {
@@ -1423,10 +1485,15 @@ var fsdCtrl = ['$scope', '$timeout', 'MgmtSvc', '$uibModal', function (sgop, tim
 }];
 
 // 用户日志
-var fslCtrl = ['$scope', '$timeout', 'MgmtSvc', '$uibModal', function (sgop, timeout, MgmtSvc, msgbox) {
-    //console.log('fslCtrl->查看用户操作日志');
-    refreshGridFnc(MgmtSvc.fetchLogs, sgop)();
-}];
+var fslCtrl = ['$scope', '$timeout', 'MgmtSvc', '$uibModal', '$filter',
+    function (sgop, timeout, MgmtSvc, msgbox, $filter) {
+        //console.debug('fslCtrl->查看用户操作日志');
+        // refreshGridFnc(MgmtSvc.fetchLogs, sgop)();
+        sgop.refreshGrid = function (tableState) {
+            console.debug('table refresh with state:', tableState);
+            gridPage(sgop, tableState, $filter, MgmtSvc.fetchLogs);
+        };
+    }];
 
 
 // directives
@@ -1453,6 +1520,12 @@ app.directive('onFinishRenderEvent', ['$timeout', function (timeout) {
             templateUrl: 'stDateRange.html',
 
             link: function (scope, element, attr, table) {
+
+                function dateChange() {
+                    trySearch();
+                };
+                scope.afterDateChange = scope.beforeDateChange = dateChange;
+
                 scope.afterOpt = {
                     showWeeks: false
                     , maxDate: new Date()
@@ -1467,30 +1540,32 @@ app.directive('onFinishRenderEvent', ['$timeout', function (timeout) {
                 var predicateName = attr.predicate;
 
                 var trySearch = function () {
+                    console.debug('try search table with new date range; before, after', scope.before, scope.after);
                     var query = {};
                     // if (!scope.isBeforeOpen && !scope.isAfterOpen) {
                     // magic condition…… this indicates the closing of datepicker popup dialog
-                    if (scope.isBeforeOpen ^ scope.isAfterOpen) {
-                        $timeout(function () {
-                            if (scope.before) {
-                                query.before = scope.before;
-                                scope.afterOpt.maxDate = query.before;
-                            }
-                            if (scope.after) {
-                                query.after = scope.after;
-                                scope.beforeOpt.minDate = scope.after;
-                            }
-                            scope.$apply(function () {
-                                // console.info('q, p', query, predicateName);
-                                table.search(query, predicateName);
-                            })
-                        });
-                    }
+                    // if (scope.isBeforeOpen ^ scope.isAfterOpen) {
+                    $timeout(function () {
+                        if (scope.before) {
+                            query.before = scope.before;
+                            scope.afterOpt.maxDate = query.before;
+                        }
+                        if (scope.after) {
+                            query.after = scope.after;
+                            scope.beforeOpt.minDate = scope.after;
+                        }
+                        scope.$apply(function () {
+                            // console.debug('q, p', query, predicateName);
+                            table.search(query, predicateName);
+                        })
+                    });
+                    // }
                 };
 
-                [inputBefore, inputAfter].forEach(function (input) {
-                    input.bind('blur', trySearch);
-                });
+                /*[inputBefore, inputAfter].forEach(function (input) {
+                 //没有效果
+                 input.bind('change', trySearch);
+                 });*/
 
                 function toggle(indicator, another) {
                     return function ($event) {
@@ -1554,7 +1629,7 @@ app.directive('onFinishRenderEvent', ['$timeout', function (timeout) {
                         }
 
                         scope.$apply(function () {
-                            // console.info('q, p', query, predicateName)
+                            // console.debug('q, p', query, predicateName)
                             table.search(query, predicateName)
                         });
                     });
@@ -1562,96 +1637,8 @@ app.directive('onFinishRenderEvent', ['$timeout', function (timeout) {
             }
         };
     }])
-    .filter('rmdsFilter', ['$filter', function ($filter) {
-        var filterFilter = $filter('filter');
-        var standardComparator = function standardComparator(obj, text) {
-            // console.info('stdcmp obj, txt', obj, text);
-            text = ('' + text).toLowerCase();
-            return ('' + obj).toLowerCase().indexOf(text) > -1;
-        };
 
-        return function (array, expression) {
-            // console.info('arr, expr', array, expression);
-            function customComparator(actual, expected) {
-                // console.info('act, expect', actual, expected);
-                // console.info('type act', typeof actual);
-
-                var isBeforeActivated = expected.before;
-                var isAfterActivated = expected.after;
-                var isLower = expected.lower;
-                var isHigher = expected.higher;
-                var higherLimit;
-                var lowerLimit;
-                var itemDate;
-                var queryDate;
-
-
-                if (ng.isObject(expected)) {
-
-                    //date range
-                    if (expected.before || expected.after) {
-                        try {
-                            if (isBeforeActivated) {
-                                higherLimit = expected.before;
-
-                                itemDate = new Date(actual);
-                                queryDate = new Date(higherLimit);
-
-                                if (itemDate > queryDate) {
-                                    return false;
-                                }
-                            }
-
-                            if (isAfterActivated) {
-                                lowerLimit = expected.after;
-
-
-                                itemDate = new Date(actual);
-                                queryDate = new Date(lowerLimit);
-
-                                if (itemDate < queryDate) {
-                                    return false;
-                                }
-                            }
-
-                            return true;
-                        } catch (e) {
-                            return false;
-                        }
-
-                    } else if (isLower || isHigher) {
-                        //number range
-                        if (isLower) {
-                            higherLimit = expected.lower;
-
-                            if (actual > higherLimit) {
-                                return false;
-                            }
-                        }
-
-                        if (isHigher) {
-                            lowerLimit = expected.higher;
-                            if (actual < lowerLimit) {
-                                return false;
-                            }
-                        }
-
-                        return true;
-                    }
-                    //etc
-
-                    return true;
-
-                }
-                return standardComparator(actual, expected);
-            }
-
-            var output = filterFilter(array, expression, customComparator);
-            return output;
-        };
-    }]);
-
-
+;
 // capture links with [rel='lightbox]
 app.run(['$rootScope', function (rootsgop) {
     rootsgop.$on('fwcnGridDone', function () {

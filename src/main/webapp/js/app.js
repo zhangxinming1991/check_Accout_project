@@ -51,9 +51,9 @@ var ReqUrl = {
     // // 新付款通知信息（用户上传）数目
     // newNotifNum: '/check_Accout/Check_MainController/goto_main',
     // “预览”付款通知数据（用户上传）
-    , notifView: '/check_Accout/Check_MainController/Watch',
+    , notifView: '/check_Accout/Check_MainController/Watch'
     // 准备对账的数据环境（进入对账模式申请）
-    prepareChkEnv: '/check_Accout/Check_MainController/enter_camodel'
+    , prepareChkEnv: '/check_Accout/Check_MainController/enter_camodel'
 
     // 注册申请中的对账联系人列表获取
     , regPendingNotifiers: '/check_Accout/PMController/watch'
@@ -109,4 +109,17 @@ var appConf = {
     //关账时间，月初5号
     checkClosingDate: 5
     , tmFmtLong: 'yyyy-MM-dd HH:mm:ss'
+    , tmFmtYMD: 'yyyy-MM-dd'
+    // , numberPerPage: 10
+    , opLogResultTypes: ['成功', '失败']
 };
+
+var frontBackEndMappping = {
+    userRole: {
+        'M': 'bm'
+        , 'U': 'bu'
+    }
+};
+
+// keys
+var lastUploadInfoKey = 'last-upload';

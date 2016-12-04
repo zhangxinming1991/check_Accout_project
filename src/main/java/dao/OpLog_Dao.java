@@ -4,6 +4,7 @@ import java.io.Serializable;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
@@ -111,6 +112,24 @@ public class OpLog_Dao {
 				.list();
 		session.close();
 		return oplogs;
+	}
+	
+	/*获取整张数据表*/
+	public int GetOpLogTb_Num(){
+		int num = 0;
+		try {
+				session = sessionFactory.openSession();
+				String hql_select_all = "select count(*) from OpLog";
+				Query query =   session.createQuery(hql_select_all);
+				num = ((Long)query.uniqueResult()).intValue();
+				session.close();
+				return num;
+		} catch (RuntimeException e) {
+			// TODO: handle exception
+			logger.error("获取总条数失败" + e);
+			return -1;
+		}
+		
 	}
 	
 	/*根据指定字段进行查找，字段类型为字符串类型*/

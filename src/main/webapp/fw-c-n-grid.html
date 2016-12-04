@@ -1,6 +1,7 @@
-<div ng>
-    <table st-table="dispRemindsx" st-safe-src="fncReminds" st-set-filter="rmdsFilter"
+<div>
+    <table st-table="dispItems" st-pipe="refreshGrid"
            class="table table-bordered table-striped">
+        <!--st-pipe="refreshGrid"-->
         <button class="btn btn-primary" ng-click="checkCashing()" title="执行对账操作（请在匹配完所有可用数据后操作）"
                 ng-hide="checkInoperable"><span class="glyphicon glyphicon-play"></span>对账……
         </button>
@@ -24,7 +25,7 @@
             <th>
                 <select st-search="payWay" class="form-control input-sm">
                     <option value="">所有</option>
-                    <option ng-repeat="way in fncReminds.payWaysInItems">{{way}}</option>
+                    <option ng-repeat="way in items.payWaysInItems">{{way}}</option>
                 </select>
             </th>
             <th><input st-search="receiver" placeholder="款项接收人" type="search" class="input-sm form-control"></th>
@@ -46,8 +47,8 @@
             <th>序号</th>
             <th ng-hide="checkInoperable">ID</th>
             <!--<th st-sort="payer">付款人</th>-->
-            <th>终端用户</th>
-            <th>实际付款人</th>
+            <th st-sort="payer">终端用户</th>
+            <th st-sort="actualPayer">实际付款人</th>
             <th st-sort="payTime">上传时间</th>
             <th st-sort="payMoney">付款金额（元）</th>
             <th st-sort="payWay">付款方式</th>
@@ -61,12 +62,12 @@
         </thead>
 
         <tbody ng-show="isNonEmptyGrid" class="">
-        <tr ng-repeat="r in dispRemindsx" on-finish-render-event="fwcnGridDone">
+        <tr ng-repeat="r in dispItems" on-finish-render-event="fwcnGridDone">
             <td>{{$index+1}}</td>
             <td ng-hide="checkInoperable">{{r.id}}</td>
             <td>{{r.payer}}</td>  <!--之前的付款人，现在的终端用户-->
             <td>{{r.actualPayer}}</td>
-            <!--<td>{{r.payTime | date:'yyyy-MM-dd HH:mm:ss'}}</td>-->
+            <!--<td>{{r.payTime | date:'yyyy-MM-dd hh:mm:ss'}}</td>-->
             <td>{{r.payTime}}</td>
             <td title="总付款金额：{{r.payMoney}}">
                 <!--总额：-->
@@ -81,6 +82,9 @@
             <td>
                 <!--<a><span class="glyphicon glyphicon-eye-open" ng-click="showPicture(r.linkCer)"></span></a>-->
                 <a rel="lightbox" href="{{r.linkCer}}"><span class="glyphicon glyphicon-eye-open"></span></a>
+
+                <!--eager load image-->
+                <img ng-src="{{r.linkCer}}" class="hidden">
 
                 <!-- <div id="imgMdl-{{r.id}}" role="dialog" class="modal fade" aria-hidden="true">
                      <div class="modal-dialog">
@@ -146,12 +150,10 @@
         </tbody>
 
         <tfoot>
-        <!--pagination-->
-        <!--<tr>-->
-        <!--<td colspan="11">-->
-        <!--<div st-pagination="" st-template="pagination.html" st-items-by-page="10"></div>-->
-        <!--</td>-->
-        <!--</tr>-->
+        <tr>
+            <td class="text-center" st-pagination="" st-items-by-page="10" colspan="20" st-displayed-pages="20">
+            </td>
+        </tr>
         </tfoot>
     </table>
 
@@ -286,31 +288,6 @@
                     <span class="text-warning" ng-show="ctrl.attachErrMsg">操作失败：{{ctrl.attachErrMsg}}</span>
                 </div>
             </div>
-        </div>
-    </script>
-
-    <script id="stDateRange.html" type="text/ng-template">
-
-        <div class="input-group">
-            <input type="text" class="form-control input-sm" uib-datepicker-popup="yyyy-MM-dd" ng-model="after"
-                   is-open="isAfterOpen" clear-text="清除" close-text="关闭" current-text="今天" placeholder="之后"
-                    datepicker-options="afterOpt"/>
-            <span class="input-group-btn">
-                <button type="button" class="btn btn-default btn-sm" ng-click="openAfter($event)">
-                    <i class="glyphicon glyphicon-calendar"></i>
-                </button>
-            </span>
-        </div>
-
-        <div class="input-group">
-            <input type="text" class="form-control input-sm" uib-datepicker-popup="yyyy-MM-dd" ng-model="before"
-                   is-open="isBeforeOpen" clear-text="清除" close-text="关闭" current-text="今天" placeholder="之前"
-                   datepicker-options="beforeOpt"/>
-            <span class="input-group-btn">
-                <button type="button" class="btn btn-default btn-sm" ng-click="openBefore($event)">
-                    <i class="glyphicon glyphicon-calendar"></i>
-                </button>
-            </span>
         </div>
     </script>
 

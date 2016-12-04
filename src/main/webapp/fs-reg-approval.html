@@ -6,7 +6,7 @@
                 <span class=""></span>客户审阅
             </uib-tab-heading>
             <div ng-controller="fsanCtrl">
-                <table st-table="dispItems" st-safe-src="items" class="table table-bordered table-striped">
+                <table st-table="dispItems" st-pipe="refreshGrid" class="table table-bordered table-striped">
                     <!--<caption class="caption h4 text-center" title="">客户审阅</caption>-->
                     <thead>
                     <tr>
@@ -23,7 +23,7 @@
                         </th>
                         <th><input st-search="weixin" placeholder="微信号" type="search" class="input-sm form-control">
                         </th>
-                        <th><input st-search="company" placeholder="名称（姓名）" type="search"
+                        <th><input st-search="company" placeholder="名称" type="search"
                                    class="input-sm form-control">
                         </th>
                         <th><input st-search="companyid" placeholder="单位代码/证件号" type="search"
@@ -47,11 +47,11 @@
                     <tr>
                         <th>序号</th>
                         <th st-sort="username">用户名</th>
-                        <th st-sort="realName">真实姓名</th>
+                        <th st-sort="realName">真实姓名<pagination/th>
                         <th st-sort="phone">电话</th>
                         <th st-sort="email">邮箱</th>
                         <th st-sort="weixin">微信号</th>
-                        <th st-sort="company" title="个人信息或所属单位名称"><!--个人信息/单位名称-->名称（姓名）</th>
+                        <th st-sort="company" title="个人信息或所属单位名称"><!--个人信息/单位名称-->名称</th>
                         <th st-sort="companyid">单位代码/证件号</th>
                         <th st-sort="registerWay"><!--商户类型-->类型</th>
                         <th st-sort="agent">所属代理商</th>
@@ -103,6 +103,8 @@
                     </tbody>
 
                     <tfoot>
+                        <td class="text-center" st-pagination="" st-items-by-page="10" colspan="20" st-displayed-pages="20">
+                        </td>
                     </tfoot>
                 </table>
             </div>
@@ -113,7 +115,7 @@
                 <span class=""></span>代理商财务审阅
             </uib-tab-heading>
             <div ng-controller="fsawCtrl">
-                <table st-table="dispItems" st-safe-src="items" class="table table-bordered table-striped">
+                <table st-table="dispItems" st-pipe="refreshGrid" class="table table-bordered table-striped">
                     <!--<caption class="caption h4 text-center" title="">代理商财务审阅</caption>-->
                     <thead>
                     <tr>
@@ -182,6 +184,8 @@
                     </tbody>
 
                     <tfoot>
+                        <td class="text-center" st-pagination="" st-items-by-page="10" colspan="20" st-displayed-pages="20">
+                        </td>
                     </tfoot>
                 </table>
             </div>

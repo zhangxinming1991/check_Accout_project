@@ -11,6 +11,7 @@
     <table class="table table-bordered text-center" ng-show="true">
         <caption class="h3 text-center" ng-show="year">{{year}}年对账结果</caption>
         <tbody ng-show="isNonEmptyGrid">
+
         <tr>
             <th class="text-center">1月</th>
             <th class="text-center">2月</th>
@@ -21,52 +22,33 @@
         </tr>
         <tr>
             <td ng-repeat="m in [1,2,3,4,5,6]">
-                <div ng-show="historyResults[m]">
-                    <p href="{{historyResults[m].url}}" class="btn btn-primary" target="_blank">
-                        <span class="glyphicon glyphicon-cloud-download" title="下载结果"></span>
-                        下载结果
-                    </p>
-                    <br>
-                    <p class="btn btn-danger" ng-click="recheck(year, m)">
-                        <span class="glyphicon glyphicon-trash" title="重新对账（谨慎）"></span>
-                        重新对账
-                    </p>
+                <div ng-show="historyResults[m]&&historyResults[m].url">
+                    <div>
+                        <a href="{{historyResults[m].url}}" class="btn btn-primary" target="_blank">
+                            <span class="glyphicon glyphicon-cloud-download" title="下载结果"></span>
+                            下载结果
+                        </a>
+                    </div>
+                    <div>
+                        <button class="btn btn-danger" ng-click="recheck(year, m)">
+                            <span class="glyphicon glyphicon-trash" title="重新对账（谨慎）"></span>
+                            重新对账
+                        </button>
+                    </div>
                 </div>
                 <div ng-show="!historyResults[m]">
-                    <p>无结果</p>
-                    <p ng-show="year<=thisDate.getFullYear()&&m<=(thisDate.getMonth()+1)" class="btn btn-primary"
-                       title="进入该月对账流程，补上结果" ng-click="recheck(year, m, true)">补充对账</p>
+                    <div>无结果</div>
+                    <div>
+                        <button ng-show="year<=thisDate.getFullYear()&&m<=(thisDate.getMonth()+1)"
+                                class="btn btn-primary"
+                                title="进入该月对账流程，补上结果" ng-click="recheck(year, m, true)">
+                            <span class="glyphicon glyphicon-plus"></span>&nbsp;补充对账
+                        </button>
+                    </div>
                 </div>
             </td>
-
-            <!--<td ng-show="historyResults['1']">
-                <a href="{{historyResults['1'].url}}" class="btn btn-primary" target="_blank">
-                    <span class="glyphicon glyphicon-cloud-download"></span>
-                </a>
-            </td>
-            <td ng-show="!historyResults['1']">无</td>
-
-            <td ng-show="historyResults['2']"><a href="{{historyResults['2'].url}}" class="btn btn-primary"
-                                                 target="_blank"><span
-                    class="glyphicon glyphicon-cloud-download"></span></a></td>
-            <td ng-show="!historyResults['2']">无</td>
-            <td ng-show="historyResults['3']"><a href="{{historyResults['3'].url}}" class="btn btn-primary"
-                                                 target="_blank"><span
-                    class="glyphicon glyphicon-cloud-download"></span></a></td>
-            <td ng-show="!historyResults['3']">无</td>
-            <td ng-show="historyResults['4']"><a href="{{historyResults['4'].url}}" class="btn btn-primary"
-                                                 target="_blank"><span
-                    class="glyphicon glyphicon-cloud-download"></span></a></td>
-            <td ng-show="!historyResults['4']">无</td>
-            <td ng-show="historyResults['5']"><a href="{{historyResults['5'].url}}" class="btn btn-primary"
-                                                 target="_blank"><span
-                    class="glyphicon glyphicon-cloud-download"></span></a></td>
-            <td ng-show="!historyResults['5']">无</td>
-            <td ng-show="historyResults['6']"><a href="{{historyResults['6'].url}}" class="btn btn-primary"
-                                                 target="_blank"><span
-                    class="glyphicon glyphicon-cloud-download"></span></a></td>
-            <td ng-show="!historyResults['6']">无</td>-->
         </tr>
+
         <tr>
             <th class="text-center">7月</th>
             <th class="text-center">8月</th>
@@ -77,48 +59,31 @@
         </tr>
         <tr>
             <td ng-repeat="m in [7,8,9,10,11,12]">
-                <div ng-show="historyResults[m]">
-                    <a href="{{historyResults[m].url}}" class="btn btn-primary" target="_blank">
-                        <span class="glyphicon glyphicon-cloud-download" title="下载结果"></span>
-                        下载结果
-                    </a>
-                    <br style="height: 5px">
-                    <a class="btn btn-danger" ng-click="recheck(year, m)">
-                        <span class="glyphicon glyphicon-trash"></span>
-                        重新对账
-                    </a>
+                <div ng-show="historyResults[m]&&historyResults[m].url">
+                    <div>
+                        <a href="{{historyResults[m].url}}" class="btn btn-primary" target="_blank">
+                            <span class="glyphicon glyphicon-cloud-download" title="下载结果"></span>
+                            下载结果
+                        </a>
+                    </div>
+                    <div>
+                        <button class="btn btn-danger" ng-click="recheck(year, m)">
+                            <span class="glyphicon glyphicon-trash"></span>
+                            重新对账
+                        </button>
+                    </div>
                 </div>
                 <div ng-show="!historyResults[m]">
-                    <p>无结果</p>
-                    <p ng-show="year<=thisDate.getFullYear()&&m<=(thisDate.getMonth()+1)" class="btn btn-primary"
-                       title="进入该月对账流程" ng-click="recheck(year, m, true)">我要对账</p>
+                    <div>无结果</div>
+                    <div>
+                        <button ng-show="year<=thisDate.getFullYear()&&m<=(thisDate.getMonth()+1)"
+                                class="btn btn-primary"
+                                title="进入该月对账流程，补上结果" ng-click="recheck(year, m, true)">
+                            <span class="glyphicon glyphicon-plus"></span>&nbsp;补充对账
+                        </button>
+                    </div>
                 </div>
             </td>
-
-            <!--<td ng-show="historyResults['7']"><a href="{{historyResults['7'].url}}" class="btn btn-primary"
-                                                 target="_blank"><span
-                    class="glyphicon glyphicon-cloud-download"></span></a></td>
-            <td ng-show="!historyResults['7']">无</td>
-            <td ng-show="historyResults['8']"><a href="{{historyResults['8'].url}}" class="btn btn-primary"
-                                                 target="_blank"><span
-                    class="glyphicon glyphicon-cloud-download"></span></a></td>
-            <td ng-show="!historyResults['8']">无</td>
-            <td ng-show="historyResults['9']"><a href="{{historyResults['9'].url}}" class="btn btn-primary"
-                                                 target="_blank"><span
-                    class="glyphicon glyphicon-cloud-download"></span></a></td>
-            <td ng-show="!historyResults['9']">无</td>
-            <td ng-show="historyResults['10']"><a href="{{historyResults['10'].url}}" class="btn btn-primary"
-                                                  target="_blank"><span
-                    class="glyphicon glyphicon-cloud-download"></span></a></td>
-            <td ng-show="!historyResults['10']">无</td>
-            <td ng-show="historyResults['11']"><a href="{{historyResults['11'].url}}" class="btn btn-primary"
-                                                  target="_blank"><span
-                    class="glyphicon glyphicon-cloud-download"></span></a></td>
-            <td ng-show="!historyResults['11']">无</td>
-            <td ng-show="historyResults['12']"><a href="{{historyResults['12'].url}}" class="btn btn-primary"
-                                                  target="_blank"><span
-                    class="glyphicon glyphicon-cloud-download"></span></a></td>
-            <td ng-show="!historyResults['12']">无</td>-->
         </tr>
         </tbody>
 

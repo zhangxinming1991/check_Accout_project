@@ -118,7 +118,9 @@ public class Person_Manage {
 	 * @return
 	 * @author zhangxinming
 	 */
-	public List Watch(String watch_type,int offset,int pagesize){
+	public JSONObject Watch(String watch_type,int offset,int pagesize){
+		JSONObject re_json = new JSONObject();
+		int num = 0;
 		List re_list = null;
 		List re_list_locked = null;
 		List<Object> re_list_new = new ArrayList<>();
@@ -126,13 +128,14 @@ public class Person_Manage {
 		if (watch_type.equals("reg_cp")) {//查看新注册的对账联系人
 			logger.info("查看新注册的对账联系人");
 			//re_list = cDao.GetTotalTbByElement("flag",REG_NEW);
-			re_list = cDao.GetTotalTbByElement_ByPage("flag",REG_NEW,offset,pagesize);
+			re_list = cDao.GetConnectTbByElement_ByPage("flag",REG_NEW,offset,pagesize);
 			for (int i = 0; i < re_list.size(); i++) {
 				ConnectPerson cPerson = (ConnectPerson) re_list.get(i);
 				cPerson.setAgent(ChangeAgentToChinese(cPerson.getAgent()));
 				cPerson.setRegisterWay(ChangeRegTypeToChinese(cPerson.getRegisterWay()));
 				re_list_new.add(cPerson);
 			}
+			num = cDao.GetConnectTbByElement_Num_ByPage("flag",REG_NEW);
 		}
 		else if (watch_type.equals("reg_as")) {//查看新注册的财务人员
 			logger.info("查看新注册的财务人员");
@@ -143,11 +146,14 @@ public class Person_Manage {
 				cPerson.setAgentid((ChangeAgentToChinese(cPerson.getAgentid())));
 				re_list_new.add(cPerson);
 			}
+			num = aS_Dao.GetTotalTbByElement_Num_ByPage("flag", REG_NEW);
 		}
 		else if (watch_type.equals("reged_cp")) {//查看已注册的对账联系人
 			logger.info("查看已注册的对账联系人");
 		//	re_list = cDao.GetTotalTbByElement("flag",REG_SUCCESS);
-			re_list = cDao.GetTotalTbByElement_ByPage("flag",REG_SUCCESS,offset,pagesize/2);
+			re_list = cDao.GetConnectTbByElement_ByPage_And("flag",REG_SUCCESS,"flag", LOCKED,offset,pagesize);
+			num = cDao.GetConnectTbByElement_Num_ByPage_And("flag",REG_SUCCESS,"flag", LOCKED);
+			logger.info(num);
 			for (int i = 0; i < re_list.size(); i++) {
 				ConnectPerson cPerson = (ConnectPerson) re_list.get(i);
 				cPerson.setAgent(ChangeAgentToChinese(cPerson.getAgent()));
@@ -155,39 +161,52 @@ public class Person_Manage {
 				re_list_new.add(cPerson);
 			}
 			
-			re_list_locked = cDao.GetTotalTbByElement_ByPage("flag", LOCKED,offset+pagesize/2,pagesize/2);
+		/*	re_list_locked = cDao.GetTotalTbByElement_ByPage("flag", LOCKED,offset+pagesize/2,pagesize/2);
 			for (int i = 0; i < re_list_locked.size(); i++) {
 				ConnectPerson cPerson = (ConnectPerson) re_list_locked.get(i);
 				cPerson.setAgent(ChangeAgentToChinese(cPerson.getAgent()));
 				cPerson.setRegisterWay(ChangeRegTypeToChinese(cPerson.getRegisterWay()));
 				re_list_locked_new.add(cPerson);
-			}
-			re_list_new.addAll(re_list_locked_new);
+			}*/
+		//	re_list_new.addAll(re_list_locked_new);
 		}
 		else if (watch_type.equals("reged_as")) {//查看已注册的财务人员
 			logger.info("查看已注册的财务人员");
-			re_list = aS_Dao.GetTotalTbByElement_ByPage("flag", REG_SUCCESS,offset,pagesize/2);
+			re_list = aS_Dao.GetTotalTbByElement_ByPage_And("flag", REG_SUCCESS,"flag",LOCKED,offset,pagesize);
+			num = aS_Dao.GetTotalTbByElement_Num_ByPage_And("flag", REG_SUCCESS,"flag",LOCKED);//获取满足条件的记录数目
+			logger.info(re_list.size() + ":" + num);
 			for (int i = 0; i < re_list.size(); i++) {
 				Assistance cPerson = (Assistance) re_list.get(i);
 				cPerson.setAgentid((ChangeAgentToChinese(cPerson.getAgentid())));
 				re_list_new.add(cPerson);
 			}
 			
-			re_list_locked = aS_Dao.GetTotalTbByElement_ByPage("flag", LOCKED,offset+pagesize/2,pagesize/2);
-			re_list_new.addAll(re_list_locked);
+	/*		re_list_locked = aS_Dao.GetTotalTbByElement_ByPage("flag", LOCKED,offset+pagesize/2,pagesize/2);
+			re_list_new.addAll(re_list_locked);*/
+			
+			//num = aS_Dao.GetTotalTb_Num();
 		}
 		else if (watch_type.equals("op_log")) {//查看操作日志
 			logger.info("查看操作日志");
 		//	re_list = opLog_Dao.GetOpLogTb();
 			
 			re_list = opLog_Dao.GetOpLogTb_ByPage(offset, pagesize);
+			num = opLog_Dao.GetOpLogTb_Num();
 			re_list_new.addAll(re_list);
 		}
 		else {
 			logger.error("未知的查看类型" + watch_type);
 		}
 		
-		return re_list_new;
+		re_json.element("data", re_list_new);
+		if (num % 10 > 0) {//计算总页数
+			re_json.element("totalpage", num/10 + 1);
+		}
+		else {
+			re_json.element("totalpage", num/10);
+		}
+		
+		return re_json;
 	}
 	
 	/**

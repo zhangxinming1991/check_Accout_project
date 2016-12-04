@@ -694,7 +694,7 @@ public class PMController {
     	logger.info("***Get Asssistance_login request***");   	
     	String work_id = null;
     	String password = null;
-    	String lgtype = null;
+    	//String lgtype = null;
     	int newpay_num = 0;
     	
     	
@@ -705,7 +705,7 @@ public class PMController {
 			JSONObject jstr = JSONObject.fromObject(request_s_de);
 			work_id = jstr.getString("uid");//获取登录id
 			password = jstr.getString("upwd");//获取登录密码
-			lgtype = jstr.getString("from"); 
+			//lgtype = jstr.getString("from"); 
 
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
@@ -1120,12 +1120,14 @@ public class PMController {
 		int pagesize = 10;
 		int offset = (pagenum-1)*10;
 		
-    	List re_list = pManage.Watch(watch_type,offset,pagesize);//进入查看处理
-    	
+		re_jsonobject = pManage.Watch(watch_type,offset,pagesize);//进入查看处理
+    	//int num = pManage.opLog_Dao.GetOpLogTb_Num();
     	/*返回数据到前台*/
     	re_jsonobject.element("flag", 0);
     	re_jsonobject.element("errmsg", "查看成功");
-    	OneKeyData_return_enall(response, re_jsonobject, "data", re_list);
+    	//re_jsonobject.element("totalpage", 2);
+    	//OneKeyData_return_enall(response, re_jsonobject, "data", re_list);
+    	Common_return_en(response, re_jsonobject);
     	/*返回数据到前台*/
     }
     

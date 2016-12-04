@@ -1,4 +1,4 @@
-// console.log('config services/providers');
+// console.debug('config services/providers');
 
 // 检测后端告知请求是否成功
 function isOkResBody(resBody) {
@@ -39,26 +39,30 @@ app.factory('HttpReqService', ['$http', '$q', function (http, Q) {
      * @returns {promise|*|d.promise|d}
      */
     svc.req = function (url, reqbody, okfnc, errfnc) {
-        console.log('url, req:', url, reqbody);
+        console.debug('url, req:', url, reqbody);
         var deferred = Q.defer();
         try {
             var encoded = reqbody === undefined || angular.equals(reqbody, {}) ? undefined : Encrypt(/*JSON.stringify*/(reqbody));
-            //console.log('encoded:' + encoded);
+            //console.debug('encoded:' + encoded);
             http.post(url, /*reqbody*/ encoded).then(function (resPkg) {
-                // console.log('recvd:',resPkg.data);
+                // console.debug('recvd:',resPkg.data);
                 resPkg.data = Decrypt(resPkg.data);
-                // console.log('Decrypted:', resPkg.data);
+                // console.debug('Decrypted:', resPkg.data);
                 resPkg.data = resPkg === undefined ? undefined : JSON.parse(resPkg.data);
                 var resbody = resPkg.data;
                 if (isOkResBody(resbody)) {
                     if (okfnc === undefined) {
                         okfnc = function (resbody) {
+                            if ($.isArray(resbody.data) && !resbody.items) {
+                                resbody.items = resbody.data;
+                                return resbody;
+                            }
                             return resbody.data;
                         };
                     }
                     deferred.resolve(okfnc(resbody));
                 } else {
-                    console.log('negative resbody:', resbody);
+                    console.debug('negative resbody:', resbody);
                     errfnc = errfnc || function (resbody) {
                             return {msg: resbody.errmsg || '网络请求错误，无详细错误信息'};
                         };
@@ -73,7 +77,7 @@ app.factory('HttpReqService', ['$http', '$q', function (http, Q) {
             console.error(expt);
             deferred.reject({msg: '网络或系统错误'});
         }
-        console.log('req result:', deferred.promise);
+        console.debug('req result:', deferred.promise);
         return deferred.promise;
     };
     return svc;
@@ -81,7 +85,7 @@ app.factory('HttpReqService', ['$http', '$q', function (http, Q) {
 
 // 用户账户相关服务
 app.factory('AccountService', ['$rootScope', '$cookies', '$q', 'HttpReqService', 'FncRmindService', function (rootsgop, cuki, Q, Req, NSvc) {
-    // console.log('constructing AccountService');
+    // console.debug('constructing AccountService');
 
     var svc = {};
 
@@ -129,7 +133,7 @@ app.factory('AccountService', ['$rootScope', '$cookies', '$q', 'HttpReqService',
                 "uid": formUser.uid,
                 "upwd": formUser.upwd,
                 // 浏览器登陆标识
-                "from": formUser.role === 'M' ? 'bm' : 'bu'
+                "from": frontBackEndMappping[formUser.role]
             };
             if (!formUser.rememberMe) {
                 storeUser(undefined, localStorage);
@@ -151,7 +155,7 @@ app.factory('AccountService', ['$rootScope', '$cookies', '$q', 'HttpReqService',
                 storeUser(reqUser);
 
                 // var newItemsNum = resbody.isnewpay ? resbody.newpay_num : 0;
-                // console.log('Login newItemsNum:' + newItemsNum);
+                // console.debug('Login newItemsNum:' + newItemsNum);
                 // NSvc.hasNotReadNumFromLogin = true;
                 // NSvc.newItemsNum = newItemsNum;
 
@@ -253,13 +257,13 @@ app.factory('AccountService', ['$rootScope', '$cookies', '$q', 'HttpReqService',
     };
 
 // 注册申请中的对账联系人列表
-    svc.regPendingPaymentNotifiers = function () {
-        return Req.req(ReqUrl.regPendingNotifiers, {watch_type: 'reg_cp'});
+    svc.regPendingPaymentNotifiers = function (reqParams) {
+        return Req.req(ReqUrl.regPendingNotifiers, $.extend({watch_type: 'reg_cp'}, reqParams));
     };
 
 // 注册申请中的财务员列表
-    svc.regPendingFinancialWorker = function () {
-        return Req.req(ReqUrl.regPendingFworkers, {watch_type: 'reg_as'});
+    svc.regPendingFinancialWorker = function (reqParams) {
+        return Req.req(ReqUrl.regPendingFworkers, $.extend({watch_type: 'reg_as'}, reqParams));
     };
 
 // 拒绝对账联系人的注册申请
@@ -299,26 +303,26 @@ app.factory('AccountService', ['$rootScope', '$cookies', '$q', 'HttpReqService',
     };
 
 // 对账联系人列表
-    svc.paymentNotifiers = function () {
-        return Req.req(ReqUrl.notifiers, {
+    svc.paymentNotifiers = function (reqParams) {
+        return Req.req(ReqUrl.notifiers, $.extend({
             watch_type: 'reged_cp'
-        }, function (resbody) {
+        }, reqParams), function (resbody) {
             resbody.data.forEach(function (ele) {
                 ele.ctlflag = ele.flag;
             });
-            return resbody.data;
+            return resbody;
         });
     };
 
 // 财务员列表
-    svc.financialWorkers = function () {
-        return Req.req(ReqUrl.fworkers, {
+    svc.financialWorkers = function (reqParams) {
+        return Req.req(ReqUrl.fworkers, $.extend({
             watch_type: 'reged_as'
-        }, function (resbody) {
+        }, reqParams), function (resbody) {
             resbody.data.forEach(function (ele) {
                 ele.ctlflag = ele.flag;
             });
-            return resbody.data;
+            return resbody;
         });
     };
 
@@ -371,7 +375,7 @@ app.factory('AccountService', ['$rootScope', '$cookies', '$q', 'HttpReqService',
 
 /*
  app.factory('OrderService', ['$http', '$q', function ($http, $q) {
- console.log('construct OrderService');
+ console.debug('construct OrderService');
 
  var svc = {};
 
@@ -415,23 +419,23 @@ app.factory('FncRmindService', ['$q', 'HttpReqService', function (Q, Req) {
             item.checkResult = item.checkResult || 'V'; // 设置V标志，为“无”，表示没有设置状态
             item.result = item.checkResult;
             item.payTime = item.payTime || item.uploadTime;
-            // 字符串时间转Date类型
-            // item.payTime = new Date(item.payTime);
+            // item.payTime = new Date(item.payTime);      // 字符串时间转Date类型
             item.mcontract_data = item.manyPay;
             if (payWaysInItems.indexOf(item.payWay) < 0) {
                 payWaysInItems.push(item.payWay);
             }
         }
         resdata.payWaysInItems = payWaysInItems;
-        return resdata;
+
+        return $.extend({}, resbody, {items: resdata});
     }
 
-    //todo paging?
-    svc.fncReminds = function () {
+    svc.fncReminds = function (cfg) {
         var reqBody = {
             "table_name": "payrecord",//查看资源名称
             "watch_type": 'T'//方式
         };
+        $.extend(reqBody, cfg);
 
         return Req.req(ReqUrl.fwFncReminds, reqBody, notifTransFnc);
     };
@@ -481,11 +485,11 @@ app.factory('FncRmindService', ['$q', 'HttpReqService', function (Q, Req) {
     };
 
 // 预览付款通知（用户上传数据）
-    svc.viewNotifications = function () {
-        return Req.req(ReqUrl.notifView, {
+    svc.viewNotifications = function (reqParams) {
+        return Req.req(ReqUrl.notifView, $.extend({
             watch_type: "T",
             table_name: "pay_cache"
-        }, notifTransFnc);
+        }, reqParams), notifTransFnc);
     };
 
     return svc;
@@ -494,21 +498,31 @@ app.factory('FncRmindService', ['$q', 'HttpReqService', function (Q, Req) {
 
 // 对账相关服务
 app.factory('ChkRsltSvc', ['HttpReqService', '$rootScope', function (Req, rootsgop) {
+    // console.debug('svc->ChkRsltSvc');
+
     var svc = {};
 
-    // 如果被刷新，需提前之前的caid
+    // 如果被刷新，需提取之前的caid
     svc.caid = svc.caid || sessionStorage.getItem('caid');
     rootsgop.caid = svc.caid;
+
 
 // 对账操作环境准备
     svc.initCheckingEnv = function () {
         return Req.req(ReqUrl.prepareChkEnv, {}, function (resbody) {
-            svc.caid = resbody.caid || resbody.data.caid;
+            svc.caid = resbody.caid || resbody.data && resbody.data.caid;
             var obj = {
                 caid: svc.caid
-                , lastUploadTime: resbody.lastUploadTime || resbody.data.lastUploadTime
-                , lastUploadResult: resbody.lastUploadResult || resbody.data.lastUploadResult
+                , lastUpload: {
+                    time: resbody.lastUploadTime || resbody.data && resbody.data.lastUploadTime
+                    , result: resbody.lastUploadResult || resbody.data && resbody.data.lastUploadResult
+                }
             };
+            //*******//
+            rootsgop.lastUpload = rootsgop.lastUpload || {};//保证.lastUpload字段非undefined，否则extend无效
+            $.extend(rootsgop.lastUpload, obj);
+            sessionStorage.setItem(lastUploadInfoKey, JSON.stringify(obj));
+            //*******//
             sessionStorage.setItem('caid', svc.caid);
             rootsgop.caid = svc.caid;
             return obj;
@@ -636,18 +650,26 @@ app.factory('ChkRsltSvc', ['HttpReqService', '$rootScope', function (Req, rootsg
 
 app.factory('MgmtSvc', ['HttpReqService', function (Req) {
     var svc = {};
-    svc.fetchLogs = function () {
-        return Req.req(ReqUrl.viewLog, {
+    svc.fetchLogs = function (reqParams) {
+        return Req.req(ReqUrl.viewLog, $.extend({
             watch_type: 'op_log'
-        }, function (resbody) {
-            var types = [];
+        }, reqParams), function (resbody) {
+            var userTypes = [];
+            var resultTypes = [];
             resbody.data.forEach(function (ele) {
-                if (types.indexOf(ele.usertype) == -1) {
-                    types.push(ele.usertype);
+                if (userTypes.indexOf(ele.usertype) == -1) {
+                    userTypes.push(ele.usertype);
                 }
+                // // 动态生成
+                // if(resultTypes.indexOf(ele.result)==-1){
+                //     resultTypes.push(ele.result);
+                // }
             });
-            resbody.data['itemTypes'] = types;
-            return resbody.data;
+            resbody.data['itemTypes'] = userTypes;
+            // resbody.data['resultTypes'] = resultTypes;
+            // 或者静态配置
+            resbody.data['resultTypes'] = appConf.opLogResultTypes;
+            return resbody;
         });
     };
 

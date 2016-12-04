@@ -1,12 +1,13 @@
 <div>
-    <table st-table="dispItems" st-safe-src="items" class="table table-bordered table-striped">
+    <table st-table="dispItems" st-pipe="refreshGrid" class="table table-bordered table-striped">
         <!--<caption class="caption h3 text-center" title="">操作日志-->
         <!--</caption>-->
         <thead>
         <tr>
             <th></th>
-            <th><input st-search="time" placeholder="时间" type="search"
-                       class="input-sm form-control">
+            <th>
+                <!--<input st-search="time" placeholder="时间" type="search" class="input-sm form-control">-->
+                <st-date-range predicate="time" before="query.before" after="query.after"></st-date-range>
             </th>
             <th><input st-search="username" placeholder="用户名" type="search"
                        class="input-sm form-control">
@@ -19,8 +20,12 @@
             </th>
             <th><input st-search="content" placeholder="操作" type="search" class="input-sm form-control">
             </th>
-            <th><input st-search="result" placeholder="操作结果" type="search"
-                       class="input-sm form-control">
+            <th>
+                <!--<input st-search="result" placeholder="操作结果" type="search" class="input-sm form-control">-->
+                <select st-search="result" class="input-sm form-control">
+                    <option value="">所有</option>
+                    <option ng-repeat="p in items.resultTypes">{{p}}</option>
+                </select>
             </th>
         </tr>
         <tr>
@@ -63,6 +68,8 @@
         </tbody>
 
         <tfoot>
+            <td class="text-center" st-pagination="" st-items-by-page="10" colspan="20" st-displayed-pages="20">
+            </td>
         </tfoot>
     </table>
 </div>

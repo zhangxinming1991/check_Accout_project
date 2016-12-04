@@ -3,10 +3,10 @@
     <uib-tabset>
         <uib-tab>
             <uib-tab-heading>
-                <span class=""></span>对账联系人管理
+                <span class=""></span><!--对账联系人-->客户管理
             </uib-tab-heading>
             <div ng-controller="fscnCtrl">
-                <table st-table="dispItems" st-safe-src="items" class="table table-bordered table-striped">
+                <table st-table="dispItems" st-pipe="refreshGrid" class="table table-bordered table-striped">
                     <!--<caption class="caption h4 text-center" title="">对账联系人管理</caption>-->
                     <thead>
                     <tr>
@@ -110,6 +110,8 @@
                     </tbody>
 
                     <tfoot>
+                        <td class="text-center" st-pagination="" st-items-by-page="10" colspan="20" st-displayed-pages="20">
+                        </td>
                     </tfoot>
                 </table>
             </div>
@@ -120,7 +122,7 @@
                 <span class=""></span>代理商财务管理
             </uib-tab-heading>
             <div ng-controller="fscwCtrl">
-                <table st-table="dispItems" st-safe-src="items" class="table table-bordered table-striped">
+                <table st-table="dispItems"  st-pipe="refreshGrid"  class="table table-bordered table-striped">
                     <!--<caption class="caption h4 text-center" title="">代理商财务管理</caption>-->
                     <thead>
                     <tr>
@@ -147,6 +149,7 @@
                                 <option value="-3">锁定</option>
                             </select>
                         </th>
+                        <th></th>
                     </tr>
                     <tr>
                         <th>序号</th>
@@ -197,6 +200,8 @@
                     </tbody>
 
                     <tfoot>
+                        <td class="text-center" st-pagination="" st-items-by-page="10" colspan="20" st-displayed-pages="20">
+                        </td>
                     </tfoot>
                 </table>
             </div>

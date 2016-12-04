@@ -10,32 +10,6 @@
     <link type="text/css" href="css/angular-bootstrap-lightbox.min.css">
     <link rel="stylesheet" href="css/picbox.css">
     <link rel="stylesheet" href="css/app.css">
-
-    <style>
-
-    </style>
-    <style type="text/css">
-
-        #bg {
-            position: fixed;
-            top: 0;
-            left: -50%;
-            width: 200%;
-            height: 75%;
-        }
-
-        #bg img {
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            margin: auto;
-            min-width: 50%;
-            min-height: 50%;
-        }
-
-    </style>
 </head>
 <body data-ng-app="sany">
 <div ng-controller="indexCtrl">
@@ -123,11 +97,10 @@
                             <span><a href="" class="pull-right">注册</a></span>
                         </div>
                     </form>-->
-                    <form name="loginForm" id="loginForm" role="form" data-toggle="validator" class="form center-block"
-                          ng-init="formUser.role='U'">
+                    <form name="loginForm" id="loginForm" role="form" data-toggle="validator" class="form center-block">
                         <!--ng-controller="loginFormCtrl"-->
 
-                        <!--                        	<div class="form-group row">
+                        <!--                        	<div class="form-group row" ng-init="formUser.role='U'">
                                                         <label class="control-label  col-md-3">人员类型：
                                                             <select ng-model="formUser.role" class="form-control col-md-3">
                                                                 <option value="U">财务人员</option>
@@ -136,7 +109,7 @@
                                                             </select>
                                                         </label>
                                                     </div>-->
-                        <div class="btn-group form-group">
+                        <!--<div class="btn-group form-group">
                             <button ng-model="formUser.role" uib-btn-radio="'U'" class="btn"
                                     ng-class="formUser.role=='U'?'btn-primary':'btn-default'" type="button">
                                 财务员
@@ -145,10 +118,10 @@
                                     ng-class="formUser.role=='M'?'btn-primary':'btn-default'" type="button">
                                 管理员
                             </button>
-                            <!--<button ng-model="formUser.role" uib-btn-radio="'S'" class="btn"-->
-                            <!--ng-class="formUser.role=='S'?'btn-primary':'btn-default'" type="button">系统管理员-->
-                            <!--</button>-->
-                        </div>
+                            &lt;!&ndash;<button ng-model="formUser.role" uib-btn-radio="'S'" class="btn"&ndash;&gt;
+                            &lt;!&ndash;ng-class="formUser.role=='S'?'btn-primary':'btn-default'" type="button">系统管理员&ndash;&gt;
+                            &lt;!&ndash;</button>&ndash;&gt;
+                        </div>-->
                         <div class="form-group">
                             <!--<label class=" control-label">登陆名：</label>-->
                             <input name="uid" id="loginUid" class="form-control input-lg" type="text"
@@ -161,7 +134,7 @@
                         </div>
                         <div class="form-group">
                             <!--<label class=" control-label">密码：</label>-->
-                            <input name="upwd" type="password" ng-model="formUser.upwd" placeholder="密码"
+                            <input name="upwd" type="password" ng-model="formUser.upwd" placehlder="密码"
                                    class="form-control input-lg"
                                    data-error="密码格式有误" required
                             >
@@ -209,11 +182,9 @@
                     <h2 class="text-center text-primary">注册</h2>
                 </div>
                 <div class="modal-body">
-                    <form name="signUpForm" id="signUpForm" data-toggle="validator" role="form"
-                          ng-init="signUpCtrl.formUser.role='U'"
-                    >
+                    <form name="signUpForm" id="signUpForm" data-toggle="validator" role="form">
                         <!--用户角色-->
-                        <!--                        <div class="btn-group form-group">
+                        <!--                        <div class="btn-group form-group" ng-init="signUpCtrl.formUser.role='U'">
                                                     <button ng-model="signUpCtrl.formUser.role" uib-btn-radio="'U'" class="btn"
                                                             ng-class="signUpCtrl.formUser.role=='U'?'btn-primary':'btn-default'" type="button">
                                                         财务人员
@@ -358,17 +329,17 @@
 
 <script id="fw.html" type="text/ng-template">
     <div class="row">
-        <div class="sidebar col-sm-2 col-md-2 col-lg-1">
+        <div class="sidebar col-sm-2 col-md-1 col-lg-1">
             <ul class="nav nav-sidebar">
                 <li ng-class="{active:activeState.indexOf('u.fw.v')==0}" ng-disabled="inChecking"><a
-                        data-ui-sref="u.fw.v">预览付款记录</a></li>
-                <li ng-class="{active:activeState.indexOf('u.fw.p')==0}"><a ng-click="checkingEnv()" href>进入对账流程</a>
+                        data-ui-sref="u.fw.v"><!--预览-->付款记录</a></li>
+                <li ng-class="{active:activeState.indexOf('u.fw.p')==0}"><a ng-click="checkingEnv()" href><!--进入-->对账流程</a>
                 </li>
                 <li ng-class="{active:activeState.indexOf('u.fw.h')==0}" ng-disabled="inChecking"><a
-                        data-ui-sref="u.fw.h">查看历史结果</a></li>
+                        data-ui-sref="u.fw.h"><!--查看-->历史结果</a></li>
             </ul>
         </div>
-        <div class="col-sm-10 col-sm-offset-2 col-md-10 col-md-offset-2 col-lg-11 col-lg-offset-1 main"
+        <div class="col-sm-offset-2 col-sm-10 col-md-offset-1 col-md-11 col-lg-offset-1 col-lg-11 main"
              data-ui-view=""></div>
     </div>
 </script>
@@ -398,6 +369,30 @@
     </div>
 </script>
 
+<script id="stDateRange.html" type="text/ng-template">
+    <div class="input-group">
+        <input type="text" class="form-control input-sm" uib-datepicker-popup="{{appConf.tmFmtYMD}}" ng-model="after"
+               is-open="isAfterOpen" clear-text="清除" close-text="关闭" current-text="今天" placeholder="之后"
+               datepicker-options="afterOpt" ng-change="afterDateChange(after)"/>
+            <span class="input-group-btn">
+                <button type="button" class="btn btn-default btn-sm" ng-click="openAfter($event)">
+                    <i class="glyphicon glyphicon-calendar"></i>
+                </button>
+            </span>
+    </div>
+
+    <div class="input-group">
+        <input type="text" class="form-control input-sm" uib-datepicker-popup="{{appConf.tmFmtYMD}}" ng-model="before"
+               is-open="isBeforeOpen" clear-text="清除" close-text="关闭" current-text="今天" placeholder="之前"
+               datepicker-options="beforeOpt" ng-change="beforeDateChange(before)"/>
+            <span class="input-group-btn">
+                <button type="button" class="btn btn-default btn-sm" ng-click="openBefore($event)">
+                    <i class="glyphicon glyphicon-calendar"></i>
+                </button>
+            </span>
+    </div>
+</script>
+
 
 <script src="js/jquery.min.js"></script>
 <script src="js/bootstrap.min.js"></script>
@@ -420,5 +415,6 @@
 <script src="js/app-service.js"></script>
 <script src="js/app-controller.js"></script>
 <script src="js/app-state.js"></script>
+<script src="js/app-mock.js"></script>
 </body>
 </html>

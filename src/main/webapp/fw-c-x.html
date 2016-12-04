@@ -1,6 +1,5 @@
 <div>
     <uib-tabset>
-
         <uib-tab select="sel(2)">
             <uib-tab-heading title="未到账的货款" class="text-danger">
                 <span class="glyphicon glyphicon-exclamation-sign"></span>未到账货款
@@ -10,34 +9,34 @@
 
         <uib-tab select="sel(1)">
             <uib-tab-heading title="无法匹配到合同或客户的出纳" class="text-danger">
-                <span class="glyphicon glyphicon-question-sign"></span>无匹配同客户的出纳
+                <span class="glyphicon glyphicon-question-sign"></span>未知出纳
             </uib-tab-heading>
             <div ng-include="'x-trans.html'" ng-controller="X1Ctrl"></div>
         </uib-tab>
 
         <uib-tab select="sel(3)">
             <uib-tab-heading title="无实际出纳的用户上传付款通知" class="text-danger">
-                <span class="glyphicon glyphicon-exclamation-sign"></span>无出纳的付款通知
+                <span class="glyphicon glyphicon-exclamation-sign"></span>未知付款通知
             </uib-tab-heading>
             <div ng-include="'x-notif.html'" ng-controller="X3Ctrl"></div>
         </uib-tab>
 
         <uib-tab select="sel(4)">
             <uib-tab-heading title="匹配到合同的出纳" class="text-success">
-                <span class="glyphicon glyphicon-ok-sign"></span>有匹配合同的出纳
+                <span class="glyphicon glyphicon-ok-sign"></span>匹配合同的出纳
             </uib-tab-heading>
             <div ng-include="'x-trans.html'" ng-controller="X4Ctrl"></div>
         </uib-tab>
 
         <uib-tab select="sel(5)">
-            <uib-tab-heading title="匹配客户的出纳（不包含匹配到合同的出纳）" class="text-success">
+            <uib-tab-heading title="匹配到客户的出纳（不包含匹配到合同的出纳）" class="text-success">
                 <span class="glyphicon glyphicon-ok-sign"></span>有匹配客户的出纳
             </uib-tab-heading>
             <div ng-include="'x-trans.html'" ng-controller="X5Ctrl"></div>
         </uib-tab>
 
         <uib-tab select="sel(6)">
-            <uib-tab-heading title="有用户上传付款通知的出纳" class="text-success">
+            <uib-tab-heading title="能匹配到出纳记录的用户上传付款通知" class="text-success">
                 <span class="glyphicon glyphicon-ok-sign"></span>有出纳的付款通知
             </uib-tab-heading>
             <div ng-include="'x-notif.html'" ng-controller="X6Ctrl"></div>
