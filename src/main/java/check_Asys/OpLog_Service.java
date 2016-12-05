@@ -37,6 +37,7 @@ public class OpLog_Service {
 	public static final String utype_as = "代理商财务";
 	public static final String utype_cp = "客户";
 	public static final String utype_ma = "管理员";
+	public static final String utype_am = "代理商管理员";
 	public static final String utype_un = "未知用户类型";
 	/*用户类型*/
 	
