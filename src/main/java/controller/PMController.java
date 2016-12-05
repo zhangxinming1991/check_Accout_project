@@ -743,7 +743,7 @@ public class PMController {
     		else if (role.equals("bm")) {
     			oLog_Service.AddLog(OpLog_Service.utype_ma, work_id, OpLog_Service.Log, OpLog_Service.result_success);
 			}
-    		else if(role.equals("bma")){
+    		else if(role.equals("ba")){
     			oLog_Service.AddLog(OpLog_Service.utype_am, work_id, OpLog_Service.Log, OpLog_Service.result_success);
     		}
     		else{
@@ -759,7 +759,7 @@ public class PMController {
     		else if (role.equals("bm")) {
     			oLog_Service.AddLog(OpLog_Service.utype_ma, work_id, OpLog_Service.Log, OpLog_Service.result_failed);
 			}
-    		else if(role.equals("bma")){
+    		else if(role.equals("ba")){
     			oLog_Service.AddLog(OpLog_Service.utype_am, work_id, OpLog_Service.Log, OpLog_Service.result_failed);
     		}
     		else{
@@ -955,7 +955,7 @@ public class PMController {
     	}
 
     	int flag = jstr.getInt("regflag");
-    	
+    	logger.info(flag);
     	Register_Manage register_Manage = pManage.new Register_Manage();
     	JSONObject jsonObject = register_Manage.Verify_RgRequest(reg_type,username, flag);
     	
