@@ -59,18 +59,26 @@ var ReqUrl = {
     , regPendingNotifiers: '/check_Accout/PMController/watch'
     // 注册申请中的代理商列表获取
     , regPendingFworkers: '/check_Accout/PMController/watch'
+    // 注册申请中的代理商管理员列表获取
+    , regPendingFAdmins: '/check_Accout/PMController/watch'
     // 审阅对账联系人注册
     , approveNotifier: '/check_Accout/PMController/verify_register'
     // 审阅代理商注册
     , approveFw: '/check_Accout/PMController/verify_register'
+    // 审阅代理商管理员注册
+    , approveFAdmin: '/check_Accout/PMController/verify_register'
     // 已注册的对账联系人
     , notifiers: '/check_Accout/PMController/watch'
     // 已注册代理商财务员
     , fworkers: '/check_Accout/PMController/watch'
+    // 已注册的代理商方面的管理员列表
+    , fadmins: '/check_Accout/PMController/watch'
     // 锁定、解锁联系人
     , ctrlNotifier: '/check_Accout/PMController/control_power'
     // 锁定、解锁代理商财务员
     , ctrlFworker: '/check_Accout/PMController/control_power'
+    // 锁定、解锁代理商管理员
+    , ctrlFAdmin: '/check_Accout/PMController/control_power'
 
     // 备份数据库操作
     , backupdb: '/check_Accout/PMController/backupdb'
@@ -92,6 +100,15 @@ String.prototype.format = function () {
             return args[i];
         });
 };
+String.prototype.contains = function (substr) {
+    return this.indexOf(substr) !== -1;
+};
+String.prototype.startsWith = function (prefix) {
+    return this.indexOf(prefix) === 0;
+};
+/*String.prototype.endsWith=function (postfix) {
+
+ };*/
 //static
 String.format = function () {
     if (arguments.length == 0)
@@ -112,12 +129,17 @@ var appConf = {
     , tmFmtYMD: 'yyyy-MM-dd'
     // , numberPerPage: 10
     , opLogResultTypes: ['成功', '失败']
+    , opLogUserRoles: ['客户', '管理员', '代理商财务', '代理商管理']
+    , userRegisterWays: ['个人', '公司']
 };
 
 var frontBackEndMappping = {
     userRole: {
+        //三一管理员，
         'M': 'bm'
+        //代理商财务
         , 'U': 'bu'
+        , 'Z': 'ba'
     }
 };
 

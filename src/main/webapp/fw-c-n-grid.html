@@ -293,8 +293,8 @@
 
     <script id="stNumberRange.html" type="text/ng-template">
         <div class="">
-            <input type="number" class="form-control input-sm" step="10000" ng-model="higher" placeholder="总额高于" min="0"/>
-            <input class="form-control input-sm" type="number" step="10000" ng-model="lower" placeholder="总额低于" min="0"/>
+            <input type="number" class="form-control input-sm" step="10000" ng-model="higher" placeholder="总额高于" min="0" max="{{lower}}"/>
+            <input class="form-control input-sm" type="number" step="10000" ng-model="lower" placeholder="总额低于" min="{{higher}}"/>
         </div>
     </script>
 </div>

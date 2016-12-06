@@ -3,9 +3,13 @@ app.config(['$stateProvider', '$urlRouterProvider', 'stateHelperProvider', funct
 
     // $urlRouterProvider.when('', '/login');
     // $urlRouterProvider.otherwise('/login');
+    /*$urlRouterProvider.when(/.*!/, ['$state','$rootScope', function (state,rootsgop) {
+        console.info('authed=', rootsgop.loggedInUser !== undefined);
+    }]);*/
     $urlRouterProvider.when('', '/index');
     $urlRouterProvider.when('/u/fw', '/u/fw/v');
     $urlRouterProvider.when('/u/fs', '/u/fs/a');
+    $urlRouterProvider.when('/u/fm', '/u/fm/a');
     $urlRouterProvider.when('/u/fw/p--', ['$state', function (state) {
         console.error('should NOT reach here');
         var thisDate = new Date();
@@ -33,11 +37,7 @@ app.config(['$stateProvider', '$urlRouterProvider', 'stateHelperProvider', funct
             url: '/index',
             // template: '<img class="row" src="welcome.jpg">',
             template: '<div class="homepage-img" style="position:fixed; top:0px; left:0px; width:100%; overflow-y:hidden; overflow-x:hidden; margin:auto;"></div><div class="copyright">&copy;Sany 版权所有</div>',
-            controller: function () {
-                // console.log('ctrl-> state-index-ctrl');
-                anyModal.modal('hide');
-                loginModal.modal('show');
-            }
+            controller: homeCtrl
         })
 
         // login
@@ -225,6 +225,37 @@ app.config(['$stateProvider', '$urlRouterProvider', 'stateHelperProvider', funct
                     }
                 ]
                 }
+                // 代理商方的管理员
+                ,  {
+                    name: 'fm',
+                    url: '/fm'
+                    , templateUrl: 'fm.html'
+                    // , controller: fmCtrl
+                    , children: [
+                        {
+                            name: 'a',
+                            url: '/a',
+                            templateUrl: 'fm-reg-approval.html'
+                        },
+                        {
+                            name: 'c',
+                            url: '/c',
+                            templateUrl: 'fm-user-ctrl.html'
+                        }
+                       /* , {
+                            name: 'l',
+                            url: '/l',
+                            templateUrl: 'fs-user-log.html',
+                            controller: fslCtrl
+                        }
+                        , {
+                            name: 'd',
+                            url: '/d',
+                            templateUrl: 'fs-db.html',
+                            controller: fsdCtrl
+                        }*/
+                    ]
+                }
             ]
         })
     ;
@@ -237,6 +268,7 @@ app.run(['$rootScope', '$state', 'AccountService', function (rootsgop, state, Ac
             && !AccSvc.isAuthenticated()) {
             AccSvc.signInBySessionStorage().then(function (ok) {
             }, function (fail) {
+                console.debug('no auth');
                 // User isn’t authenticated
                 state.transitionTo("index");
                 event.preventDefault();
