@@ -75,12 +75,15 @@ public class Check_MainController {
 	 */
 	@RequestMapping(value="enter_camodel")
 	public void Enter_CaModel(HttpServletRequest request,HttpServletResponse response){
+		logger.info("***Get enter_camodel request***");
+		
 		HttpSession session = request.getSession(false);
 		JSONObject jsonObject = new JSONObject();
 		if (session == null) {
 			jsonObject.element("flag", -1);
 			jsonObject.element("errmsg", "登录超时，请重新登录");
 			Common_return_en(response,jsonObject);
+			logger.info("***Get enter_camodel request***");
 			return;
 		}
 		String who = (String)session.getAttribute("workId");//获取用户名
@@ -103,8 +106,8 @@ public class Check_MainController {
 			jsonObject.element("errmsg", "产生对账id失败，进入对账模式失败");
 			Common_return_en(response,jsonObject);
 		}
-		
-		
+		logger.info("***Get enter_camodel request***");
+		return;
 	}
 	
 	/**

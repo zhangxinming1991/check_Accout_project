@@ -79,6 +79,22 @@ public class ConnectP_PayService {
 		pCDao.add(pRecord);
 	}
 	
+	public void Save_UploadPicture(MultipartFile mfile,String savedir,String fileName){
+		if (mfile != null) {
+			AnyFile_Op aOp= new AnyFile_Op();
+			long filesize = mfile.getSize();
+		
+			AnyFileElement aElement = aOp.new AnyFileElement(fileName, savedir, (int)filesize);
+			
+			/*读取并保存文件*/
+			aOp.CreateDir(aElement.dirname);
+			File upload_file = aOp.CreateFile(aElement.dirname, aElement.filename);
+			byte read_b[] = aOp.ReadFile(mfile);
+			aOp.WriteFile(aElement, read_b, upload_file);
+			/*读取并保存文件*/	
+		}
+	}
+	
 	/**
 	 * Upload_PayToWArea 该函数被弃用
 	 * @param pRecord

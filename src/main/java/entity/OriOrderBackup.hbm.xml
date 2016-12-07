@@ -1,13 +1,22 @@
 <?xml version="1.0"?>
 <!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
 "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
-<!-- Generated 2016-12-1 21:09:21 by Hibernate Tools 5.1.0.Beta1 -->
+<!-- Generated 2016-12-7 20:55:28 by Hibernate Tools 5.1.0.Beta1 -->
 <hibernate-mapping>
     <class name="entity.OriOrderBackup" table="ori_order_backup" catalog="check_a_db" optimistic-lock="version">
-        <id name="orderNum" type="string">
-            <column name="order_num" length="30" />
-            <generator class="assigned" />
-        </id>
+        <composite-id name="id" class="entity.OriOrderBackupId">
+            <key-property name="cuscompanyid" type="string">
+                <column name="cuscompanyid" length="30" />
+            </key-property>
+            <key-property name="paymentNature" type="string">
+                <column name="paymentNature" length="20" />
+            </key-property>
+        </composite-id>
+        <property name="orderNum" type="string">
+            <column name="order_num" length="30" not-null="true">
+                <comment>&#186;&#207;&#205;&#172;&#186;&#197;</comment>
+            </column>
+        </property>
         <property name="input" type="java.lang.Double">
             <column name="input" precision="22" scale="0">
                 <comment>&#177;&#190;&#212;&#194;&#202;&#213;&#200;&#235;</comment>
@@ -44,11 +53,6 @@
                 <comment>&#182;&#212;&#213;&#203;&#193;&#170;&#207;&#181;&#200;&#203;id</comment>
             </column>
         </property>
-        <property name="cuscompanyid" type="string">
-            <column name="cuscompanyid" length="30">
-                <comment>&#191;&#205;&#187;&#167;id</comment>
-            </column>
-        </property>
         <property name="productTime" type="string">
             <column name="product_time" length="10">
                 <comment>&#183;&#162;&#187;&#245;&#202;&#177;&#188;&#228;</comment>
@@ -80,6 +84,11 @@
         <property name="province" type="string">
             <column name="province" length="20">
                 <comment>&#202;&#161;&#183;&#221;</comment>
+            </column>
+        </property>
+        <property name="num" type="int">
+            <column name="num" not-null="true">
+                <comment>&#208;&#242;&#186;&#197;</comment>
             </column>
         </property>
     </class>

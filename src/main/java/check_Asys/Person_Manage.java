@@ -190,7 +190,8 @@ public class Person_Manage {
 			logger.info("查看操作日志");
 		//	re_list = opLog_Dao.GetOpLogTb();
 			
-			re_list = opLog_Dao.GetOpLogTb_ByPage(offset, pagesize);
+			//re_list = opLog_Dao.GetOpLogTb_ByPage(offset, pagesize);
+			re_list = opLog_Dao.GetOpLogTb_InvertedOrder_ByPage(offset,pagesize);
 			num = opLog_Dao.GetOpLogTb_Num();
 			re_list_new.addAll(re_list);
 		}

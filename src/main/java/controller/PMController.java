@@ -1001,7 +1001,6 @@ public class PMController {
 		Common_return_en(response,re_jsonobject);
     }
    
-   
     /**
      * Connectp_login 对账联系人登录 
      * @author  客户接口
@@ -1129,6 +1128,7 @@ public class PMController {
     	//OneKeyData_return_enall(response, re_jsonobject, "data", re_list);
     	Common_return_en(response, re_jsonobject);
     	/*返回数据到前台*/
+    	return;
     }
     
     /**

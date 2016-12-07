@@ -39,6 +39,7 @@ import entity.CusSdstoreBackup;
 import entity.CusSecondstore;
 import entity.OriOrder;
 import entity.OriOrderBackup;
+import entity.OriOrderId;
 import entity.PayRecord;
 import entity.PayRecordCache;
 import entity.PayRecordHistory;
@@ -196,7 +197,7 @@ public class AutoCheckAuccount {
 	/**
 	 * ConnectBankWithCustom  将出纳记录关联到客户名下
 	 * @param cInput 出纳信息
-	 * @param truepayer 真实付款人
+	 * @param truepayer 付款人公司id
 	 * @param truemoney 真实金额 
 	 * @return
 	 */
@@ -259,7 +260,7 @@ public class AutoCheckAuccount {
 	 * @param cInput 出纳记录信息
 	 * @return
 	 */
-	public JSONObject ConnectBankWithAccount(BankInput cInput,String owner){
+	public JSONObject ConnectBankWithAccount(BankInput cInput,String owner){//函数设计的不好，不应该加入关联出纳到客户名下的功能
 		OriOrder fOrder = null;
 		JSONObject re_object = new JSONObject();
 		re_object.element("flag", -1);
@@ -271,21 +272,38 @@ public class AutoCheckAuccount {
 			return re_object;
 		}
 		if (many_contract.size() == 0) {
-			logger.warn("没有任何合同信息");
-			re_object.element("errmsg", "没有任何合同信息");
+			logger.warn("没有任何货款信息");
+			re_object.element("errmsg", "没有任何货款信息");
 			return re_object;
 		}
 		
 		for (int j = 0; j < many_contract.size(); j++) {
 			JSONObject cotract_money = many_contract.getJSONObject(j);
 			
-			fOrder = tDao.findById(OriOrder.class, cotract_money.getString("contract"));
+		//	fOrder = tDao.findById(OriOrder.class, cotract_money.getString("contract"));
+			String paymentNature = cotract_money.getString("contract");
+			String cuscompanyid = cInput.getCuscompanyid();
+			if (cuscompanyid == null) {
+				logger_error.error("客户公司id为null");
+				re_object.element("errmsg", "客户公司id为null");
+				return re_object;
+			}
+			fOrder = tDao.findById(OriOrder.class, new OriOrderId(cuscompanyid, paymentNature));
 			if (fOrder == null || fOrder.getOwner().equals(owner) == false) {
 		//		logger.info(fOrder.getOwner() + ":" + owner);
-				String errmsg = "填写的" + cotract_money.getString("contract") + "合同号有误,货款表中不存在该合同号";
+				String errmsg = "填写的" + cotract_money.getString("contract") + "货款信息有误," + cuscompanyid + "不存在该货款信息";
 				logger.info(errmsg);
 				re_object.element("errmsg", errmsg);
-				String truepayer = pDao.findById(PayRecord.class, cInput.getPayid()).getPayer();
+				String truepayer = null;
+				if (cInput.getIsConnect() == true) {
+					truepayer = pDao.findById(PayRecord.class, cInput.getPayid()).getPayer();
+				}
+				else{
+					logger_error.error("出纳没有绑定货款信息");
+					re_object.element("errmsg", "出纳没有绑定货款信息");
+					return re_object;
+				}
+				
 				Double money = cotract_money.getDouble("money");
 
 				ConnectBankWithCustom(cInput,truepayer,money);//使用客户名称去关联合同号
@@ -323,12 +341,14 @@ public class AutoCheckAuccount {
 	 * @param cInput
 	 * @return
 	 */
-	public boolean ConnectBankWithAccount_Only(BankInput cInput){
+	public boolean ConnectBankWithAccount_Only(BankInput cInput,String paymentNature){
 		OriOrder fOrder = null;
 		boolean connectResult = false;
 
 		logger.info(cInput.getPayer());
-		fOrder = tDao.FindByClient(cInput.getPayer()).get(0);
+	//	fOrder = tDao.FindByClient(cInput.getPayer()).get(0);
+		String cuscompanyid = cInput.getCuscompanyid();
+
 		/*绑定需要完成的业务功能*/
 		logger.info(cInput.getMoney() + ":" + fOrder.getInput());
 		fOrder.setInput(cInput.getMoney() + fOrder.getInput());
@@ -1020,7 +1040,7 @@ public class AutoCheckAuccount {
 
 				
 				/*填补对账联系人信息*/
-				List<ConnectPerson> fPersons = cPerson_Dao.FindBySpeElement("companyid", order.getCuscompanyid(), owner);
+				List<ConnectPerson> fPersons = cPerson_Dao.FindBySpeElement("companyid", order.getId().getCuscompanyid(), owner);
 				if (fPersons.isEmpty() !=  true) {
 					order.setCustomname(fPersons.get(0).getRealName());
 					order.setCustomphone(fPersons.get(0).getPhone());

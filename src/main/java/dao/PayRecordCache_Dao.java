@@ -1,5 +1,6 @@
 package dao;
 
+import java.io.Serializable;
 import java.util.List;
 
 import org.apache.logging.log4j.LogManager;
@@ -39,6 +40,19 @@ public class PayRecordCache_Dao {
 	protected void endTransaction() {
 		transaction.commit();
 		session.close();
+	}
+	
+	public PayRecordCache findById(Class<PayRecordCache> cla,Serializable id){
+		try {
+			session = sessionFactory.openSession();
+			PayRecordCache find_PayR = (PayRecordCache) session.get(cla, id);
+			session.close();
+			return find_PayR;	
+		} catch (RuntimeException e) {
+			// TODO: handle exception
+			System.out.println("findById failed");
+			return null;
+		}
 	}
 	
 	public void add(PayRecordCache in_pR){

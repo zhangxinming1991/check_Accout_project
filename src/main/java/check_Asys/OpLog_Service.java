@@ -31,6 +31,7 @@ public class OpLog_Service {
 	public static final String ENTRER_CaModel = "进入对账流程";
 	public static final String CANCEL_CaAgain = "取消并重新对账";
 	public static final String EXPORT_CARes = "导出对账结果";
+	public static final String Update_Pay_Weixin = "更新微信付款信息";
 	/*日志内容*/
 	
 	/*用户类型*/

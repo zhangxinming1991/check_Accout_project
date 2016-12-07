@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
 "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
-<!-- Generated 2016-12-1 21:09:21 by Hibernate Tools 5.1.0.Beta1 -->
+<!-- Generated 2016-12-7 20:55:28 by Hibernate Tools 5.1.0.Beta1 -->
 <hibernate-mapping>
     <class name="entity.PayRecordCache" table="pay_record_cache" catalog="check_a_db" optimistic-lock="version">
         <id name="id" type="int">
@@ -90,6 +90,21 @@
         <property name="freeback" type="java.lang.Boolean">
             <column name="freeback">
                 <comment>&#183;&#181;&#192;&#251;&#177;&#234;&#214;&#190;</comment>
+            </column>
+        </property>
+        <property name="actualPayer" type="string">
+            <column name="actualPayer" length="50">
+                <comment>&#202;&#181;&#188;&#202;&#184;&#182;&#191;&#238;&#200;&#203;</comment>
+            </column>
+        </property>
+        <property name="paymentNature" type="string">
+            <column name="paymentNature" length="30">
+                <comment>&#184;&#182;&#191;&#238;&#208;&#212;&#214;&#202;</comment>
+            </column>
+        </property>
+        <property name="actualPayTime" type="string">
+            <column name="actualPayTime" length="30">
+                <comment>&#202;&#181;&#188;&#202;&#184;&#182;&#191;&#238;&#202;&#177;&#188;&#228;</comment>
             </column>
         </property>
     </class>

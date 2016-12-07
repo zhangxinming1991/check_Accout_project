@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
 "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
-<!-- Generated 2016-12-1 21:09:21 by Hibernate Tools 5.1.0.Beta1 -->
+<!-- Generated 2016-12-7 20:55:28 by Hibernate Tools 5.1.0.Beta1 -->
 <hibernate-mapping>
     <class name="entity.BankInputBackup" table="bank_input_backup" catalog="check_a_db" optimistic-lock="version">
         <id name="id" type="int">
@@ -81,6 +81,20 @@
             <column name="owner" length="10">
                 <comment>&#201;&#207;&#180;&#171;&#213;&#223;id</comment>
             </column>
+        </property>
+        <property name="num" type="java.lang.Integer">
+            <column name="num">
+                <comment>&#208;&#242;&#186;&#197;</comment>
+            </column>
+        </property>
+        <property name="actualPayer" type="string">
+            <column name="actualPayer" length="50" />
+        </property>
+        <property name="paymentNature" type="string">
+            <column name="paymentNature" length="50" />
+        </property>
+        <property name="cuscompanyid" type="string">
+            <column name="cuscompanyid" length="50" />
         </property>
     </class>
 </hibernate-mapping>

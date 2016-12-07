@@ -310,7 +310,7 @@ public class CheckAcManage {
 			for (OriOrder order:orders) {
 				
 				/*填补对账联系人信息*/
-				List<ConnectPerson> fPersons = dao_List.cPerson_Dao.FindBySpeElement("companyid", order.getCuscompanyid(), owner);
+				List<ConnectPerson> fPersons = dao_List.cPerson_Dao.FindBySpeElement("companyid", order.getId().getCuscompanyid(), owner);
 				if (fPersons.isEmpty() !=  true) {
 					order.setCustomname(fPersons.get(0).getRealName());
 					order.setCustomphone(fPersons.get(0).getPhone());
@@ -526,8 +526,9 @@ public class CheckAcManage {
 							}
 							else {
 								if (fcustom.getContractNum() <= 1) {
-									logger.info(fcustom.getClient() + "只有一个合同号,直接关联到合同号");
-									auccount.ConnectBankWithAccount_Only(bInput);//如果客户只有一个合同或者只有一个合同欠款，用该合同号去关联
+									logger.info(fcustom.getClient() + "只有一个货款性质,直接关联到货款表");
+									String paymentNature = JSONArray.fromObject(fcustom.getContractMes()).getString(0);
+									auccount.ConnectBankWithAccount_Only(bInput,paymentNature);//如果客户只有一个合同或者只有一个合同欠款，用该合同号去关联
 								}
 								else {//否则出纳记录关联到客户名下
 									logger.info("关联" + bInput.getId() + ":" + bInput.getPayer() + "出纳记录到客户名下");
