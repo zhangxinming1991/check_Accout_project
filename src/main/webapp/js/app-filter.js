@@ -151,3 +151,10 @@ app.filter('rmdsFilter', ['$filter', function ($filter) {
         return output;
     };
 }]);
+/*
+
+app.filter('scoreStatus', function () {
+    return function (statusCode) {
+        return appConf.mappings.scoreStatus[statusCode] || statusCode;
+    }
+});*/

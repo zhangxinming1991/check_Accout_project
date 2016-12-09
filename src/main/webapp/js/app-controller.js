@@ -1579,6 +1579,81 @@ var fsdCtrl = ['$scope', '$timeout', 'MgmtSvc', '$uibModal', function (sgop, tim
     };
 }];
 
+// 超级管理员客户积分
+var fssvCtrl = ['$scope', '$filter', 'ScoreService',
+    function (sgop, $filter, ScoreSvc) {
+        console.debug('ctrl->超级管理员客户积分查看');
+
+        sgop.refreshGrid = function (tableState) {
+            gridPage(sgop, tableState, $filter, ScoreSvc.scoreInAllAgents);
+        };
+
+        // TODO
+        sgop.detail = function (item) {
+            'fs-client-score-detail.html'
+        };
+    }];
+
+// 超级管理员积分管理
+var fssmCtrl = ['$scope', '$filter', 'ScoreService',
+    function (sgop, $filter, ScoreSvc) {
+        console.debug('ctrl->超级管理员客户积分管理');
+
+        sgop.refreshGrid = function (tableState) {
+            gridPage(sgop, tableState, $filter, ScoreSvc.scoreMgmtAll);
+        };
+
+        // 详情 TODO
+        sgop.detail = function (item) {
+
+        };
+        // 确认礼品 TODO
+        sgop.confirm = function (item) {
+
+        };
+    }];
+
+
+// 财务员积分查看
+var fwsvCtrl = ['$scope', '$filter', 'ScoreService', '$uibModal',
+    function (sgop, $filter, ScoreSvc, msgbox) {
+        console.debug('ctrl->财务员客户积分查看');
+
+        sgop.nonSuperAdmin = true;
+
+        sgop.refreshGrid = function (tableState) {
+            gridPage(sgop, tableState, $filter, ScoreSvc.scoreInAgent);
+        };
+
+        // TODO
+        sgop.detail = function (item) {
+            ScoreSvc.scoreDetail({username:item.username}).then(function (changes) {
+               /* msgbox.open({
+                    templateUrl: 'fs-score-view-detail.html'
+                });*/
+            }, function (fail) {
+            });
+
+        };
+    }];
+
+// 财务员积分管理
+var fwsmCtrl = ['$scope', '$filter', 'ScoreService',
+    function (sgop, $filter, ScoreSvc) {
+        console.debug('ctrl->财务员客户积分管理');
+
+        sgop.nonSuperAdmin = true;
+
+        sgop.refreshGrid = function (tableState) {
+            gridPage(sgop, tableState, $filter, ScoreSvc.scoreMgmtInAgent);
+        };
+
+        // 详情 TODO
+        sgop.detail = function (item) {
+
+        };
+    }];
+
 // 用户日志
 var fslCtrl = ['$scope', '$timeout', 'MgmtSvc', '$uibModal', '$filter',
     function (sgop, timeout, MgmtSvc, msgbox, $filter) {

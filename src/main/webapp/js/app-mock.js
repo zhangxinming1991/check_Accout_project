@@ -121,11 +121,18 @@
          * @returns {*}
          */
         function randInRange(a, b) {
-            if (arguments.length == 1) {
-                b = a;
-                a = 0;
-            }
-            return Math.round(Math.random() * (b - a)) + a;
+            if (angular.isDate(a) && angular.isDate(b)) return (function (a, b) {
+                return new Date(a.getFullYear() + randInRange(0, b.getFullYear() - a.getFullYear())
+                    , a.getMonth() + randInRange(0, b.getMonth() - a.getMonth())
+                    , a.getDate() + randInRange(0, b.getDate() - a.getDate()))
+            })(a, b);
+            else if (angular.isNumber(a)) return (function (a, b) {
+                if (arguments.length == 1) {
+                    b = a;
+                    a = 0;
+                }
+                return Math.round(Math.random() * (b - a)) + a;
+            })(a, b);
         }
 
         function randIn(items) {
@@ -276,7 +283,8 @@
                 var payAmount = 0;
                 for (var j = 0; j < randInRange(1, 3); j++) {
                     tc.manyPay[j] = {
-                        contract: '合同号...',
+                        // contract: '合同号...',
+                        contract: '货款性质',
                         money: 10000
                     };
                     payAmount += tc.manyPay[j].money;
@@ -326,14 +334,14 @@
         var notifsInChk;
 
         function resPage(pagenum, data, resbody, reqbody) {
-            if (reqbody.sort) {
-                console.debug('server side search', reqbody.search);
-                var data = $filter('rmdsFilter')(data, reqbody.search);
-            }
-            if (reqbody.sort) {
-                console.debug('server side sort', reqbody.sort);
-                data = $filter('orderBy')(data, reqbody.sort.field, reqbody.sort.desc);
-            }
+            /* if (reqbody.sort) {
+             console.debug('server side search', reqbody.search);
+             var data = $filter('rmdsFilter')(data, reqbody.search);
+             }
+             if (reqbody.sort) {
+             console.debug('server side sort', reqbody.sort);
+             data = $filter('orderBy')(data, reqbody.sort.field, reqbody.sort.desc);
+             }*/
             return $.extend(resbody, {
                 data: data.slice((pagenum - 1) * numberPerPage, pagenum * numberPerPage)
                 // , totalItemCount: data.length
@@ -1001,7 +1009,8 @@
             return [200, resPage(reqbody.pagenum, oplogs, {flag: failOrNot()}, reqbody)];
         });
 
-        bkd.whenPOST(ReqUrl.fetchAgents).respond(function () {
+        bkd.whenPOST(ReqUrl.fetchAgents).respond(function (method,url,reqbody) {
+            console.debug('mock->代理商列表',reqbody);
             var items = [{code: 'gd0001', name: '广东代理商'}, {code: 'ah0001', name: '安徽代理商'}];
             var extra = 2;
             for (var i = 0; i < randInRange(0, extra); i++) {
@@ -1013,5 +1022,76 @@
             }
             return [200, {flag: failOrNot(0), data: items}];
         });
+
+
+        function randScoreInfo(itemCount) {
+            var items = [];
+            for (var i = 0; i < itemCount; i++) {
+                var item = {
+                    agentName: '代理商'
+                    , username: '用户名'
+                    , realName: '真实姓名'
+                    , weiXin: '微信'
+                    , company: '客户名'
+                    , score: randInRange(100, 200)
+                    , exchangedScore: randInRange(50, 100)
+                    , exchangingScore: randInRange(0, 50)
+                    , status: randIn(appConf.scoreStatusInTable)
+                };
+                items.push(item);
+            }
+            return items;
+        }
+
+        var scoreAll;
+        bkd.whenPOST(ReqUrl.scoreInAllAgents).respond(function (method, url, reqbody) {
+            console.debug('mock->所有客户积分情况',reqbody);
+            scoreAll = scoreAll || randScoreInfo(randInRange(100, 200));
+            return [200, resPage(reqbody.pagenum, scoreAll, {flag: failOrNot()}, reqbody)];
+        });
+        bkd.whenPOST(ReqUrl.scoreInAgent).respond(function (method, url, reqbody) {
+            console.debug('mock->代理商客户积分情况',reqbody);
+            scoreAll = scoreAll || randScoreInfo(randInRange(100, 200));
+            return [200, resPage(reqbody.pagenum, scoreAll, {flag: failOrNot()}, reqbody)];
+        });
+
+        function genScoreMgmt(itemCount) {
+            var items = [];
+            for (var i = 0; i < itemCount; i++) {
+                var item = {
+                    agentName: '代理商'
+                    , username: '用户名'
+                    , realName: '真实姓名'
+                    , weiXin: '微信'
+                    , company: '客户名'
+                    , exchangeScore: randInRange(50, 100)
+                    , exchangeType: randIn(appConf.exchangeTypes)
+                    , exchangeCategory: '礼品类型'
+                    , applicaTime: $filter('date')(randInRange(new Date(2014, 1, 1), new Date()), appConf.tmFmtLong)
+                    , finishTime: $filter('date')(randInRange(new Date(2014, 1, 1), new Date()), appConf.tmFmtLong)
+                    , status: randIn(['兑换中', '已兑换', '未领取'])
+                    , description: '说明'
+                };
+                items.push(item);
+            }
+            return items;
+        }
+
+        var scoreMgmtAll;
+        bkd.whenPOST(ReqUrl.scoreMgmtAll).respond(function (method, url, reqbody) {
+            console.debug('mock->超级管理员 积分管理表',reqbody);
+            scoreMgmtAll = scoreMgmtAll || genScoreMgmt(randInRange(100, 200));
+            return [200, resPage(reqbody.pagenum, scoreMgmtAll, {flag: failOrNot()}, reqbody)]
+        });
+        bkd.whenPOST(ReqUrl.approveScoreExchg).respond(function (method, url, reqbody) {
+            console.debug('mock->确认礼品兑换',reqbody);
+            return [200, {flag: failOrNot()}];
+        });
+        bkd.whenPOST(ReqUrl.scoreMgmtInAgent).respond(function (method, url, reqbody) {
+            console.debug('mock->财务员 积分管理表',reqbody);
+            scoreMgmtAll = scoreMgmtAll || genScoreMgmt(randInRange(100, 200));
+            return [200, resPage(reqbody.pagenum, scoreMgmtAll, {flag: failOrNot()}, reqbody)]
+        });
+
     }]);
 })();

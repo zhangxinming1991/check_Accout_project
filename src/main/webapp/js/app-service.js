@@ -68,7 +68,7 @@ app.factory('HttpReqService', ['$http', '$q', function (http, Q) {
 
                     var ret = okfnc && okfnc(resbody);
                     if (!ret) {
-                    console.warn('no return value???');
+                        console.warn('no return value???');
                         // ret = resbody.items ? resbody : resbody.data;
                     }
 
@@ -780,6 +780,45 @@ app.factory('MgmtSvc', ['HttpReqService', function (Req) {
 
     svc.restoreDB = function (id) {
         return Req.req(ReqUrl.restoredb, {id: id});
+    };
+
+    return svc;
+}]);
+
+// 积分相关服务
+app.factory('ScoreService', ['HttpReqService', function (Req) {
+    var svc = {};
+
+    function scoreInfoExtractor(resbody) {
+        resbody.items = resbody.items || resbody.data;
+        return resbody;
+    }
+
+    // 超级管理员获取所有客户的积分信息
+    svc.scoreInAllAgents = function (reqParams) {
+        return Req.req(ReqUrl.scoreInAllAgents, reqParams, scoreInfoExtractor);
+    };
+
+    // 财务员获取客户积分信息
+    svc.scoreInAgent = function (reqParams) {
+        return Req.req(ReqUrl.scoreInAgent, reqParams, scoreInfoExtractor);
+    };
+
+    // 客户积分详情
+    svc.scoreDetail = function (reqParams) {
+        return Req.req(ReqUrl.scoreDetail, reqParams);
+    };
+
+    // 超级管理员 积分管理
+    svc.scoreMgmtAll = function (reqParams) {
+        return Req.req(ReqUrl.scoreMgmtAll, reqParams, scoreInfoExtractor);
+    };
+    svc.approveScoreExchange = function (id) {
+        return Req.req(ReqUrl.approveScoreExchg, {randKey: id});
+    };
+    // 财务员 积分管理
+    svc.scoreMgmtInAgent = function (reqParams) {
+        return Req.req(ReqUrl.scoreMgmtInAgent, reqParams, scoreInfoExtractor);
     };
 
     return svc;

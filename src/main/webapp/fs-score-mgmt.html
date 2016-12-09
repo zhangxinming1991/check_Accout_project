@@ -1,0 +1,105 @@
+<div>
+    <table st-table="dispItems" st-pipe="refreshGrid" class="table table-bordered table-striped">
+        <thead>
+        <tr>
+            <th></th>
+            <th><input class="input-sm form-control" type="search" st-search="agentName" placeholder="代理商"></th>
+            <th><input class="input-sm form-control" type="search" st-search="username" placeholder="用户名"></th>
+            <th><input class="input-sm form-control" type="search" st-search="realName" placeholder="真实姓名"></th>
+            <th><input class="input-sm form-control" type="search" st-search="weiXin" placeholder="微信号"></th>
+            <th><input class="input-sm form-control" type="search" st-search="company" placeholder="客户名"></th>
+            <th><input class="input-sm form-control" type="number" st-search="exchangeScore" placeholder="兑换积分"></th>
+            <th>
+                <!--兑换类型-->
+                <select class="input-sm form-control" st-search="exchangeType">
+                    <option value="">所有</option>
+                    <option>红包</option>
+                    <option>礼品</option>
+                </select>
+            </th>
+            <th><input class="input-sm form-control" type="search" st-search="exchangeCategory" placeholder="礼品类型"></th>
+            <th>
+                <!--申请时间-->
+                <input class="input-sm form-control" type="search" st-search="applicaTime" placeholder="申请时间">
+            </th>
+            <th>
+                <!--完成时间-->
+                <input class="input-sm form-control" type="search" st-search="finishTime" placeholder="完成时间">
+            </th>
+            <th>
+                <!--状态-->
+                <select class="input-sm form-control" st-search="status">
+                    <option value="">所有</option>
+                    <option>兑换中</option>
+                    <option>已兑换</option>
+                    <option>未领取</option>
+                </select>
+            </th>
+            <th><!--说明--></th>
+            <th><!--操作--></th>
+        </tr>
+        <tr>
+            <th>序号</th>
+            <th>代理商</th>
+            <th>用户名</th>
+            <th>真实姓名</th>
+            <th>微信号</th>
+            <th>客户名</th>
+            <th>兑换积分</th>
+            <th>兑换类型</th>
+            <th>礼品类型</th>
+            <th>申请时间</th>
+            <th>完成时间</th>
+            <th>状态</th>
+            <th>说明</th>
+            <th>操作</th>
+        </tr>
+        </thead>
+
+        <tbody ng-show="isNonEmptyGrid" class="">
+        <tr ng-repeat="r in dispItems">
+            <td>{{$index+1}}</td>
+            <td>{{r.agentName}}</td>
+            <td>{{r.username}}</td>
+            <td>{{r.realName}}</td>
+            <td>{{r.weiXin}}</td>
+            <td>{{r.company}}</td>
+            <td>{{r.exchangeScore}}</td>
+            <td>{{r.exchangeType}}</td>
+            <td>{{r.exchangeCategory}}</td>
+            <td>{{r.applicaTime}}</td>
+            <td>{{r.finishTime}}</td>
+            <td>{{r.status}}</td>
+            <td>{{r.description}}</td>
+            <td>
+                <button class="btn btn-primary" ng-click="detail(r)">详情</button>
+                <button class="btn btn-primary" ng-click="confirm(r)" ng-hide="nonSuperAdmin">确认</button>
+            </td>
+        </tr>
+        </tbody>
+
+        <tbody ng-show="items!==undefined&&items.length==0">
+        <tr>
+            <td colspan="20" class="text-center text-info">无数据</td>
+        </tr>
+        </tbody>
+
+        <tbody ng-show="isLoading">
+        <tr>
+            <td colspan="20" class="text-center text-info">正在拼命为您加载数据……</td>
+        </tr>
+        </tbody>
+
+        <tbody ng-show="errMsg">
+        <tr>
+            <td colspan="20" class="text-center text-warning">{{errMsg}}</td>
+        </tr>
+        </tbody>
+
+        <tfoot>
+        <td class="text-center" st-pagination="" st-items-by-page="10" colspan="20" st-displayed-pages="20">
+        </td>
+        </tfoot>
+    </table>
+
+</div>

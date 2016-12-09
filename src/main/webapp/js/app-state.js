@@ -173,6 +173,7 @@ app.config(['$stateProvider', '$urlRouterProvider', 'stateHelperProvider', funct
 
                             ]
                         }
+                        // 对账历史
                         , {
                             name: 'h',
                             url: '/h',
@@ -183,6 +184,7 @@ app.config(['$stateProvider', '$urlRouterProvider', 'stateHelperProvider', funct
                                 }
                             }
                         },
+                        // 预览
                         {
                             name: 'v',
                             url: '/v'
@@ -192,6 +194,20 @@ app.config(['$stateProvider', '$urlRouterProvider', 'stateHelperProvider', funct
                                 controller: fwvCtrl
                             }
                         }
+                        }
+                         // 积分查看
+                        ,{
+                            name: 's',
+                            url: '/s',
+                            templateUrl: 'fs-score-view.html'
+                            ,controller:fwsvCtrl
+                        }
+                        // 积分管理
+                        ,{
+                            name:'m'
+                            ,url:'/m'
+                            , templateUrl:'fs-score-mgmt.html'
+                            ,controller:fwsmCtrl
                         }
                     ]
                 },
@@ -205,11 +221,25 @@ app.config(['$stateProvider', '$urlRouterProvider', 'stateHelperProvider', funct
                         name: 'a',
                         url: '/a',
                         templateUrl: 'fs-reg-approval.html'
-                    },
-                    {
+                    }
+                    ,{
                         name: 'c',
                         url: '/c',
                         templateUrl: 'fs-user-ctrl.html'
+                    }
+                    // 积分查看
+                    ,{
+                        name: 's',
+                        url: '/s',
+                        templateUrl: 'fs-score-view.html'
+                        ,controller:fssvCtrl
+                    }
+                    // 积分管理
+                    ,{
+                        name:'m'
+                        ,url:'/m'
+                        , templateUrl:'fs-score-mgmt.html'
+                        ,controller:fssmCtrl
                     }
                     , {
                         name: 'l',

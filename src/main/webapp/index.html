@@ -378,6 +378,13 @@
     </div>
 </script>
 
+<script id="stNumberRange.html" type="text/ng-template">
+    <div class="">
+        <input type="number" class="form-control input-sm" step="" ng-model="higher" placeholder="总额高于" min="0" max="{{lower}}"/>
+        <input class="form-control input-sm" type="number" step="" ng-model="lower" placeholder="总额低于" min="{{higher}}"/>
+    </div>
+</script>
+
 
 <script src="js/jquery.min.js"></script>
 <script src="js/bootstrap.min.js"></script>

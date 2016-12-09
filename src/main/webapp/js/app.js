@@ -90,6 +90,20 @@ var ReqUrl = {
     , viewLog: '/check_Accout/PMController/watch'
     // 获取代理商列表
     , fetchAgents: '/check_Accout/PMController/get_agentcodeAname'
+
+    // 积分模块
+    // 超级管理员获取所有用户积分信息
+    , scoreInAllAgents: '/check_Accout/ScoreController/all_scoreinfos'
+    // 财务员获取所在代理商管理的用户的积分信息
+    , scoreInAgent: '/check_Accout/ScoreController/agent_scoreinfos'
+    // 用户积分详情
+    , scoreDetail: '/check_Accout/ScoreController/score_records'
+    // 超级管理员 积分管理表
+    , scoreMgmtAll: '/check_Accout/ScoreController/manage_exchange'
+    // 财务员 积分管理表
+    , scoreMgmtInAgent: '/check_Accout/ScoreController/agent_exchangeinfos'
+    // 确认 积分兑换
+    , approveScoreExchg: '/check_Accout/ScoreController/approval_exchange'
 };
 
 // string format
@@ -131,6 +145,17 @@ var appConf = {
     , opLogResultTypes: ['成功', '失败']
     , opLogUserRoles: ['客户', '管理员', '代理商财务', '代理商管理']
     , userRegisterWays: ['个人', '公司']
+    , scoreStatusInTable: ['兑换中', '正常']
+    // 兑换类型
+    , exchangeTypes: ['红包', '礼品']
+    , mappings: {
+        scoreStatus: {
+            '0': '已提交'
+            , '1': '兑换中'
+            , '2': '兑换成功'
+            , '-1': '兑换失败'
+        }
+    }
 };
 
 var frontBackEndMappping = {
