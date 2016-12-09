@@ -40,6 +40,7 @@ import dao.Total_Account_Dao;
 import en_de_code.ED_Code;
 import entity.Agent;
 import entity.BankInput;
+import entity.CaresultHistory;
 import entity.ConnectPerson;
 import entity.CusSecondstore;
 import entity.OpLog;
@@ -423,8 +424,31 @@ public class CheckAcManage {
 			}
 			else if (location.table_name.equals(CheckAcManage.RES_CAHISTORY)) {
 				logger.info("查看对账记录历史");
-				list = dao_List.cDao.FindBySpeElement("cayear", location.cayear, owner.work_id);
+				list = dao_List.cDao.FindBySpeElement_ByPage("cayear", location.cayear, owner.work_id,offset,pagesize);
 				logger.info(list.size() + location.cayear + owner.work_id);
+				
+				JSONArray orders = new JSONArray();//json类中的数组
+				
+				for(int i = 0;i<list.size();i++){
+					CaresultHistory cahistory = (CaresultHistory) list.get(i);
+					if (cahistory != null) {
+						//System.out.println(object.getPayer());
+						String months = cahistory.getCamonth();
+						int month = Integer.parseInt(months);
+						if (month < 10) {
+							months = String.valueOf(month);
+						}
+						JSONObject caresult = new JSONObject();
+						caresult.element("month", months);
+						caresult.element("url", cahistory.getUrl());
+						orders.add(i,caresult);
+					}
+					else{
+						logger.error("not find the record");
+					}
+				}
+				re_json.element("data", orders);//将数组添加到对象中
+				return re_json;
 			}
 			else if(location.table_name.equals(CheckAcManage.RES_PAYCACHE)){
 				logger.info("查看预付款记录历史" + "owner=" + owner.work_id);

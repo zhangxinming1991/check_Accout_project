@@ -130,6 +130,31 @@ public class CaresultHistory_Dao {
 	}
 	
 	/*寻找匹配的出纳记录*/
+	public List<CaresultHistory> FindBySpeElement_ByPage(String filed1,Object value1,String owner,int offset,int pagesize){		
+		/*修改匹配策略*/
+		String fdclient_hql = "select crhistory from CaresultHistory crhistory where " +  filed1 + " = :value1" + " and " + "owner = :owner_value";//策略一：
+		/*修改匹配策略*/
+
+		try {			
+			session = sessionFactory.openSession();
+			Query query = session.createQuery(fdclient_hql)
+					.setParameter("value1", value1)
+					.setParameter("owner_value", owner)
+					.setFirstResult(offset)
+					.setMaxResults(pagesize);
+			java.util.List<CaresultHistory> crhistorys = query.list();
+			session.close();
+			
+			return crhistorys;
+		
+		} catch (RuntimeException e) {
+			// TODO: handle exception
+			logger_error.error("根据:" + filed1 + "=" + value1 + "查找对账结果失败:" + e);
+			return null;
+		}
+	}
+	
+	/*寻找匹配的出纳记录*/
 	public List<CaresultHistory> FindBySpeElementLimit(String filed1,Object value1,String owner){		
 		/*修改匹配策略*/
 		String fdclient_hql = "select crhistory from CaresultHistory crhistory where " +  filed1 + " = :value1" + " and " + "owner = :owner_value";//策略一：

@@ -314,8 +314,12 @@ public class Check_MainController {
 		
 		String request_s = null;
 		String request_s_de = null;
-		int pagenum = -1;
+		
 		Watch_Object wObject = null;
+		
+		int pagenum = 1;
+		int pagesize = 10;
+		int offset = (pagenum-1)*10;
 		try {
 				request_s = IOUtils.toString(request.getInputStream());
 				request_s_de = AES.aesDecrypt(request_s, AES.key);
@@ -323,7 +327,17 @@ public class Check_MainController {
 				logger.info("receive" + request_s_de);
 				JSONObject jstr = JSONObject.fromObject(request_s_de);
 				wObject = cOp.Create_Watch_Object(jstr);//设置查看参数
-				pagenum = jstr.getInt("pagenum");
+				
+				if (!wObject.table_name.equals("caresult_history")) {
+					pagenum = jstr.getInt("pagenum");
+					offset = (pagenum-1)*10;
+					pagesize = 10;
+				}
+				else{
+					pagenum = 1;
+					offset = (pagenum-1)*10;
+					pagesize = 12;
+				}
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			logger.error("获取提交参数失败" + e);
@@ -333,8 +347,6 @@ public class Check_MainController {
 			Common_return_en(response,re_jsonobject);
 		}
 		
-		int pagesize = 10;
-		int offset = (pagenum-1)*10;
 		//java.util.List list = cOp.Watch(wObject, owner,offset,pagesize);
 		re_jsonobject = cOp.Watch(wObject, owner,offset,pagesize);
 		//Watch_return(list,response,wObject);//返回数据到前台
