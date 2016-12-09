@@ -281,7 +281,7 @@ public class Person_Manage {
 		public static final String restore_cmd_wd = "cmd /c start e:/restore.bat";
 		public static final String dirname = "backup_database";
 		public static final String db_name = "check_a_db";
-		public static final String db_passwd = "1234";
+		public static final String db_passwd = "ldwz#r@24#";
 		public static final String db_user = "root";
 		/**
 		 * BackUp_db 备份数据库

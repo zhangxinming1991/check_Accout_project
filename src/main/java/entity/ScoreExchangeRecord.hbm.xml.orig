@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 <?xml version="1.0"?>
 <!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
 "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
@@ -60,3 +61,57 @@
         </property>
     </class>
 </hibernate-mapping>
+=======
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+"http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping>
+    <class name="entity.ScoreExchangeRecord" table="score_exchange_record" catalog="check_a_db" optimistic-lock="version">
+        <id name="id" type="int">
+            <column name="id" />
+            <generator class="assigned" />
+        </id>
+        <property name="username" type="string">
+            <column name="username" length="12">
+            </column>
+        </property>
+        <property name="exchangeScore" type="int">
+            <column name="exchange_score">
+            </column>
+        </property>
+        <property name="exchangeType" type="byte">
+            <column name="exchange_type">
+            </column>
+        </property>
+        <property name="status" type="byte">
+            <column name="status">
+            </column>
+        </property>
+        <property name="applicaTime" type="java.sql.Timestamp">
+            <column name="applica_time">
+            </column>
+        </property>
+        <property name="finishTime" type="java.sql.Timestamp">
+            <column name="finish_time">
+            </column>
+        </property>
+        <property name="serialNumber" type="string">
+            <column name="serial_number" length="20">
+            </column>
+        </property>
+        <property name="randKey" type="string">
+            <column name="randkey" length="30">
+            </column>
+        </property>
+        <property name="description" type="string">
+            <column name="description" length="50">
+            </column>
+        </property>
+        <property name="hander" type="string">
+            <column name="hander" length="50">
+            </column>
+        </property>
+    </class>
+</hibernate-mapping>
+>>>>>>> origin/linli-dev

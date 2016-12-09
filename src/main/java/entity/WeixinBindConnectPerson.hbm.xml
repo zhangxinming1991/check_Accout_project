@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
 "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
-<!-- Generated 2016-12-8 22:36:44 by Hibernate Tools 5.1.0.Beta1 -->
+<!-- Generated 2016-12-9 19:45:29 by Hibernate Tools 5.1.0.Beta1 -->
 <hibernate-mapping>
     <class name="entity.WeixinBindConnectPerson" table="weixin_bind_connect_person" catalog="check_a_db" optimistic-lock="version">
         <id name="username" type="string">
