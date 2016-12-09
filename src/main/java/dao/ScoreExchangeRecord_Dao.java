@@ -118,17 +118,21 @@ public class ScoreExchangeRecord_Dao {
 	public List<ScoreExchangeRecord> getInfosByAgentId(String agentId, int offset, int pagesize){
 		try{
 			beginTransaction();
-			String sqlString = "from ScoreExchangeRecord  where agentId = :agentId order by applica_time desc";
+			String sqlString ="select S.username, S.exchangeScore, S.exchangeType, S.status, S.applicaTime, "
+					+ "S. finishTime, S.randKey, S.description, S.hander from ScoreExchangeRecord  S, ConnectPersonScoreInfo  C "
+					+ "where S.username = C.username and C.agent = :agentId order by applica_time desc";
 			@SuppressWarnings({ "unchecked", "deprecation" })
 			List<ScoreExchangeRecord> infos = session.createQuery(sqlString)
 					.setParameter("agentId", agentId)
 					.setFirstResult(offset)
 					.setMaxResults(pagesize)
 					.list();
+			System.out.print(infos.toString());
 			endTransaction();
 			return infos;
 		}catch(RuntimeException e){
-			System.out.println("getInfoByUsername failed");
+			System.out.println("getInfosByAgentId failed");
+			System.out.println(e);
 			return null;
 		}
 	}
@@ -136,7 +140,8 @@ public class ScoreExchangeRecord_Dao {
 	public List<ScoreExchangeRecord> getInfosByAgentId(String agentId){
 		try{
 			beginTransaction();
-			String sqlString = "from ScoreExchangeRecord  where agentId = :agentId order by applica_time desc";
+			String sqlString = "from ScoreExchangeRecord  S, ConnectPersonScoreInfo  C "
+					+ "where S.username = C.username and C.agent = :agentId order by applica_time desc";
 			@SuppressWarnings({ "unchecked", "deprecation" })
 			List<ScoreExchangeRecord> infos = session.createQuery(sqlString)
 					.setParameter("agentId", agentId)
@@ -145,6 +150,7 @@ public class ScoreExchangeRecord_Dao {
 			return infos;
 		}catch(RuntimeException e){
 			System.out.println("getInfoByUsername failed");
+			System.out.println(e);
 			return null;
 		}
 	}
@@ -170,7 +176,8 @@ public class ScoreExchangeRecord_Dao {
 	{
 		try{
 			beginTransaction();
-			String sqlString = "select count(*) from ScoreExchangeRecord where agent = :agentId";
+			String sqlString = "select count(*)  from ScoreExchangeRecord  S, ConnectPersonScoreInfo  C "
+					+ "where S.username = C.username and C.agent = :agentId";
 			@SuppressWarnings({"deprecation" })
 			int num =((Number)session.createQuery(sqlString)
 									.setParameter("agentId", agentId)
@@ -205,6 +212,23 @@ public class ScoreExchangeRecord_Dao {
 		}
 	}
 	
+	public int updateStatus(String randKey, byte status)
+	{
+		try{
+			beginTransaction();
+			
+			String sqlString = "update ScoreExchangeRecord set status = :status where randKey = :randKey";
+			Query query = session.createQuery(sqlString);
+			query.setParameter("status", status);
+			query.setParameter("randKey", randKey);
+			int result = query.executeUpdate();
+			endTransaction();
+			return result;
+		}catch(RuntimeException e){
+			System.out.println("get info failed");
+			return 0;
+		}
+	}
 	
 	
 	public void Close_Connect(){

@@ -46,9 +46,10 @@ public class ScoreManage {
 	private static final String EXTYPE_GIFT = "礼品";
 	private static final String EXTYPE_ERROE = "未知";
 	private static final String INSC = "已到账";
-	private static final String EXING = "未兑换";
+	private static final String EXWA = "未兑换";
 	private static final String EXSC = "已兑换";
 	private static final String EXFA= "兑换失败";
+	private static final String EXING= "兑换中";
 	
 	public ScoreManage(SessionFactory wFactory) {
 		// TODO Auto-generated constructor stub
@@ -84,33 +85,7 @@ public class ScoreManage {
 		int num = cps_Dao.getNumByAgentId(agentId);
 		pageNum = num % pagesize > 0 ? num / pagesize + 1 : num /pagesize;
 	
-		JSONArray dataArray = new JSONArray();
-		for(int i = 0; i < resultList.size(); i++){
-			ConnectPersonScoreInfo connectPersonScoreInfo = resultList.get(i);
-			JSONObject tmp = new JSONObject();
-			tmp.element("agentName", connectPersonScoreInfo.getAgentName());
-			tmp.element("cardId", connectPersonScoreInfo.getCardId());
-			tmp.element("company", connectPersonScoreInfo.getCompany());
-			tmp.element("username", connectPersonScoreInfo.getUsername());
-			tmp.element("email", connectPersonScoreInfo.getEmail());
-			tmp.element("realName", connectPersonScoreInfo.getRealName());
-			tmp.element("weiXin", connectPersonScoreInfo.getWeiXin());
-			tmp.element("exchangedScore", connectPersonScoreInfo.getExchangedScore());
-			tmp.element("exchangingScore", connectPersonScoreInfo.getExchangingScore());
-			tmp.element("phone", connectPersonScoreInfo.getPhone());
-			tmp.element("score", connectPersonScoreInfo.getScore());
-			if(connectPersonScoreInfo.getRegisterWay().equals("P"))
-				tmp.element("registerWay", "个人");
-			else if(connectPersonScoreInfo.getRegisterWay().equals("C"))
-				tmp.element("registerWay", "公司");
-			else 
-				tmp.element("registerWay", "未知");
-			if(connectPersonScoreInfo.getExchangingScore() == 0)
-				tmp.element("status", "正常");
-			else 
-				tmp.element("status", "兑换中");
-			dataArray.add(tmp);
-		}
+		JSONArray dataArray = returnScoreData(resultList);
 		reJsonObject.element("data", dataArray);
 		reJsonObject.element("totalpage", pageNum);
 		return reJsonObject;
@@ -128,33 +103,7 @@ public class ScoreManage {
 		List<ConnectPersonScoreInfo> resultList = cps_Dao.getAllInfo(offset, pagesize);
 		int num = cps_Dao.getAllNum();
 		pageNum = num % pagesize > 0 ? num / pagesize + 1 : num /pagesize;
-		JSONArray dataArray = new JSONArray();
-		for(int i = 0; i < resultList.size(); i++){
-			ConnectPersonScoreInfo connectPersonScoreInfo = resultList.get(i);
-			JSONObject tmp = new JSONObject();
-			tmp.element("agentName", connectPersonScoreInfo.getAgentName());
-			tmp.element("cardId", connectPersonScoreInfo.getCardId());
-			tmp.element("company", connectPersonScoreInfo.getCompany());
-			tmp.element("username", connectPersonScoreInfo.getUsername());
-			tmp.element("email", connectPersonScoreInfo.getEmail());
-			tmp.element("realName", connectPersonScoreInfo.getRealName());
-			tmp.element("weiXin", connectPersonScoreInfo.getWeiXin());
-			tmp.element("exchangedScore", connectPersonScoreInfo.getExchangedScore());
-			tmp.element("exchangingScore", connectPersonScoreInfo.getExchangingScore());
-			tmp.element("phone", connectPersonScoreInfo.getPhone());
-			tmp.element("score", connectPersonScoreInfo.getScore());
-			if(connectPersonScoreInfo.getRegisterWay().equals("P"))
-				tmp.element("registerWay", "个人");
-			else if(connectPersonScoreInfo.getRegisterWay().equals("C"))
-				tmp.element("registerWay", "公司");
-			else 
-				tmp.element("registerWay", "未知");
-			if(connectPersonScoreInfo.getExchangingScore() == 0)
-				tmp.element("status", "正常");
-			else 
-				tmp.element("status", "兑换中");
-			dataArray.add(tmp);
-		}
+		JSONArray dataArray = returnScoreData(resultList);
 		reJsonObject.element("data", dataArray);
 		reJsonObject.element("totalpage", pageNum);
 		return reJsonObject;
@@ -269,41 +218,10 @@ public class ScoreManage {
 	public JSONObject getExchangeInfos(int offset, int pagesize)
 	{
 		JSONObject result = new JSONObject();
-		JSONArray  dataArray = new JSONArray();
 		List<ScoreExchangeRecord> scoreExchangeRecords = ser_Dao.getInfos(offset, pagesize);
 		int num = ser_Dao.getNum();
 		int pageNum = num % pagesize > 0 ? num / pagesize + 1 : num /pagesize;
-		for(int i = 0; i < scoreExchangeRecords.size(); i++){
-			JSONObject tmp = new JSONObject();
-			ScoreExchangeRecord scoreExchangeRecord = scoreExchangeRecords.get(i);
-			String username = scoreExchangeRecord.getUsername();
-			ConnectPersonScoreInfo connectPersonScoreInfo = cps_Dao.getConnectPersonScoreInfo(username);
-			if(connectPersonScoreInfo != null){
-				tmp.element("agentName", connectPersonScoreInfo.getAgentName());
-				tmp.element("username", username);
-				tmp.element("realName", connectPersonScoreInfo.getRealName());
-				tmp.element("weiXin", connectPersonScoreInfo.getWeiXin());
-				tmp.element("company", connectPersonScoreInfo.getCompany());
-				tmp.element("exchangeScore", scoreExchangeRecord.getExchangeScore());
-				if(scoreExchangeRecord.getExchangeType() == 0)
-					tmp.element("exchangeType", EXTYPE_MONEY);
-				else if(scoreExchangeRecord.getExchangeType() == 1)
-					tmp.element("exchangeType", EXTYPE_GIFT);
-				else
-					tmp.element("exchangeType", EXTYPE_ERROE);
-				tmp.element("exchangeCategory", "电风扇");
-				tmp.element("applicaTime", scoreExchangeRecord.getApplicaTime().toString());
-				tmp.element("finishTime", scoreExchangeRecord.getFinishTime().toString());
-				if(scoreExchangeRecord.getStatus() == 1)
-					tmp.element("status", EXING);
-				else if(scoreExchangeRecord.getStatus() == 2)
-					tmp.element("status", EXSC);
-				else
-					tmp.element("status", EXFA);
-				tmp.element("description", scoreExchangeRecord.getDescription());	
-				dataArray.add(tmp);
-			}
-		}
+		JSONArray  dataArray = returnExchangeData(scoreExchangeRecords);
 		result.element("data", dataArray);	
 		result.element("totalpage", pageNum);
 		return result;
@@ -312,39 +230,8 @@ public class ScoreManage {
 	public JSONObject getExchangeInfos()
 	{
 		JSONObject result = new JSONObject();
-		JSONArray  dataArray = new JSONArray();
 		List<ScoreExchangeRecord> scoreExchangeRecords = ser_Dao.getInfos();
-		for(int i = 0; i < scoreExchangeRecords.size(); i++){
-			JSONObject tmp = new JSONObject();
-			ScoreExchangeRecord scoreExchangeRecord = scoreExchangeRecords.get(i);
-			String username = scoreExchangeRecord.getUsername();
-			ConnectPersonScoreInfo connectPersonScoreInfo = cps_Dao.getConnectPersonScoreInfo(username);
-			if(connectPersonScoreInfo != null){
-				tmp.element("agentName", connectPersonScoreInfo.getAgentName());
-				tmp.element("username", username);
-				tmp.element("realName", connectPersonScoreInfo.getRealName());
-				tmp.element("weiXin", connectPersonScoreInfo.getWeiXin());
-				tmp.element("company", connectPersonScoreInfo.getCompany());
-				tmp.element("exchangeScore", scoreExchangeRecord.getExchangeScore());
-				if(scoreExchangeRecord.getExchangeType() == 0)
-					tmp.element("exchangeType", EXTYPE_MONEY);
-				else if(scoreExchangeRecord.getExchangeType() == 1)
-					tmp.element("exchangeType", EXTYPE_GIFT);
-				else
-					tmp.element("exchangeType", EXTYPE_ERROE);
-				tmp.element("exchangeCategory", "电风扇");
-				tmp.element("applicaTime", scoreExchangeRecord.getApplicaTime().toString());
-				tmp.element("finishTime", scoreExchangeRecord.getFinishTime().toString());
-				if(scoreExchangeRecord.getStatus() == 1)
-					tmp.element("status", EXING);
-				else if(scoreExchangeRecord.getStatus() == 2)
-					tmp.element("status", EXSC);
-				else
-					tmp.element("status", EXFA);
-				tmp.element("description", scoreExchangeRecord.getDescription());	
-				dataArray.add(tmp);
-			}
-		}
+		JSONArray  dataArray = returnExchangeData(scoreExchangeRecords);
 		System.out.println(dataArray.toString());
 		result.element("data", dataArray);	
 		return result;
@@ -353,40 +240,14 @@ public class ScoreManage {
 	public JSONObject getExchangeInfosByAgentId(String agentId, int offset, int pagesize)
 	{
 		JSONObject result = new JSONObject();
-		JSONArray  dataArray = new JSONArray();
-		List<ScoreExchangeRecord> scoreExchangeRecords = ser_Dao.getInfosByAgentId(agentId, offset, pagesize);
+		List<ScoreExchangeRecord> scoreExchangeRecords = ser_Dao.getInfos(offset, pagesize);
 		int num = ser_Dao.getNumByAgentId(agentId);
 		int pageNum = num % pagesize > 0 ? num / pagesize + 1 : num /pagesize;
-		for(int i = 0; i < scoreExchangeRecords.size(); i++){
-			JSONObject tmp = new JSONObject();
-			ScoreExchangeRecord scoreExchangeRecord = scoreExchangeRecords.get(i);
-			String username = scoreExchangeRecord.getUsername();
-			ConnectPersonScoreInfo connectPersonScoreInfo = cps_Dao.getConnectPersonScoreInfo(username);
-			if(connectPersonScoreInfo != null){
-				tmp.element("agentName", connectPersonScoreInfo.getAgentName());
-				tmp.element("username", username);
-				tmp.element("realName", connectPersonScoreInfo.getRealName());
-				tmp.element("weiXin", connectPersonScoreInfo.getWeiXin());
-				tmp.element("company", connectPersonScoreInfo.getCompany());
-				tmp.element("exchangeScore", scoreExchangeRecord.getExchangeScore());
-				if(scoreExchangeRecord.getExchangeType() == 0)
-					tmp.element("exchangeType", EXTYPE_MONEY);
-				else if(scoreExchangeRecord.getExchangeType() == 1)
-					tmp.element("exchangeType", EXTYPE_GIFT);
-				else
-					tmp.element("exchangeType", EXTYPE_ERROE);
-				tmp.element("exchangeCategory", "电风扇");
-				tmp.element("applicaTime", scoreExchangeRecord.getApplicaTime().toString());
-				tmp.element("finishTime", scoreExchangeRecord.getFinishTime().toString());
-				if(scoreExchangeRecord.getStatus() == 1)
-					tmp.element("status", EXING);
-				else if(scoreExchangeRecord.getStatus() == 2)
-					tmp.element("status", EXSC);
-				else
-					tmp.element("status", EXFA);
-				tmp.element("description", scoreExchangeRecord.getDescription());	
-				dataArray.add(tmp);
-			}
+		JSONArray  dataArray = returnExchangeData(scoreExchangeRecords);
+		for(int i = 0; i < dataArray.size(); i++){
+			JSONObject tmp = dataArray.getJSONObject(i);
+			if(!tmp.getString("agentId").equals(agentId))
+				dataArray.remove(i);
 		}
 		result.element("data", dataArray);	
 		result.element("totalpage", pageNum);
@@ -396,30 +257,107 @@ public class ScoreManage {
 	public JSONObject getExchangeInfosByAgentId(String agentId)
 	{
 		JSONObject result = new JSONObject();
-		JSONArray  dataArray = new JSONArray();
-		List<ScoreExchangeRecord> scoreExchangeRecords = ser_Dao.getInfosByAgentId(agentId);
-		for(int i = 0; i < scoreExchangeRecords.size(); i++){
+		List<ScoreExchangeRecord> scoreExchangeRecords = ser_Dao.getInfos();
+		JSONArray  dataArray = returnExchangeData(scoreExchangeRecords);
+		for(int i = 0; i < dataArray.size(); i++){
+			JSONObject tmp = dataArray.getJSONObject(i);
+			if(!tmp.getString("agentId").equals(agentId))
+				dataArray.remove(i);
+		}
+		result.element("data", dataArray);	
+		return result;
+	}
+	
+	public int getCurrentScoreByUsername(String username)
+	{
+		ConnectPersonScoreInfo connectPersonScoreInfo =  cps_Dao.getConnectPersonScoreInfo(username); 
+		if(connectPersonScoreInfo != null)
+			return connectPersonScoreInfo.getScore();
+		else 
+			return 0;
+	}
+	
+	public void updateExchangeStatus(String randKey)
+	{
+		ser_Dao.updateStatus(randKey, (byte)1);
+	}
+	
+	private JSONArray returnScoreData(List<ConnectPersonScoreInfo> infos)
+	{
+		JSONArray dataArray = new JSONArray();
+		if(infos == null)
+			return null;
+		for(int i = 0; i < infos.size(); i++){
+			ConnectPersonScoreInfo connectPersonScoreInfo = infos.get(i);
 			JSONObject tmp = new JSONObject();
-			ScoreExchangeRecord scoreExchangeRecord = scoreExchangeRecords.get(i);
+			tmp.element("agentName", connectPersonScoreInfo.getAgentName());
+			tmp.element("cardId", connectPersonScoreInfo.getCardId());
+			tmp.element("company", connectPersonScoreInfo.getCompany());
+			tmp.element("username", connectPersonScoreInfo.getUsername());
+			tmp.element("email", connectPersonScoreInfo.getEmail());
+			tmp.element("realName", connectPersonScoreInfo.getRealName());
+			tmp.element("weiXin", connectPersonScoreInfo.getWeiXin());
+			if(connectPersonScoreInfo.getExchangedScore() == null)
+				tmp.element("exchangedScore", 0);
+			else
+				tmp.element("exchangedScore", connectPersonScoreInfo.getExchangedScore());
+			if(connectPersonScoreInfo.getExchangingScore() == null)
+				tmp.element("exchangingScore", 0);
+			else
+				tmp.element("exchangingScore", connectPersonScoreInfo.getExchangingScore());
+			tmp.element("phone", connectPersonScoreInfo.getPhone());
+			tmp.element("score", connectPersonScoreInfo.getScore());
+			if(connectPersonScoreInfo.getRegisterWay().equals("P"))
+				tmp.element("registerWay", "个人");
+			else if(connectPersonScoreInfo.getRegisterWay().equals("C"))
+				tmp.element("registerWay", "公司");
+			else 
+				tmp.element("registerWay", "未知");
+			if(tmp.getInt("exchangingScore") == 0)
+				tmp.element("status", "正常");
+			else 
+				tmp.element("status", "兑换中");
+			dataArray.add(tmp);
+		}
+		return dataArray;
+	}
+	
+	private JSONArray returnExchangeData(List<ScoreExchangeRecord> infos)
+	{
+		JSONArray  dataArray = new JSONArray();
+		if(infos == null)
+			return null;
+		for(int i = 0; i < infos.size(); i++){
+			JSONObject tmp = new JSONObject();
+			ScoreExchangeRecord scoreExchangeRecord = infos.get(i);
 			String username = scoreExchangeRecord.getUsername();
 			ConnectPersonScoreInfo connectPersonScoreInfo = cps_Dao.getConnectPersonScoreInfo(username);
 			if(connectPersonScoreInfo != null){
+				tmp.element("agentId", connectPersonScoreInfo.getAgent());
 				tmp.element("agentName", connectPersonScoreInfo.getAgentName());
 				tmp.element("username", username);
 				tmp.element("realName", connectPersonScoreInfo.getRealName());
 				tmp.element("weiXin", connectPersonScoreInfo.getWeiXin());
 				tmp.element("company", connectPersonScoreInfo.getCompany());
 				tmp.element("exchangeScore", scoreExchangeRecord.getExchangeScore());
-				if(scoreExchangeRecord.getExchangeType() == 0)
+				if(scoreExchangeRecord.getExchangeType() == 0){
 					tmp.element("exchangeType", EXTYPE_MONEY);
-				else if(scoreExchangeRecord.getExchangeType() == 1)
+					tmp.element("exchangeCategory", "现金");
+				}
+				else if(scoreExchangeRecord.getExchangeType() == 1){
 					tmp.element("exchangeType", EXTYPE_GIFT);
-				else
+					tmp.element("exchangeCategory", "电风扇");
+				}
+				else{
 					tmp.element("exchangeType", EXTYPE_ERROE);
-				tmp.element("exchangeCategory", "电风扇");
+					tmp.element("exchangeCategory", "未知");
+				}
 				tmp.element("applicaTime", scoreExchangeRecord.getApplicaTime().toString());
 				tmp.element("finishTime", scoreExchangeRecord.getFinishTime().toString());
-				if(scoreExchangeRecord.getStatus() == 1)
+				tmp.element("randKey", scoreExchangeRecord.getRandKey());
+				if(scoreExchangeRecord.getStatus() == 0)
+					tmp.element("status", EXWA);
+				else if(scoreExchangeRecord.getStatus() == 1)
 					tmp.element("status", EXING);
 				else if(scoreExchangeRecord.getStatus() == 2)
 					tmp.element("status", EXSC);
@@ -429,7 +367,6 @@ public class ScoreManage {
 				dataArray.add(tmp);
 			}
 		}
-		result.element("data", dataArray);	
-		return result;
+		return dataArray;
 	}
 }

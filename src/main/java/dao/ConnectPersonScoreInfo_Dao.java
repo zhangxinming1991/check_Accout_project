@@ -182,6 +182,7 @@ public class ConnectPersonScoreInfo_Dao {
 			return null;
 		}
 	}
+	
 	public void Close_Connect(){
 		
 /*		try {

@@ -59,7 +59,15 @@ public class ScoreController {
 	private static final String descriptionMoney = "兑换现金";
 	private static final String descriptionGift = "兑换礼品";
 	private static final int PAGESIZE = 10;
-			
+		
+	/**
+	 * 用户提交积分兑换申请
+	 * @address: /check_Accout/ScoreController/insert_exrecord
+	 * @input : username、exchange_score、exchange_type
+	 * @output: {flag, errormsg}
+	 * @param request
+	 * @param response
+	 */
 	@RequestMapping(value="/insert_exrecord")
 	public void insertExRecord(HttpServletRequest request, HttpServletResponse response){
 		
@@ -67,10 +75,11 @@ public class ScoreController {
 		String username;
 		int exchangeScore;
 		byte exchangeType;
-		byte status = 1;
+		byte status = 0;
 		Timestamp applicaTime;
 		String randKey;
 		String description;
+		JSONObject re_jsonobject = new JSONObject();
 		try {
 			@SuppressWarnings("deprecation")
 			String request_s = IOUtils.toString(request.getInputStream());
@@ -80,24 +89,30 @@ public class ScoreController {
 			username = jstr.getString("username");
 			exchangeScore = jstr.getInt("exchange_score");
 			exchangeType = (byte) jstr.getInt("exchange_type");
-			applicaTime = new Timestamp(jstr.getLong("applica_time"));
+			applicaTime = new Timestamp(System.currentTimeMillis());
 			randKey = RandomCreate.createRandomString(18);
 			if(exchangeType == 0)
 				description = descriptionMoney;
 			else
 				description = descriptionGift;
+			int score = scoreManage.getCurrentScoreByUsername(username);
+			if(score < exchangeScore){
+				re_jsonobject.element("flag", -2);
+				re_jsonobject.element("errmsg", "当前拥有积分少于所申请积分");
+				logger_error.error("当前拥有积分少于所申请积分");
+				Common_return_en(response,re_jsonobject);
+			}
 			ScoreExchangeRecord scoreExchangeRecord = new ScoreExchangeRecord(username,
 					exchangeScore, exchangeType, status, applicaTime, randKey, description);
 			scoreManage.insertExchangeRecord(scoreExchangeRecord);
-			JSONObject re_jsonobject = new JSONObject();
 			re_jsonobject.element("flag", 0);
+			re_jsonobject.element("errmsg", "兑换申请提交成功");
 			Common_return_en(response,re_jsonobject);
 		}catch(Exception e){
 			logger_error.error("获取提交参数失败" + e);
 			logger_error.error(e);
 			e.printStackTrace();
 			
-			JSONObject re_jsonobject = new JSONObject();
 			re_jsonobject.element("flag", -1);
 			re_jsonobject.element("errmsg", "获取提交参数失败");
 			Common_return_en(response,re_jsonobject);
@@ -110,7 +125,7 @@ public class ScoreController {
 	 * @input : pagenum 页码
 	 * @output: {data:[{"agent","agentName","cardId","company","companyId","email",
 	 * 				"exchangedScore","exchangingScore","phone","realName", 
-	 * 				"registerWay""score", "username" ,"weiXin"}], flag, errormsg}
+	 * 				"registerWay""score", "username" ,"weiXin"}],totalpage, flag, errormsg}
 	 * @param request
 	 * @param response
 	 */
@@ -290,7 +305,7 @@ public class ScoreController {
 	 * @address: /check_Accout/ScoreController/manage_exchange
 	 * @input : pagenum 页码
 	 * @output: {data:[{"agentName","username","realName","weiXin","company","exchangeScore",
-	 * "exchangeType","exchangeCategory","applicaTime","finishTime","status","description"}], totalpage, flag, errormsg}
+	 * "exchangeType","exchangeCategory","applicaTime","finishTime","randKey","status","description"}], totalpage, flag, errormsg}
 	 * @param request
 	 * @param response
 	 */
@@ -338,7 +353,7 @@ public class ScoreController {
 	 * @address: /check_Accout/ScoreController/agent_exchangeinfos
 	 * @input : pagenum 页码
 	 * @output: { {data:[{"agentName","username","realName","weiXin","company","exchangeScore",
-	 * "exchangeType","exchangeCategory","applicaTime","finishTime","status","description"}], totalpage,flag, errormsg}
+	 * "exchangeType","exchangeCategory","applicaTime","finishTime","randKey", "status","description"}], totalpage,flag, errormsg}
 	 * @param request
 	 * @param response
 	 */
@@ -419,6 +434,50 @@ public class ScoreController {
 		returnJsonObject.element("errmsg", "生成报表成功");
 		
 		Common_return_en(response, returnJsonObject);
+	}
+	/**
+	 * 超级管理员批准礼品兑换
+	 * @address: /check_Accout/ScoreController/approval_exchange
+	 * @input : randKey 流水号
+	 * @output: {flag, errormsg}
+	 * @param request
+	 * @param response
+	 */
+	@SuppressWarnings("deprecation")
+	@RequestMapping(value="/approval_exchange")
+	public void approvalExchange(HttpServletRequest request, HttpServletResponse response){
+		logger.info("超级管理员批准积分兑换");
+		HttpSession session = request.getSession(false);
+		JSONObject re_jsonobject = new JSONObject();
+		String usertype = session.getAttribute("usertype").toString();
+		if(!usertype.equals("bm")){
+			logger_error.error("该用户没有权限批准积分兑换");
+			re_jsonobject.element("flag", -1);
+			re_jsonobject.element("errmsg", "权限错误");
+			Common_return_en(response,re_jsonobject);
+		}
+		String request_s;
+		String request_s_de;
+		String randKey = null;
+		try {
+			request_s = IOUtils.toString(request.getInputStream());
+			request_s_de = AES.aesDecrypt(request_s, AES.key);	//解密数据
+			logger.info("接口all_scoreinfos received content:" + request_s_de);
+			JSONObject jstr = JSONObject.fromObject(request_s_de);
+			randKey = jstr.getString("randKey");
+		} catch (Exception e) {
+			e.printStackTrace();
+			logger_error.error("参数解析失败");
+			logger_error.error(e);
+			re_jsonobject.element("flag", -1);
+			re_jsonobject.element("errmsg", "参数解析失败");
+			Common_return_en(response,re_jsonobject);
+		}
+		scoreManage.updateExchangeStatus(randKey);
+		re_jsonobject.element("flag", 0);
+		re_jsonobject.element("errmsg", "批准成功");
+		
+		Common_return_en(response, re_jsonobject);
 	}
     /**
      * Common_return_en 不带具体信息的加密返回
