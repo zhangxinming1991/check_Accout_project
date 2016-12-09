@@ -69,7 +69,8 @@ import javax.activation.*;
 /**
  * PMController 人员管理接口类 ，提供的接口包括用户注册，控制用户权限,操作日志查看，数据库备份
  * @author zhangxinming
- * @version 1.0.0
+ * @modify LinLi
+ * @version 1.1.0
  */
 @Controller
 public class PMController {
@@ -742,6 +743,9 @@ public class PMController {
     		else if (role.equals("bm")) {
     			oLog_Service.AddLog(OpLog_Service.utype_ma, work_id, OpLog_Service.Log, OpLog_Service.result_success);
 			}
+    		else if(role.equals("ba")){
+    			oLog_Service.AddLog(OpLog_Service.utype_am, work_id, OpLog_Service.Log, OpLog_Service.result_success);
+    		}
     		else{
     			oLog_Service.AddLog(OpLog_Service.utype_un, work_id, OpLog_Service.Log, OpLog_Service.result_success);
 			}
@@ -755,6 +759,9 @@ public class PMController {
     		else if (role.equals("bm")) {
     			oLog_Service.AddLog(OpLog_Service.utype_ma, work_id, OpLog_Service.Log, OpLog_Service.result_failed);
 			}
+    		else if(role.equals("ba")){
+    			oLog_Service.AddLog(OpLog_Service.utype_am, work_id, OpLog_Service.Log, OpLog_Service.result_failed);
+    		}
     		else{
     			oLog_Service.AddLog(OpLog_Service.utype_un, work_id, OpLog_Service.Log, OpLog_Service.result_failed);
 			}
@@ -821,9 +828,9 @@ public class PMController {
     	assistance.setPhone(phone);
     	assistance.setEmail(email);
     	assistance.setPassword(password);
+    	// 前端直接传用户身份对应的编码：代理商财务=bu 代理商管理员=bam
     	assistance.setUsertype(usertype);
     	assistance.setAgentid(agentid);
-    	assistance.setUsertype("bu");//普通财务人员
   
     	Register_Manage regmanager = pManage.new Register_Manage();
     	re_jsonobject = regmanager.RgEnter_Select(assistance, "as");
@@ -948,7 +955,7 @@ public class PMController {
     	}
 
     	int flag = jstr.getInt("regflag");
-    	
+    	logger.info(flag);
     	Register_Manage register_Manage = pManage.new Register_Manage();
     	JSONObject jsonObject = register_Manage.Verify_RgRequest(reg_type,username, flag);
     	
@@ -1103,6 +1110,8 @@ public class PMController {
 		String request_s_de = null;
 		String watch_type = null;
 		int pagenum = -1;
+		String user_type = session.getAttribute("usertype").toString();
+		String agent_id = session.getAttribute("agentid").toString();
 		try {
 				request_s = IOUtils.toString(request.getInputStream());
 				request_s_de = AES.aesDecrypt(request_s, AES.key);//解密数据
@@ -1119,7 +1128,7 @@ public class PMController {
 		int pagesize = 10;
 		int offset = (pagenum-1)*10;
 		
-		re_jsonobject = pManage.Watch(watch_type,offset,pagesize);//进入查看处理
+		re_jsonobject = pManage.Watch(watch_type,offset,pagesize, user_type, agent_id);//进入查看处理
     	//int num = pManage.opLog_Dao.GetOpLogTb_Num();
     	/*返回数据到前台*/
     	re_jsonobject.element("flag", 0);

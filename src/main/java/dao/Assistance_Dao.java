@@ -132,6 +132,25 @@ public class Assistance_Dao {
 		}
 	}
 	
+	public List<Assistance> GetTotalTbByElement_ByPage_ByUserType(String filed1,Object value1,int offset,int pagesize, String usertype){
+		try {
+					session = sessionFactory.openSession();
+		String hql_select_all = "from Assistance where usertype = :usertype and " + filed1 + " = :value1";
+		List<Assistance> assistances =   (List<Assistance>) session.createQuery(hql_select_all)
+				.setParameter("usertype", usertype)
+				.setParameter("value1", value1)
+				.setFirstResult(offset)
+				.setMaxResults(pagesize)
+				.list();
+		session.close();
+		return assistances;
+		} catch (RuntimeException e) {
+			// TODO: handle exception
+			logger.error("根据" + filed1 + "=" + value1 + "获取整个Assistance表" + "失败" + e);
+			return null;
+		}
+	}
+	
 	public int GetTotalTbByElement_Num_ByPage(String filed1,Object value1){
 		int num = 0;
 		try {
@@ -139,6 +158,26 @@ public class Assistance_Dao {
 			String hql_select_all = "select count(*) from Assistance where " + filed1 + " = :value1";
 		//	String hql_select_all = "select count(*) from Assistance";
 			Query query =   session.createQuery(hql_select_all)
+					.setParameter("value1", value1);
+			//int size = query.list().size();
+			num = ((Long)query.uniqueResult()).intValue();
+			session.close();
+			return num;
+		} catch (RuntimeException e) {
+			// TODO: handle exception
+			logger.error("查询中记录数失败" + e);
+			return -1;
+		}
+	}
+	
+	public int GetTotalTbByElement_Num_ByPage_ByUserType(String filed1,Object value1, String usertype){
+		int num = 0;
+		try {
+			session = sessionFactory.openSession();
+			String hql_select_all = "select count(*) from Assistance where usertype = :usertype and " + filed1 + " = :value1";
+		//	String hql_select_all = "select count(*) from Assistance";
+			Query query =   session.createQuery(hql_select_all)
+					.setParameter("usertype", usertype)
 					.setParameter("value1", value1);
 			//int size = query.list().size();
 			num = ((Long)query.uniqueResult()).intValue();
@@ -170,6 +209,25 @@ public class Assistance_Dao {
 		}
 	}
 	
+	public List<Assistance> GetTotalTbByElement_ByPage_ByUserType_And(String filed1,Object value1,String filed2,Object value2,int offset,int pagesize, String usertype){
+		try {
+					session = sessionFactory.openSession();
+		String hql_select_all = "select assis from Assistance assis where usertype = :usertype and " + filed1 + " = :value1" + " or " + filed2 + " = :value2";
+		List<Assistance> assistances =   (List<Assistance>) session.createQuery(hql_select_all)
+				.setParameter("usertype", usertype)
+				.setParameter("value1", value1)
+				.setParameter("value2", value2)
+				.setFirstResult(offset)
+				.setMaxResults(pagesize)
+				.list();
+		session.close();
+		return assistances;
+		} catch (RuntimeException e) {
+			// TODO: handle exception
+			logger.error("根据" + filed1 + "=" + value1 + "获取整个Assistance表" + "失败" + e);
+			return null;
+		}
+	}
 	public int GetTotalTbByElement_Num_ByPage_And(String filed1,Object value1,String filed2,Object value2){
 		int num = 0;
 		try {
@@ -177,6 +235,27 @@ public class Assistance_Dao {
 			String hql_select_all = "select count(*) from Assistance where " + filed1 + " = :value1" + " or " + filed2 + " = :value2";
 		//	String hql_select_all = "select count(*) from Assistance";
 			Query query =   session.createQuery(hql_select_all)
+					.setParameter("value1", value1)
+					.setParameter("value2", value2);
+			//int size = query.list().size();
+			num = ((Long)query.uniqueResult()).intValue();
+			session.close();
+			return num;
+		} catch (RuntimeException e) {
+			// TODO: handle exception
+			logger.error("查询中记录数失败" + e);
+			return -1;
+		}
+	}
+	
+	public int GetTotalTbByElement_Num_ByPage_ByUserType_And(String filed1,Object value1,String filed2,Object value2, String usertype){
+		int num = 0;
+		try {
+			session = sessionFactory.openSession();
+			String hql_select_all = "select count(*) from Assistance where usertype = :usertype and " + filed1 + " = :value1" + " or " + filed2 + " = :value2";
+		//	String hql_select_all = "select count(*) from Assistance";
+			Query query =   session.createQuery(hql_select_all)
+					.setParameter("usertype", usertype)
 					.setParameter("value1", value1)
 					.setParameter("value2", value2);
 			//int size = query.list().size();

@@ -12,13 +12,15 @@
     <link rel="stylesheet" href="css/app.css">
 </head>
 <body data-ng-app="sany">
-<div ng-controller="indexCtrl">
+<div ng-controller="MainCtrl">
     <nav class="navbar navbar-inverse navbar-fixed-top" role="navigation">
         <div class="container-fluid" style="position: relative">
             <!--<div class="navbar-header">-->
             <div>
-                <a id="brandBlock" class="navbar-brand" href ng-click="signOut()" style="position:relative; display: inline-block; white-space: nowrap; float: left" >
-                    <span><img src="favicon.ico" width="auto" height="20px"  style="margin: 0; padding-right: 5px; float:left;"></span>
+                <a id="brandBlock" class="navbar-brand" href ng-click="signOut()"
+                   style="position:relative; display: inline-block; white-space: nowrap; float: left">
+                    <span><img src="favicon.ico" width="auto" height="20px"
+                               style="margin: 0; padding-right: 5px; float:left;"></span>
                     三一重工对账通
                 </a>
             </div>
@@ -134,7 +136,7 @@
                         </div>
                         <div class="form-group">
                             <!--<label class=" control-label">密码：</label>-->
-                            <input name="upwd" type="password" ng-model="formUser.upwd" placehlder="密码"
+                            <input name="upwd" type="password" ng-model="formUser.upwd" placeholder="密码"
                                    class="form-control input-lg"
                                    data-error="密码格式有误" required
                             >
@@ -184,19 +186,19 @@
                 <div class="modal-body">
                     <form name="signUpForm" id="signUpForm" data-toggle="validator" role="form">
                         <!--用户角色-->
-                        <!--                        <div class="btn-group form-group" ng-init="signUpCtrl.formUser.role='U'">
-                                                    <button ng-model="signUpCtrl.formUser.role" uib-btn-radio="'U'" class="btn"
-                                                            ng-class="signUpCtrl.formUser.role=='U'?'btn-primary':'btn-default'" type="button">
-                                                        财务人员
-                                                    </button>
-                                                    <button ng-model="signUpCtrl.formUser.role" uib-btn-radio="'M'" class="btn"
-                                                            ng-class="signUpCtrl.formUser.role=='M'?'btn-primary':'btn-default'" type="button">
-                                                        财务总监
-                                                    </button>
-                                                    &lt;!&ndash;<button ng-model="signUpCtrl.formUser.role" uib-btn-radio="'S'" class="btn"&ndash;&gt;
-                                                    &lt;!&ndash;ng-class="signUpCtrl.formUser.role=='S'?'btn-primary':'btn-default'" type="button">系统管理员&ndash;&gt;
-                                                    &lt;!&ndash;</button>&ndash;&gt;
-                                                </div>-->
+                        <div class="btn-group form-group" ng-init="signUpCtrl.formUser.role='U'">
+                            <button ng-model="signUpCtrl.formUser.role" uib-btn-radio="'U'" class="btn"
+                                    ng-class="signUpCtrl.formUser.role=='U'?'btn-primary':'btn-default'" type="button">
+                                代理商财务
+                            </button>
+                            <button ng-model="signUpCtrl.formUser.role" uib-btn-radio="'Z'" class="btn"
+                                    ng-class="signUpCtrl.formUser.role=='Z'?'btn-primary':'btn-default'" type="button">
+                                代理商财务管理
+                            </button>
+                            <!--<button ng-model="signUpCtrl.formUser.role" uib-btn-radio="'S'" class="btn"-->
+                            <!--ng-class="signUpCtrl.formUser.role=='S'?'btn-primary':'btn-default'" type="button">系统管理员-->
+                            <!--</button>-->
+                        </div>
                         <!--登陆名域-->
                         <div class="form-group">
                             <!--<label  class="control-label">登陆名：</label>-->
@@ -326,23 +328,6 @@
     <div class="container-fluid" data-ui-view="">
     </div>
 </div>
-
-<script id="fw.html" type="text/ng-template">
-    <div class="row">
-        <div class="sidebar col-sm-2 col-md-1 col-lg-1">
-            <ul class="nav nav-sidebar">
-                <li ng-class="{active:activeState.indexOf('u.fw.v')==0}" ng-disabled="inChecking"><a
-                        data-ui-sref="u.fw.v"><!--预览-->付款记录</a></li>
-                <li ng-class="{active:activeState.indexOf('u.fw.p')==0}"><a ng-click="checkingEnv()" href><!--进入-->对账流程</a>
-                </li>
-                <li ng-class="{active:activeState.indexOf('u.fw.h')==0}" ng-disabled="inChecking"><a
-                        data-ui-sref="u.fw.h"><!--查看-->历史结果</a></li>
-            </ul>
-        </div>
-        <div class="col-sm-offset-2 col-sm-10 col-md-offset-1 col-md-11 col-lg-offset-1 col-lg-11 main"
-             data-ui-view=""></div>
-    </div>
-</script>
 
 
 <script type="text/ng-template" id="msgbox.html">

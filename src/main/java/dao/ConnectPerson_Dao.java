@@ -162,10 +162,37 @@ public class ConnectPerson_Dao {
 		return cPersons;
 	}
 	
+	public List<ConnectPerson> GetConnectTbByElement_ByPage_ByAgent_And(String filed1,Object value1,String filed2,Object value2,int offset,int pagesize, String agent_id){
+		session = sessionFactory.openSession();
+		String hql_select_all = "select connectp from ConnectPerson connectp where agent = :agent_id and " + filed1 + " = :value1" + " or " + filed2 + " = :value2";
+		List<ConnectPerson> cPersons =   (List<ConnectPerson>) session.createQuery(hql_select_all)
+				.setParameter("agent_id", agent_id)
+				.setParameter("value1", value1)
+				.setParameter("value2", value2)
+				.setFirstResult(offset)
+				.setMaxResults(pagesize)
+				.list();
+		session.close();
+		return cPersons;
+	}
+	
 	public List<ConnectPerson> GetConnectTbByElement_ByPage(String filed1,Object value1,int offset,int pagesize){
 		session = sessionFactory.openSession();
 		String hql_select_all = "select connectp from ConnectPerson connectp where " + filed1 + " = :value1";
 		List<ConnectPerson> cPersons =   (List<ConnectPerson>) session.createQuery(hql_select_all)
+				.setParameter("value1", value1)
+				.setFirstResult(offset)
+				.setMaxResults(pagesize)
+				.list();
+		session.close();
+		return cPersons;
+	}
+	
+	public List<ConnectPerson> GetConnectTbByElement_ByPage_ByAgent(String filed1,Object value1,int offset,int pagesize, String agent_id){
+		session = sessionFactory.openSession();
+		String hql_select_all = "select connectp from ConnectPerson connectp where agent = :agent_id and " + filed1 + " = :value1";
+		List<ConnectPerson> cPersons =   (List<ConnectPerson>) session.createQuery(hql_select_all)
+				.setParameter("agent_id", agent_id)
 				.setParameter("value1", value1)
 				.setFirstResult(offset)
 				.setMaxResults(pagesize)
@@ -192,6 +219,25 @@ public class ConnectPerson_Dao {
 		}
 	}
 	
+	public int GetConnectTbByElement_Num_ByPage_ByAgent(String filed1,Object value1, String agent_id){
+		int num = 0;
+		try {
+			session = sessionFactory.openSession();
+			String hql_select_all = "select count(*) from ConnectPerson where agent = :agent_id" + filed1 + " = :value1";
+		//	String hql_select_all = "select count(*) from Assistance";
+			Query query =   session.createQuery(hql_select_all)
+					.setParameter("agent_id", agent_id)
+					.setParameter("value1", value1);
+			num = ((Long)query.uniqueResult()).intValue();
+			session.close();
+			return num;
+		} catch (RuntimeException e) {
+			// TODO: handle exception
+			logger.error("查询中记录数失败" + e);
+			return -1;
+		}
+	}
+	
 	public int GetConnectTbByElement_Num_ByPage_And(String filed1,Object value1,String filed2,Object value2){
 		int num = 0;
 		try {
@@ -199,6 +245,27 @@ public class ConnectPerson_Dao {
 			String hql_select_all = "select count(*) from ConnectPerson where " + filed1 + " = :value1" + " or " + filed2 + " = :value2";
 		//	String hql_select_all = "select count(*) from Assistance";
 			Query query =   session.createQuery(hql_select_all)
+					.setParameter("value1", value1)
+					.setParameter("value2", value2);
+			//int size = query.list().size();
+			num = ((Long)query.uniqueResult()).intValue();
+			session.close();
+			return num;
+		} catch (RuntimeException e) {
+			// TODO: handle exception
+			logger.error("查询中记录数失败" + e);
+			return -1;
+		}
+	}
+	
+	public int GetConnectTbByElement_Num_ByPage_ByAgent_And(String filed1,Object value1,String filed2,Object value2, String agent_id){
+		int num = 0;
+		try {
+			session = sessionFactory.openSession();
+			String hql_select_all = "select count(*) from ConnectPerson where agent = :agent_id" + filed1 + " = :value1" + " or " + filed2 + " = :value2";
+		//	String hql_select_all = "select count(*) from Assistance";
+			Query query =   session.createQuery(hql_select_all)
+					.setParameter("agent_id", agent_id)
 					.setParameter("value1", value1)
 					.setParameter("value2", value2);
 			//int size = query.list().size();

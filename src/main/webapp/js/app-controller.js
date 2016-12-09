@@ -20,48 +20,57 @@ var anyModal = $('.modal');
 
 var ng = angular;
 
-
 // 首页
-app.controller('indexCtrl', ['$scope', '$state', '$rootScope', function ($scope, $state, rootsgop) {
-    //console.debug('indexCtrl');
+app.controller('MainCtrl', ['$scope', '$state', '$rootScope', 'AccountService',
+    function ($scope, $state, rootsgop, AccSvc) {
+        // console.debug('MainCtrl');
+        // console.debug('authed?' + AccSvc.isAuthenticated());
 
-    // rebind F5(refresh) to reload current state( refresh data by javascript)
-    $scope.disableKeyF5 = function (evt) {
-        if ((evt.which || evt.code) === 116 && !evt.ctrlKey) {    // do not disable <Ctrl>+F5 (force refreshing)
-            //console.debug('F5 pressed');
-            evt.preventDefault();
-            // console.debug('reloading state');
-            $state.reload();
-        }
-    };
-    $(document).on('keydown', $scope.disableKeyF5);
+        // rebind F5(refresh) to reload current state( refresh data by javascript)
+        $scope.disableKeyF5 = function (evt) {
+            if ((evt.which || evt.code) === 116 && !evt.ctrlKey) {    // do not disable <Ctrl>+F5 (force refreshing)
+                //console.debug('F5 pressed');
+                evt.preventDefault();
+                // console.debug('reloading state');
+                $state.reload();
+            }
+        };
+        $(document).on('keydown', $scope.disableKeyF5);
 
-    anyModal.on('hidden.bs.modal', function () {
-        // regLogModal.on('shown.bs.modal', function () {
-        $(this).find('div.with-errors').html('');
-    });
-    // $('.modal').modal('hide');
+        anyModal.on('hidden.bs.modal', function () {
+            // regLogModal.on('shown.bs.modal', function () {
+            $(this).find('div.with-errors').html('');
+        });
+        // $('.modal').modal('hide');
 
-    // anyModal.on('hidden.bs.modal', function () {
-    // });
-    // anyModal.on('shown.bs.modal', function () {
-    // });
+        // anyModal.on('hidden.bs.modal', function () {
+        // });
+        // anyModal.on('shown.bs.modal', function () {
+        // });
 
-    rootsgop.$on('$stateChangeSuccess', function (event, toState) {
-        rootsgop.activeState = toState.name;
-    });
+        rootsgop.$on('$stateChangeSuccess', function (event, toState, toParams, fromState, fromParams) {
+            rootsgop.activeState = toState.name;
+        });
 
-    rootsgop.$watch('loggedInUser', function (nv) {
-        if (nv) {
-            // 先隐藏，再显示
-            regLogEntry.css('display', 'none');
-            signOutEntry.css('display', 'inherit');
-        } else {
-            signOutEntry.css('display', 'none');
-            regLogEntry.css('display', 'inherit');
-        }
-    });
-}]);
+        rootsgop.$watch('loggedInUser', function (nv) {
+            if (nv) {
+                // 先隐藏，再显示
+                regLogEntry.css('display', 'none');
+                signOutEntry.css('display', 'inherit');
+            } else {
+                signOutEntry.css('display', 'none');
+                regLogEntry.css('display', 'inherit');
+            }
+        });
+    }]);
+
+var homeCtrl = ['$scope', 'AccountService', function (sgop, AccSvc) {
+    // console.debug('ctrl-> state-index-ctrl(homeCtrl)');
+    // 如果用户在程序内（angular生命周期内的）
+    AccSvc.signOut();
+    anyModal.modal('hide');
+    loginModal.modal('show');
+}];
 
 // 登陆
 var signInCtrl = ['$scope', '$state', 'AccountService',
@@ -69,6 +78,7 @@ var signInCtrl = ['$scope', '$state', 'AccountService',
         //console.debug('sign in ctrl 登陆');
 
         var ctrl = sgop;
+        ctrl.formUser = {};
 
         sgop.submitForm = function () {
             var formUser = sgop.formUser;
@@ -100,7 +110,11 @@ var signInCtrl = ['$scope', '$state', 'AccountService',
         function goState(role) {
             switch (role) {
                 case "bu":
-                    $state.go('u.fw');
+                    if (new Date().getDate() < appConf.checkClosingDate) {
+                        $state.go('u.fw.h');
+                    } else {
+                        $state.go('u.fw');
+                    }
                     return;
                 case "bm":
                     $state.go('u.fs');
@@ -108,6 +122,8 @@ var signInCtrl = ['$scope', '$state', 'AccountService',
                 case "bs":
                     $state.go('u.sa');
                     return;
+                case 'ba':
+                    $state.go('u.fm');
             }
         }
 
@@ -129,6 +145,7 @@ var signUpCtrl = ['$scope', '$state', 'AccountService', '$uibModal', '$timeout',
         // for no 'controller as ctrl' grammar
         // sgop.signUpCtrl=sgop;
         // var ctrl = sgop;
+        ctrl.formUser = {};
 
         ctrl.submitForm = function () {
 
@@ -140,7 +157,7 @@ var signUpCtrl = ['$scope', '$state', 'AccountService', '$uibModal', '$timeout',
                     && /[A-Z]/.test(pwd)
                 )
             ) {
-                ctrl.errMsg = '密码8-16位，必须有大小写字母和数字三种字符'
+                ctrl.errMsg = '密码8-16位，必须有大小写字母和数字三种字符';
                 return false;
             }
             var pwdCfm = ctrl.formUser.upwdCfm;
@@ -157,11 +174,7 @@ var signUpCtrl = ['$scope', '$state', 'AccountService', '$uibModal', '$timeout',
             ctrl.errMsg = '申请注册中……';
 
             var formUser = angular.copy(ctrl.formUser);
-            var m = {
-                'U': 'bu',
-                'M': 'bm'
-            };
-            formUser.role = m[formUser.role] || formUser.role;
+            formUser.role = frontBackEndMappping.userRole[formUser.role] || formUser.role;
             formUser.renameProperty('uid', 'username');
             formUser.renameProperty('upwd', 'password');
             formUser.renameProperty('agent', 'agentid', function (agent) {
@@ -306,7 +319,7 @@ app.controller('ResetPwdCtrl', resetPwdCtrl);
 // 对于直接通过URL访问需要授权信息页面的情况（#/u/*, #/u/fw,#/fs, #/u/sa），Javascript环境已没有任何用户登陆信息，如何自动登陆？
 // 已#/u打头的路径，需要授权信息，需检测是否已登陆，如果没有,或者自动登陆、或者弹窗登陆、或者跳转登陆页面
 var uCtrl = ['$scope', '$state', 'AccountService', '$timeout', '$uibModal', 'FncRmindService', 'ChkRsltSvc', function (sgop, state, AccSvc, timeout, msgbox, NotifSvc, ChkSvc) {
-    //console.debug('uCtrl');
+    // console.debug('uCtrl');
 
     regLogModal.modal('hide');
     //
@@ -336,6 +349,7 @@ var uCtrl = ['$scope', '$state', 'AccountService', '$timeout', '$uibModal', 'Fnc
         state.go('index');
     };
 
+
     ctrl.userInfo = function () {
         msgbox.open({
             templateUrl: 'fw-info.html'
@@ -348,8 +362,29 @@ var uCtrl = ['$scope', '$state', 'AccountService', '$timeout', '$uibModal', 'Fnc
         });
     };
 
+    /*
+     // 页面被销毁时自动注销会导致刷新页面也会注销登陆，这是不允许的
+     // 存在问题：利用登陆过本网站的标签页访问其他网站后，继续使用该标签页访问本站时，登陆信息还在（跳转其他网站时没有自动注销登陆）
+     // window.addEventListener('beforeunload',function () {
+     window.addEventListener('unload', function () {
+     // debug
+     sessionStorage.setItem('last-close', 'beforeunload');
+     // AccSvc.signOut();
+     });*/
+    //关闭标签页自动注销
+    window.close = function (event) {
+        // console.debug('window close');
+        sessionStorage.setItem('last-close', 'window-close');
+        AccSvc.signOut();
+    }
 }];
 
+/*// debug
+ window.document.onready = function () {
+ console.debug('last-close=' + sessionStorage.getItem('last-close'));
+ // alert(sessionStorage.getItem('last-close'));
+ sessionStorage.setItem('last-close', '')
+ };*/
 
 //**** 财务人员fw控制器 ----->>>>start *****//
 
@@ -638,9 +673,8 @@ function initGridStatus(sgop) {
 }
 
 function gridPage(sgop, tableState, $filter, businessFnc) {
-
     if (tableState.pagination.lastStartIdx == tableState.pagination.start && sgop.items) {
-        console.debug('only local search & sort; items, dispItems', sgop.items, sgop.dispItems);
+        // console.debug('only local search & sort; items, dispItems', sgop.items, sgop.dispItems);
         localSearchAndSort();
         return;
     }
@@ -665,14 +699,18 @@ function gridPage(sgop, tableState, $filter, businessFnc) {
     var pageNum = Math.floor(start / numberPerPage) + 1; // first page with 1 not 0
 
     sgop.isLoading = true;
-    businessFnc({pagenum: pageNum}).then(function (data) {
+    businessFnc({
+        pagenum: pageNum
+        , search: tableState.search.predicateObject
+        , sort: {field: tableState.sort.predicate, desc: tableState.sort.reverse}
+    }).then(function (data) {
 
         tableState.pagination.lastStartIdx = start;
 
         var items = data.items || data.data;
 
         sgop.items = items;
-        // sgop.dispItems = items;
+        sgop.dispItems = items;
 
         localSearchAndSort();
 
@@ -696,7 +734,7 @@ var fwnCtrl = ['$scope', 'FncRmindService', 'Lightbox', "$uibModal", '$state', '
         //console.debug('fwnCtrl 待审付款通知');
 
         sgop.refreshGrid = function (tableState) {
-            console.debug('table refresh with state:', tableState);
+            // console.debug('table refresh with state:', tableState);
             gridPage(sgop, tableState, $filter, FncRmindService.fncReminds);
         };
 
@@ -940,7 +978,7 @@ var fwvCtrl = ['$scope', 'Lightbox', '$uibModal', 'FncRmindService', '$filter', 
 
     sgop.checkInoperable = true;
     sgop.refreshGrid = function (tableState) {
-        console.debug('table refresh with state:', tableState);
+        // console.debug('table refresh with state:', tableState);
         gridPage(sgop, tableState, $filter, NotifSvc.viewNotifications);
     };
     // sgop.refreshGrid({pagination: {}});
@@ -1291,7 +1329,7 @@ function refreshGridFnc(svcfnc, sgop) {
     }
 }
 
-function approveReg(item, items, svcfnc, msgbox) {
+function approveReg(item, itemsIgnored, svcfnc, msgbox, itemsScope) {
     var msgcfg = {
         msgbox: msgbox
         , title: '审阅操作结果'
@@ -1305,6 +1343,7 @@ function approveReg(item, items, svcfnc, msgbox) {
             boxInst.close();
         }, msgOkTimeout);
         // 如果用户注册审阅操作成功（被通过、被拒绝），则不再在表中显示
+        var items = itemsScope.dispItems;
         var i = items.indexOf(item);
         if (i > -1) {
             items.splice(i, 1);
@@ -1321,19 +1360,20 @@ function approveReg(item, items, svcfnc, msgbox) {
 // 审阅对账联系人注册申请
 var fsanCtrl = ['$scope', '$timeout', 'AccountService', '$uibModal', '$filter',
     function (sgop, timeout, AccSvc, msgbox, $filter) {
-        console.debug('fsan Ctrl->审阅对账联系人注册申请');
+        // console.debug('fsan Ctrl->审阅对账联系人注册申请');
 
         // refreshGridFnc(AccSvc.regPendingPaymentNotifiers, sgop)();
         sgop.refreshGrid = function (tableState) {
-            console.debug('table refresh with state:', tableState);
+            // console.debug('table refresh with state:', tableState);
             gridPage(sgop, tableState, $filter, AccSvc.regPendingPaymentNotifiers);
         };
+        var items = sgop.dispItems;
 
         sgop.acceptNotifier = function (item) {
-            approveReg(item, sgop.items, AccSvc.acceptNotifierReg, msgbox);
+            approveReg(item, items, AccSvc.acceptNotifierReg, msgbox, sgop);
         };
         sgop.rejectNotifier = function (item) {
-            approveReg(item, sgop.items, AccSvc.rejectNotifierReg, msgbox);
+            approveReg(item, items, AccSvc.rejectNotifierReg, msgbox, sgop);
         };
     }];
 app.controller('fsanCtrl', fsanCtrl);
@@ -1345,7 +1385,7 @@ var fsawCtrl = ['$scope', '$timeout', 'AccountService', '$uibModal', '$filter',
 
         // refreshGridFnc(AccSvc.regPendingFinancialWorker, sgop)();
         sgop.refreshGrid = function (tableState) {
-            console.debug('table refresh with state:', tableState);
+            // console.debug('table refresh with state:', tableState);
             gridPage(sgop, tableState, $filter, AccSvc.regPendingFinancialWorker);
         };
         // sgop.isLoading = true;
@@ -1357,19 +1397,40 @@ var fsawCtrl = ['$scope', '$timeout', 'AccountService', '$uibModal', '$filter',
         // }).finally(function () {
         //     sgop.isLoading = false;
         // });
+        var items = sgop.dispItems;
         sgop.accept = function (item) {
-            approveReg(item, sgop.items, AccSvc.acceptFinancialWorkerReg, msgbox);
+            // approveReg(item, sgop.items, AccSvc.acceptFinancialWorkerReg, msgbox, sgop);
+            approveReg(item, items, AccSvc.acceptFinancialWorkerReg, msgbox, sgop);
         };
         sgop.reject = function (item) {
-            approveReg(item, sgop.items, AccSvc.rejectFinancialWorkerReg, msgbox);
+            approveReg(item, items, AccSvc.rejectFinancialWorkerReg, msgbox, sgop);
         };
     }];
 app.controller('fsawCtrl', fsawCtrl);
 
+var fsamCtrl = ['$scope', '$timeout', 'AccountService', '$uibModal', '$filter',
+    function (sgop, timeout, AccSvc, msgbox, $filter) {
+        //console.debug('fsaw Ctrl->审阅代理商注册');
+
+        // refreshGridFnc(AccSvc.regPendingFinancialWorker, sgop)();
+        sgop.refreshGrid = function (tableState) {
+            // console.debug('table refresh with state:', tableState);
+            gridPage(sgop, tableState, $filter, AccSvc.regPendingFinancialAdmins);
+        };
+        var items = sgop.dispItems;
+        sgop.accept = function (item) {
+            approveReg(item, items, AccSvc.acceptFinancialAdminReg, msgbox, sgop);
+        };
+        sgop.reject = function (item) {
+            approveReg(item, items, AccSvc.rejectFinancialAdminReg, msgbox, sgop);
+        };
+    }];
+app.controller('fsamCtrl', fsamCtrl);
+
 function ctrlUser(item, svcfnc, msgbox) {
     var msgcfg = {
         msgbox: msgbox
-        , title: '管控操作结果'
+        , title: '控制操作结果'
         , msgHtml: '操作<strong class="text-info">执行中</strong>'
         , size: 'sm'
     };
@@ -1379,8 +1440,23 @@ function ctrlUser(item, svcfnc, msgbox) {
         setTimeout(function () {
             boxInst.close();
         }, msgOkTimeout);
-        // 改变管控状态
-        item.ctlflag = newCtrlFlag;
+        // 改变控制状态
+        if (newCtrlFlag) {
+            item.ctlflag = newCtrlFlag;
+        } else {
+            switch (item.ctlflag) {
+                case 0:
+                    item.ctlflag = -3;
+                    break;
+                case -3:
+                    item.ctlflag = 0;
+                    break;
+                default:
+                    console.warn('should NOT reach here');
+                    item.ctlflag = undefined;
+            }
+        }
+
     }, function (errobj) {
         msgcfg.msgHtml = '操作<strong class="text-danger">失败</strong>，' + ensureErrMsg(errobj);
         setTimeout(function () {
@@ -1392,11 +1468,11 @@ function ctrlUser(item, svcfnc, msgbox) {
 
 var fscnCtrl = ['$scope', '$timeout', 'AccountService', '$uibModal', '$filter',
     function (sgop, timeout, AccSvc, msgbox, $filter) {
-        //console.debug('fscwCtrl ->管控对账联系人');
+        //console.debug('fscwCtrl ->控制对账联系人');
 
         // refreshGridFnc(AccSvc.paymentNotifiers, sgop)();
         sgop.refreshGrid = function (tableState) {
-            console.debug('table refresh with state:', tableState);
+            // console.debug('table refresh with state:', tableState);
             gridPage(sgop, tableState, $filter, AccSvc.paymentNotifiers);
         };
 
@@ -1411,11 +1487,11 @@ app.controller('fscnCtrl', fscnCtrl);
 
 var fscwCtrl = ['$scope', '$timeout', 'AccountService', '$uibModal', '$filter',
     function (sgop, timeout, AccSvc, msgbox, $filter) {
-        //console.debug('fscnCtrl ->管控代理商财务员');
+        //console.debug('ctrl ->');
 
         // refreshGridFnc(AccSvc.financialWorkers, sgop)();
         sgop.refreshGrid = function (tableState) {
-            console.debug('table refresh with state:', tableState);
+            // console.debug('table refresh with state:', tableState);
             gridPage(sgop, tableState, $filter, AccSvc.financialWorkers);
         };
 
@@ -1427,6 +1503,25 @@ var fscwCtrl = ['$scope', '$timeout', 'AccountService', '$uibModal', '$filter',
         };
     }];
 app.controller('fscwCtrl', fscwCtrl);
+
+var fscmCtrl = ['$scope', '$timeout', 'AccountService', '$uibModal', '$filter',
+    function (sgop, timeout, AccSvc, msgbox, $filter) {
+        //console.debug('fscmCtrl ->控制代理商管理员');
+
+        // refreshGridFnc(AccSvc.financialWorkers, sgop)();
+        sgop.refreshGrid = function (tableState) {
+            // console.debug('table refresh with state:', tableState);
+            gridPage(sgop, tableState, $filter, AccSvc.financialAdmins);
+        };
+
+        sgop.lock = function (item) {
+            ctrlUser(item, AccSvc.lockFAdmin, msgbox);
+        };
+        sgop.unlock = function (item) {
+            ctrlUser(item, AccSvc.unlockFAdmin, msgbox);
+        };
+    }];
+app.controller('fscmCtrl', fscmCtrl);
 
 var fsdCtrl = ['$scope', '$timeout', 'MgmtSvc', '$uibModal', function (sgop, timeout, MgmtSvc, msgbox) {
     sgop.backupDB = function () {
@@ -1490,7 +1585,7 @@ var fslCtrl = ['$scope', '$timeout', 'MgmtSvc', '$uibModal', '$filter',
         //console.debug('fslCtrl->查看用户操作日志');
         // refreshGridFnc(MgmtSvc.fetchLogs, sgop)();
         sgop.refreshGrid = function (tableState) {
-            console.debug('table refresh with state:', tableState);
+            // console.debug('table refresh with state:', tableState);
             gridPage(sgop, tableState, $filter, MgmtSvc.fetchLogs);
         };
     }];
@@ -1540,7 +1635,7 @@ app.directive('onFinishRenderEvent', ['$timeout', function (timeout) {
                 var predicateName = attr.predicate;
 
                 var trySearch = function () {
-                    console.debug('try search table with new date range; before, after', scope.before, scope.after);
+                    // console.debug('try search table with new date range; before, after', scope.before, scope.after);
                     var query = {};
                     // if (!scope.isBeforeOpen && !scope.isAfterOpen) {
                     // magic condition…… this indicates the closing of datepicker popup dialog
