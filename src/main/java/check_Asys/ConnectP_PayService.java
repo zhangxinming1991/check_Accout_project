@@ -102,21 +102,25 @@ public class ConnectP_PayService {
 	 * @return
 	 */
 	public int GetMaxId_InPayCWH(){
+		int maxid_c = -1;
+		int maxid_w = -1;
+		int maxid_h = -1;
 		int maxid = -1;
-		maxid = pHDao.GetMaxID();
 		
-		if (maxid > 0) {
-			return maxid;
+		maxid_c = pCDao.GetMaxID();
+		maxid_w = pDao.GetMaxID();
+		maxid_h = pHDao.GetMaxID();
+		
+		if (maxid_w > maxid_c) {
+			maxid = maxid_w;
 		}
 		else {
-			maxid = pDao.GetMaxID();
-			if (maxid > 0) {
-				return maxid;
-			}
-			else {
-				return pCDao.GetMaxID();
-			}
+			maxid = maxid_c;
 		}
+		if (maxid_h > maxid) {
+			maxid = maxid_h;
+		}
+		return maxid;
 	}
 	
 	/**
