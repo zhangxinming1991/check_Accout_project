@@ -179,12 +179,12 @@ public class PayRecord_Dao {
 	}
 	
 	/*获取整张数据表*/
-	public int GetPayTb_Num(){
+	public int GetPayTb_Num_ByElement(String filed,String value){
 		int num = 0;
 		try {
 				session = sessionFactory.openSession();
-				String hql_select_all = "select count(*) from PayRecord";
-				Query query =   session.createQuery(hql_select_all);
+				String hql_select_all = "select count(*) from PayRecord where " +  filed + " = :value";
+				Query query =   session.createQuery(hql_select_all).setParameter("value", value);
 				num = ((Long)query.uniqueResult()).intValue();
 				session.close();
 				return num;

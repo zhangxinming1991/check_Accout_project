@@ -335,10 +335,13 @@ public class Check_MainController {
 		
 		int pagesize = 10;
 		int offset = (pagenum-1)*10;
-		java.util.List list = cOp.Watch(wObject, owner,offset,pagesize);
-		
-		Watch_return(list,response,wObject);//返回数据到前台
-		
+		//java.util.List list = cOp.Watch(wObject, owner,offset,pagesize);
+		re_jsonobject = cOp.Watch(wObject, owner,offset,pagesize);
+		//Watch_return(list,response,wObject);//返回数据到前台
+    	re_jsonobject.element("flag", 0);
+    	re_jsonobject.element("errmsg", "查看成功");
+		Common_return_en(response, re_jsonobject);
+		return;
 	//	cOp.Close_All_Dao();
 	}
 	
