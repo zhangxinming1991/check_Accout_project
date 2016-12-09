@@ -1,0 +1,40 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+"http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+<!-- Generated 2016-12-9 19:45:29 by Hibernate Tools 5.1.0.Beta1 -->
+<hibernate-mapping>
+    <class name="entity.ScoreIncreaseRecord" table="score_increase_record" catalog="check_a_db" optimistic-lock="version">
+        <id name="id" type="java.lang.Integer">
+            <column name="id" />
+            <generator class="identity" />
+        </id>
+        <property name="time" type="timestamp">
+            <column name="time" length="19" not-null="true">
+                <comment>&#204;&#225;&#189;&#187;&#202;&#177;&#188;&#228;</comment>
+            </column>
+        </property>
+        <property name="increaseScore" type="int">
+            <column name="increase_score" not-null="true">
+                <comment>&#208;&#194;&#212;&#246;&#187;&#253;&#183;&#214;&#202;&#253;</comment>
+            </column>
+        </property>
+        <property name="hander" type="string">
+            <column name="hander" length="50" not-null="true">
+                <comment>&#178;&#217;&#215;&#247;&#200;&#203;</comment>
+            </column>
+        </property>
+        <property name="username" type="string">
+            <column name="username" length="50" not-null="true">
+                <comment>&#191;&#205;&#187;&#167;&#195;&#251;&#179;&#198;</comment>
+            </column>
+        </property>
+        <property name="description" type="string">
+            <column name="description" length="50" not-null="true">
+                <comment>&#178;&#217;&#215;&#247;&#203;&#181;&#195;&#247;</comment>
+            </column>
+        </property>
+        <property name="status" type="java.lang.Byte">
+            <column name="status" />
+        </property>
+    </class>
+</hibernate-mapping>

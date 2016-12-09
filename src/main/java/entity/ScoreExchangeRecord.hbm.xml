@@ -1,0 +1,62 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+"http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+<!-- Generated 2016-12-9 19:45:29 by Hibernate Tools 5.1.0.Beta1 -->
+<hibernate-mapping>
+    <class name="entity.ScoreExchangeRecord" table="score_exchange_record" catalog="check_a_db" optimistic-lock="version">
+        <id name="id" type="java.lang.Integer">
+            <column name="id" />
+            <generator class="identity" />
+        </id>
+        <property name="username" type="string">
+            <column name="username" length="50">
+                <comment>&#191;&#205;&#187;&#167;&#211;&#195;&#187;&#167;&#195;&#251;</comment>
+            </column>
+        </property>
+        <property name="exchangeScore" type="java.lang.Integer">
+            <column name="exchange_score">
+                <comment>&#207;&#251;&#186;&#196;&#187;&#253;&#183;&#214;</comment>
+            </column>
+        </property>
+        <property name="exchangeType" type="java.lang.Byte">
+            <column name="exchange_type">
+                <comment>&#182;&#210;&#187;&#187;&#192;&#224;&#208;&#205;</comment>
+            </column>
+        </property>
+        <property name="status" type="java.lang.Byte">
+            <column name="status">
+                <comment>&#182;&#210;&#187;&#187;&#215;&#180;&#204;&#172;</comment>
+            </column>
+        </property>
+        <property name="applicaTime" type="timestamp">
+            <column name="applica_time" length="19">
+                <comment>&#201;&#234;&#199;&#235;&#202;&#177;&#188;&#228;</comment>
+            </column>
+        </property>
+        <property name="finishTime" type="timestamp">
+            <column name="finish_time" length="19">
+                <comment>&#205;&#234;&#179;&#201;&#202;&#177;&#188;&#228;</comment>
+            </column>
+        </property>
+        <property name="serialNumber" type="timestamp">
+            <column name="serial_number" length="19">
+                <comment>&#193;&#247;&#203;&#174;&#186;&#197;</comment>
+            </column>
+        </property>
+        <property name="randkey" type="string">
+            <column name="randkey" length="50">
+                <comment>&#206;&#162;&#208;&#197;&#214;&#167;&#184;&#182;&#203;&#230;&#187;&#250;&#194;&#235;</comment>
+            </column>
+        </property>
+        <property name="description" type="string">
+            <column name="description" length="50">
+                <comment>&#178;&#217;&#215;&#247;&#203;&#181;&#195;&#247;</comment>
+            </column>
+        </property>
+        <property name="hander" type="string">
+            <column name="hander" length="50">
+                <comment>&#178;&#217;&#215;&#247;&#200;&#203;</comment>
+            </column>
+        </property>
+    </class>
+</hibernate-mapping>
