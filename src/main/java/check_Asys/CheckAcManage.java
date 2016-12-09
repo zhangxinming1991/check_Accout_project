@@ -377,8 +377,10 @@ public class CheckAcManage {
 	}
 	
 	/*查看功能*/
-	public List Watch(Watch_Object location,Owner owner,int offset,int pagesize){
+	public JSONObject Watch(Watch_Object location,Owner owner,int offset,int pagesize){
+		JSONObject re_json = new JSONObject();
 		java.util.List list = null;
+		int num = -1;
 		switch (location.watch_type) {
 		case 'T'://查看整张表
 			if (location.table_name.equals(CheckAcManage.RES_PAYR)) {//查看付款记录
@@ -387,7 +389,7 @@ public class CheckAcManage {
 					if (owner.user_type.equals("bu")) {//对账人员
 						//list = dao_List.pDao.FindBySpeElement_S("owner", owner.work_id);
 						list = dao_List.pDao.FindBySpeElement_S_Page("owner", owner.work_id, offset, pagesize);
-						
+						num = dao_List.pDao.GetPayTb_Num();
 					}
 					else if(owner.user_type.equals("bm")){//总监
 						
@@ -440,7 +442,15 @@ public class CheckAcManage {
 			break;
 		}
 		
-		return list;
+		re_json.element("data", list);
+		if (num % 10 > 0) {//计算总页数
+			re_json.element("totalpage", num/10 + 1);
+		}
+		else {
+			re_json.element("totalpage", num/10);
+		}
+		return re_json;
+		//return list;
 	}
 
 	/*寻找匹配及确定唯一匹配功能*/

@@ -178,6 +178,24 @@ public class PayRecord_Dao {
 		}
 	}
 	
+	/*获取整张数据表*/
+	public int GetPayTb_Num(){
+		int num = 0;
+		try {
+				session = sessionFactory.openSession();
+				String hql_select_all = "select count(*) from PayRecord";
+				Query query =   session.createQuery(hql_select_all);
+				num = ((Long)query.uniqueResult()).intValue();
+				session.close();
+				return num;
+		} catch (RuntimeException e) {
+			// TODO: handle exception
+			logger.error("获取总条数失败" + e);
+			return -1;
+		}
+		
+	}
+	
 	/*根据指定字段进行查找，字段类型为字符串类型*/
 	public java.util.List<PayRecord> FindBySpeElement_S_limit(String filed,String value){
 		String fdclient_hql = "select order from PayRecord order where " +  filed + " = :value";
