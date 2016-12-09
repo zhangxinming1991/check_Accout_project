@@ -13,6 +13,7 @@ import org.hibernate.query.Query;
 import com.sun.org.apache.bcel.internal.generic.NEW;
 
 import entity.BankInput;
+import entity.PayRecord;
 import entity.PayRecordCache;
 
 /**
@@ -183,12 +184,25 @@ public class PayRecordCache_Dao {
 
 	}
 	
+	public boolean update(PayRecordCache pRecord){
+		try {
+			beginTransaction();
+			session.update(pRecord);
+			endTransaction();	
+			return true;
+		} catch (RuntimeException e) {
+			// TODO: handle exception
+			System.out.println("payrecord update failed");
+			return false;
+		}
+	}
+	
 	/**
 	 * GetMaxID 查找最大id的记录的id
 	 * @return
 	 */
 	public int GetMaxID(){
-		String hql_getmaxid = "SELECT precord from PayRecordCache precord where id = (SELECT max(id) FROM BankInput)";
+		String hql_getmaxid = "SELECT precord from PayRecordCache precord where id = (SELECT max(id) FROM PayRecordCache)";
 		
 		try {
 			

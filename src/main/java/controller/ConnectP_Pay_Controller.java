@@ -193,30 +193,42 @@ public class ConnectP_Pay_Controller {
 		String actual_payTime = null;
 		String paymentNature = null;
 		try {
-			actual_payer = AES.aesDecrypt(request.getParameter("actual_payer"),AES.key);
+			actual_payer = AES.aesDecrypt(request.getParameter("actualPayer"),AES.key);
 			logger.info("actual_payer:" + actual_payer);
 			
 			paymentNature = AES.aesDecrypt(request.getParameter("paymentNature"),AES.key);
 			logger.info("paymentNature:" + paymentNature);
 			
-			actual_payTime = AES.aesDecrypt(request.getParameter("actual_payTime"),AES.key);
+			actual_payTime = AES.aesDecrypt(request.getParameter("actualPayTime"),AES.key);
 			logger.info("actual_payTime:" + actual_payTime);
 			
 			imageUrl = AES.aesDecrypt(request.getParameter("imageUrl"),AES.key);
 			logger.info("imageUrl：" + imageUrl);
 			
 			username = AES.aesDecrypt(request.getParameter("username"),AES.key);
+			logger.info("username：" + username);
+			
 			payer = cps.cDao.findById(ConnectPerson.class, username).getCompany();//获取客户名称
-			pay_money = AES.aesDecrypt(request.getParameter("pay_money"),AES.key); //获取付款金额
-			pay_way = new String(AES.aesDecrypt(request.getParameter("pay_way"),AES.key).getBytes("GBK"),"GBK");//获取付款方式
+			logger.info("payer：" + payer);
+			
+			pay_money = AES.aesDecrypt(request.getParameter("payMoney"),AES.key); //获取付款金额
+			logger.info("pay_money：" + pay_money);
+			
+			pay_way = new String(AES.aesDecrypt(request.getParameter("payWay"),AES.key).getBytes("GBK"),"GBK");//获取付款方式
 			logger.info("pay_way:" + pay_way);
-			pay_account = AES.aesDecrypt(request.getParameter("pay_account"),AES.key);//获取付款账号
+			
+			pay_account = AES.aesDecrypt(request.getParameter("payAccount"),AES.key);//获取付款账号
 			logger.info("pay_account：" + pay_account);
-			many_pay = AES.aesDecrypt(request.getParameter("many_pay"),AES.key);//获取付款的合同及金额信息
+			
+			many_pay = AES.aesDecrypt(request.getParameter("manyPay"),AES.key);//获取付款的合同及金额信息
+			logger.info("many_pay：" + many_pay);
+			
 			receiver = new String(AES.aesDecrypt(request.getParameter("receiver"),AES.key).getBytes("GBK"),"GBK");//获取款项接受人信息
+			logger.info("receiver：" + receiver);
+			
 			owner = AES.aesDecrypt(request.getParameter("owner"),AES.key);//获取付款记录所属代理商信息
-			logger.info(owner);
-			ED_Code.printHexString(owner.getBytes());
+			logger.info("owner:" + owner);
+			//ED_Code.printHexString(owner.getBytes());
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			logger_error.error("解密微信上传付款信息错误" + e);
@@ -239,7 +251,6 @@ public class ConnectP_Pay_Controller {
 			jamany_pay.set(i, jomany_pay);
 		}
 		String new_many_pay = jamany_pay.toString();
-		logger.info("付款合同及金额信息");
 		/*获取付款的合同及金额信息*/
 		
 		String savedir = request.getServletContext().getRealPath("/" + "付款记录/" + owner + "/" + payer);
@@ -253,7 +264,10 @@ public class ConnectP_Pay_Controller {
 		
 		String caid = CreateCaid(owner);
 		
+		int offset = cps.GetMaxId_InPayCWH();
+		
 		PayRecordCache ipayRecord = new PayRecordCache();
+		ipayRecord.setId(offset+1);
 		ipayRecord.setPayer(payer);
 		ipayRecord.setOwner(owner);
 		ipayRecord.setManyPay(new_many_pay);
@@ -324,23 +338,38 @@ public class ConnectP_Pay_Controller {
 		String paymentNature = null;
 		String newfilename = null;
 		try {			
-			actual_payer = AES.aesDecrypt(request.getParameter("actual_payer"),AES.key);
+			actual_payer = AES.aesDecrypt(request.getParameter("actualPayer"),AES.key);
 			logger.info("actual_payer:" + actual_payer);
+			
 			paymentNature = AES.aesDecrypt(request.getParameter("paymentNature"),AES.key);
 			logger.info("paymentNature:" + paymentNature);
-			actual_payTime = AES.aesDecrypt(request.getParameter("actual_payTime"),AES.key);
+			
+			actual_payTime = AES.aesDecrypt(request.getParameter("actualPayTime"),AES.key);
 			logger.info("actual_payTime:" + actual_payTime);
+			
 			username = AES.aesDecrypt(request.getParameter("username"),AES.key);
+			logger.info("username:" + username);
+			
 			payer = cps.cDao.findById(ConnectPerson.class, username).getCompany();//获取客户名称
-			pay_money = AES.aesDecrypt(request.getParameter("pay_money"),AES.key); //获取付款金额
-			pay_way = new String(AES.aesDecrypt(request.getParameter("pay_way"),AES.key).getBytes("GBK"),"GBK");//获取付款方式
+			logger.info("payer:" + payer);
+			
+			pay_money = AES.aesDecrypt(request.getParameter("payMoney"),AES.key); //获取付款金额
+			logger.info("pay_money:" + pay_money);
+			
+			pay_way = new String(AES.aesDecrypt(request.getParameter("payWay"),AES.key).getBytes("GBK"),"GBK");//获取付款方式
 			logger.info("pay_way:" + pay_way);
-			pay_account = AES.aesDecrypt(request.getParameter("pay_account"),AES.key);//获取付款账号
+			
+			pay_account = AES.aesDecrypt(request.getParameter("payAccount"),AES.key);//获取付款账号
 			logger.info("pay_account：" + pay_account);
-			many_pay = AES.aesDecrypt(request.getParameter("many_pay"),AES.key);//获取付款的合同及金额信息
+			
+			many_pay = AES.aesDecrypt(request.getParameter("manyPay"),AES.key);//获取付款的合同及金额信息
+			logger.info("many_pay：" + many_pay);
+			
 			receiver = new String(AES.aesDecrypt(request.getParameter("receiver"),AES.key).getBytes("GBK"),"GBK");//获取款项接受人信息
+			logger.info("receiver：" + receiver);
+			
 			owner = AES.aesDecrypt(request.getParameter("owner"),AES.key);//获取付款记录所属代理商信息
-			logger.info(owner);
+			logger.info("owner：" + owner);
 			
 			/*获取付款的合同及金额信息*/
 			JSONArray jamany_pay = JSONArray.fromObject(many_pay);
@@ -351,7 +380,6 @@ public class ConnectP_Pay_Controller {
 				jamany_pay.set(i, jomany_pay);
 			}
 			String new_many_pay = jamany_pay.toString();
-			logger.info("付款合同及金额信息");
 			/*获取付款的合同及金额信息*/
 			Date date = new Date();
 			SimpleDateFormat sFormatf = new SimpleDateFormat("yyyy-MM-dd_HH_mm_ss");
@@ -376,7 +404,12 @@ public class ConnectP_Pay_Controller {
 				newfilename = new MediaDownloadRequestExecutor().Excute_post(client, null, imageUrl, fileName,savedir);
 			}
 			
-			id = Integer.parseInt(AES.aesDecrypt(request.getParameter("id"), AES.key));	
+			String id_s = AES.aesDecrypt(request.getParameter("id"), AES.key);
+			logger.info("id_s:" + id_s);
+			
+			id = Integer.parseInt(id_s);
+			logger.info("id" + id);
+			
 			PayRecordCache ipayRecord = cps.pCDao.findById(PayRecordCache.class, id);
 			if (ipayRecord == null) {//如果付款记录已经被转移到工作区
 				PayRecord fRecord2 = cps.pDao.findById(PayRecord.class, id);
@@ -399,6 +432,8 @@ public class ConnectP_Pay_Controller {
 					fRecord2.setLinkCer("/check_Accout/" + "付款记录/" + owner + "/" + payer + "/" + newfilename);
 					cps.Save_UploadPicture(null,savedir,newfilename);
 				}
+				
+				cps.pDao.update(fRecord2);
 			}
 			else {//如果付款记录还在缓存区
 				ipayRecord.setPayer(payer);
@@ -420,6 +455,8 @@ public class ConnectP_Pay_Controller {
 					ipayRecord.setLinkCer("/check_Accout/" + "付款记录/" + owner + "/" + payer + "/" + newfilename);
 					cps.Save_UploadPicture(null,savedir,newfilename);
 				}
+				
+				cps.pCDao.update(ipayRecord);
 			}
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
@@ -438,7 +475,6 @@ public class ConnectP_Pay_Controller {
 		oLog_Service.AddLog(OpLog_Service.utype_cp, username, OpLog_Service.Upload_Pay_Wexin, OpLog_Service.result_success);
 		Common_return(response,re_jsonobject);
 		return;
-
 	}
 
 	/**
@@ -618,7 +654,7 @@ public class ConnectP_Pay_Controller {
 		JSONObject re_object =  jsonObject;//传递参数中的最外层对象
 		
 		/*传递json数据给前台*/
-		System.out.println(re_object.toString());
+		logger.info("send:" + re_object.toString());
 		try {
 			Writer writer = response.getWriter();
 			writer.write(re_object.toString());

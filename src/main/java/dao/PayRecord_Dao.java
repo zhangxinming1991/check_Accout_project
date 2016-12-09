@@ -11,6 +11,7 @@ import org.hibernate.Transaction;
 import org.hibernate.query.Query;
 
 import entity.PayRecord;
+import entity.PayRecordCache;
 import sun.util.logging.resources.logging;
 
 /**
@@ -66,6 +67,36 @@ public class PayRecord_Dao {
 			// TODO: handle exception
 			System.out.println("delete failed");
 		}
+	}
+	
+	/**
+	 * GetMaxID 查找最大id的记录的id
+	 * @return
+	 */
+	public int GetMaxID(){
+		String hql_getmaxid = "SELECT precord from PayRecord precord where id = (SELECT max(id) FROM PayRecord)";
+		
+		try {
+			
+			session = sessionFactory.openSession();
+			Query query = session.createQuery(hql_getmaxid);
+			java.util.List<PayRecordCache> pCaches = query.list();
+			session.close();
+			
+			if (pCaches.size() > 0) {
+				return pCaches.get(0).getId();
+			}
+			else {
+				logger.warn("pCaches 表为空");
+				return 0;
+			}
+			
+		
+		} catch (RuntimeException e) {
+			// TODO: handle exception
+			logger.error("查询最大id失败" + e);
+			return -1;
+		}	
 	}
 	
 	public void DeletePrecordTb(){

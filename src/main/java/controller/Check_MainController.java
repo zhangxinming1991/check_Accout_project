@@ -314,10 +314,16 @@ public class Check_MainController {
 		
 		String request_s = null;
 		String request_s_de = null;
+		int pagenum = -1;
+		Watch_Object wObject = null;
 		try {
 				request_s = IOUtils.toString(request.getInputStream());
 				request_s_de = AES.aesDecrypt(request_s, AES.key);
+				
 				logger.info("receive" + request_s_de);
+				JSONObject jstr = JSONObject.fromObject(request_s_de);
+				wObject = cOp.Create_Watch_Object(jstr);//设置查看参数
+				pagenum = jstr.getInt("pagenum");
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			logger.error("获取提交参数失败" + e);
@@ -327,11 +333,8 @@ public class Check_MainController {
 			Common_return_en(response,re_jsonobject);
 		}
 		
-		JSONObject jstr = JSONObject.fromObject(request_s_de);
-		Watch_Object wObject = cOp.Create_Watch_Object(jstr);//设置查看参数
-		
-		int offset = 0;
-		int pagesize = 2;
+		int pagesize = 10;
+		int offset = (pagenum-1)*10;
 		java.util.List list = cOp.Watch(wObject, owner,offset,pagesize);
 		
 		Watch_return(list,response,wObject);//返回数据到前台

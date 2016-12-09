@@ -9,6 +9,8 @@ import org.apache.logging.log4j.Logger;
 import org.hibernate.SessionFactory;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.sun.org.apache.regexp.internal.recompile;
+
 import check_Asys.CheckAcManage.Dao_List;
 import dao.Assistance_Dao;
 import dao.BankInput_Dao;
@@ -92,6 +94,28 @@ public class ConnectP_PayService {
 			byte read_b[] = aOp.ReadFile(mfile);
 			aOp.WriteFile(aElement, read_b, upload_file);
 			/*读取并保存文件*/	
+		}
+	}
+	
+	/**
+	 * GetMaxId_InPayCWH：获取付款记录三个区中的最大id记录的信息
+	 * @return
+	 */
+	public int GetMaxId_InPayCWH(){
+		int maxid = -1;
+		maxid = pHDao.GetMaxID();
+		
+		if (maxid > 0) {
+			return maxid;
+		}
+		else {
+			maxid = pDao.GetMaxID();
+			if (maxid > 0) {
+				return maxid;
+			}
+			else {
+				return pCDao.GetMaxID();
+			}
 		}
 	}
 	
