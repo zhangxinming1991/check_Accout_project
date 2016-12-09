@@ -1,5 +1,6 @@
 (function () {
     var successfulEcho = true;
+    console.debug('检测是否有后台服务器……');
     $.ajax({
         url: ReqUrl.rstPwdSendvc
         , type: 'post'
@@ -19,11 +20,11 @@
     });
     // no mock
     if (successfulEcho) {
-        console.info('NO mocking');
+        console.info('检测到后台服务器，NO mocking');
         return;
     }
 
-    console.info('mocking backend...');
+    console.info('无后台服务器，mocking backend...');
 
     document.write('<script src="js/angular-mocks.js"></script>');
 // add requirement
@@ -36,6 +37,7 @@
     app.config(function ($provide) {
         $provide.decorator('$httpBackend', function ($delegate) {
             var proxy = function (method, url, data, callback, headers) {
+                console.debug('mock-> request url', url);
                 var encrypedReq = method === 'POST' && url != ReqUrl.fwOrderUpload;
                 if (encrypedReq) {
                     // console.debug('request data(before decrypted):', data);
@@ -45,7 +47,7 @@
                 if (jsonReq) {
                     data = JSON.parse(data);
                 }
-                console.debug('request data:', data);
+                console.debug('mock-> request data:', data);
 
                 var interceptor = function () {
                     var _this = this,
@@ -119,11 +121,18 @@
          * @returns {*}
          */
         function randInRange(a, b) {
-            if (arguments.length == 1) {
-                b = a;
-                a = 0;
-            }
-            return Math.round(Math.random() * (b - a)) + a;
+            if (angular.isDate(a) && angular.isDate(b)) return (function (a, b) {
+                return new Date(a.getFullYear() + randInRange(0, b.getFullYear() - a.getFullYear())
+                    , a.getMonth() + randInRange(0, b.getMonth() - a.getMonth())
+                    , a.getDate() + randInRange(0, b.getDate() - a.getDate()))
+            })(a, b);
+            else if (angular.isNumber(a)) return (function (a, b) {
+                if (arguments.length == 1) {
+                    b = a;
+                    a = 0;
+                }
+                return Math.round(Math.random() * (b - a)) + a;
+            })(a, b);
         }
 
         function randIn(items) {
@@ -139,13 +148,19 @@
             var resUser = {
                 "uid": reqBody.uid,
                 // "role": reqBody.from,
-                "name": '三毛' + reqBody.uid
+                "name": '李' + reqBody.uid
                 // more info
                 , phone: '13312348'
                 , email: 'aabcdwfe@a.com'
                 , agentname: '广东代理商'
             };
-            resUser.role = reqBody.uid.indexOf('m') === 0 ? 'bm' : 'bu';
+            if (resUser.uid.startsWith('ba')) {
+                resUser.role = 'ba';
+            } else if (resUser.uid.startsWith('bm')) {
+                resUser.role = 'bm';
+            } else {
+                resUser.role = 'bu';
+            }
             var uid = reqBody.uid;
             // if (uid.indexOf('u') != -1) {
             //     resUser.role = 'bu';
@@ -217,29 +232,28 @@
         //     return [200, {flag: 0, data: ['2016-08', '2016-09', '2016-10']}, {}];
         // });
 
-        /*
-         function orders(itemsLimit) {
+        function orders(itemsLimit) {
 
-         var resdata = [];
-         var t =
-         {
-         "orderNum": "合同号好长好长好长……",
-         "input": 1000,
-         "debt": 8000,
-         "total": 10000,
-         "client": "中国铁路",
-         "state": "对账中",
-         "updateTime": "2016-8-20",
-         "remark": "无"
-         };
-         if (!itemsLimit)itemsLimit = 20;
-         for (var i = 0; i < itemsLimit; i++) {
-         var tc = angular.copy(t);
-         tc.orderNum += '' + i;
-         resdata.push(tc);
-         }
-         return resdata;
-         }*/
+            var resdata = [];
+            var t =
+            {
+                "orderNum": "合同号好长好长好长……",
+                "input": 1000,
+                "debt": 8000,
+                "total": 10000,
+                "client": "中国铁路",
+                "state": "对账中",
+                "updateTime": "2016-8-20",
+                "remark": "无"
+            };
+            if (!itemsLimit)itemsLimit = 20;
+            for (var i = 0; i < itemsLimit; i++) {
+                var tc = angular.copy(t);
+                tc.orderNum += '' + i;
+                resdata.push(tc);
+            }
+            return resdata;
+        }
 
         function notifications(itemCount) {
             var resdata = [];
@@ -269,7 +283,8 @@
                 var payAmount = 0;
                 for (var j = 0; j < randInRange(1, 3); j++) {
                     tc.manyPay[j] = {
-                        contract: '合同号...',
+                        // contract: '合同号...',
+                        contract: '货款性质',
                         money: 10000
                     };
                     payAmount += tc.manyPay[j].money;
@@ -318,7 +333,15 @@
 
         var notifsInChk;
 
-        function resPage(pagenum, data, resbody) {
+        function resPage(pagenum, data, resbody, reqbody) {
+            /* if (reqbody.sort) {
+             console.debug('server side search', reqbody.search);
+             var data = $filter('rmdsFilter')(data, reqbody.search);
+             }
+             if (reqbody.sort) {
+             console.debug('server side sort', reqbody.sort);
+             data = $filter('orderBy')(data, reqbody.sort.field, reqbody.sort.desc);
+             }*/
             return $.extend(resbody, {
                 data: data.slice((pagenum - 1) * numberPerPage, pagenum * numberPerPage)
                 // , totalItemCount: data.length
@@ -336,7 +359,7 @@
             var resbody = {
                 flag: failOrNot()
             };
-            resPage(reqbody.pagenum || 1, notifsInChk, resbody);
+            resPage(reqbody.pagenum || 1, notifsInChk, resbody, reqbody);
             return [200, resbody];
         });
         //
@@ -739,7 +762,7 @@
             var resbody = {
                 flag: failOrNot()
             };
-            $.extend(resbody, resPage(reqbody.pagenum || 1, notifsInPreview));
+            resPage(reqbody.pagenum || 1, notifsInPreview, resbody, reqbody);
             return [200, resbody];
         });
 
@@ -769,7 +792,7 @@
                     , phone: '10086 ' + i
                     , email: 'k' + i + '@sany.com'
                     , weixin: 'wechat-' + i
-                    , registerWay: randIn(['个人', '公司'])
+                    , registerWay: randIn(appConf.userRegisterWays)
                     , company: '恒大地产-' + i
                     , companyid: 'cid-' + i
                     , contractMes: '合同号啊～～～～～'
@@ -800,6 +823,25 @@
             return items;
         }
 
+        function regFAdmins(itemCount) {
+            var itemsNum = itemCount;
+            var items = [];
+            for (var i = 0; i < itemsNum; i++) {
+                var item = {
+                    workId: '代理商管理 ' + i
+                    , name: '湫 ' + i
+                    , phone: '10086 ' + i
+                    , email: 'q' + i + '@sany.com'
+                    // , company: '恒大地产-' + i
+                    , companyid: 'cid-' + i
+                    , agentid: '代理商 ' + i
+                    , flag: randIn([0, -3])
+                };
+                items.push(item);
+            }
+            return items;
+        }
+
 
         var pendingNotifiers;
         bkd.whenPOST(ReqUrl.regPendingNotifiers, function (reqbody) {
@@ -807,7 +849,7 @@
             return reqbody.watch_type == 'reg_cp';
         }).respond(function (method, url, reqbody) {
             pendingNotifiers = pendingNotifiers || regNotifiers(randInRange(100, 150));
-            return [200, resPage(reqbody.pagenum, pendingNotifiers, {flag: failOrNot()})];
+            return [200, resPage(reqbody.pagenum, pendingNotifiers, {flag: failOrNot()}, reqbody)];
         });
 
         var pendingWorkers;
@@ -815,9 +857,18 @@
             // reqbody = JSON.parse(reqbody);
             return reqbody.watch_type == 'reg_as';
         }).respond(function (method, url, reqbody) {
-            console.debug('客户审阅', reqbody);
+            console.debug('mock->客户审阅', reqbody);
             pendingWorkers = pendingWorkers || regFworkers(randInRange(100, 200));
-            return [200, resPage(reqbody.pagenum, pendingWorkers, {flag: failOrNot()})];
+            return [200, resPage(reqbody.pagenum, pendingWorkers, {flag: failOrNot()}, reqbody)];
+        });
+
+        var pendingFAdmins;
+        bkd.whenPOST(ReqUrl.regPendingFAdmins, function (reqbody) {
+            return reqbody.watch_type == 'reg_am';
+        }).respond(function (method, url, reqbody) {
+            console.debug('mock->代理商方面管理员');
+            pendingFAdmins = pendingFAdmins || regFAdmins(randInRange(100, 200));
+            return [200, resPage(reqbody.pagenum, pendingFAdmins, {flag: failOrNot()}, reqbody)];
         });
 
         bkd.whenPOST(ReqUrl.approveNotifier, function (reqbody) {
@@ -852,6 +903,15 @@
             return [200, {flag: failOrNot()}, {}];
         });
 
+
+        bkd.whenPOST(ReqUrl.approveFAdmin, function (reqbody) {
+            // reqbody = JSON.parse(reqbody);
+            return reqbody.id && reqbody.reg_type == 'am' && reqbody.regflag !== undefined;
+        }).respond(function (method, url, reqbody) {
+            console.debug('mock backend->审阅代理商管理员注册', reqbody);
+            return [200, {flag: failOrNot()}, {}];
+        });
+
         var regedNotifiers;
         bkd.whenPOST(ReqUrl.notifiers, function (reqbody) {
             // reqbody = JSON.parse(reqbody);
@@ -859,7 +919,7 @@
         }).respond(function (method, url, reqbody) {
             console.debug('mock backend->已注册对账联系人获取');
             regedNotifiers = regedNotifiers || regNotifiers(randInRange(300, 400));
-            return [200, resPage(reqbody.pagenum, regedNotifiers, {flag: failOrNot()})];
+            return [200, resPage(reqbody.pagenum, regedNotifiers, {flag: failOrNot()}, reqbody)];
         });
 
         var regedFWorkers;
@@ -869,21 +929,36 @@
         }).respond(function (method, url, reqbody) {
             console.debug('mock backend->已注册代理商财务员获取');
             regedFWorkers = regFworkers(randInRange(50, 100));
-            return [200, resPage(reqbody.pagenum, regedFWorkers, {flag: failOrNot()})];
+            return [200, resPage(reqbody.pagenum, regedFWorkers, {flag: failOrNot()}, reqbody)];
+        });
+
+        var regedFAdmins;
+        bkd.whenPOST(ReqUrl.fadmins, function (reqbody) {
+            return reqbody.watch_type == 'reged_am';
+        }).respond(function (method, url, reqbody) {
+            console.debug('mock backend->已注册代理商管理员获取');
+            regedFAdmins = regedFAdmins || regFAdmins(randInRange(50, 100));
+            return [200, resPage(reqbody.pagenum, regedFAdmins, {flag: failOrNot()}, reqbody)];
         });
 
         bkd.whenPOST(ReqUrl.ctrlNotifier, function (reqbody) {
             // reqbody = JSON.parse(reqbody);
             return reqbody.id && reqbody.control_type == 'cp' && reqbody.ctlflag !== undefined;
         }).respond(function () {
-            console.debug('mock backend->管控对账联系人');
+            console.debug('mock backend->控制对账联系人');
             return [200, {flag: failOrNot()}, {}];
         });
         bkd.whenPOST(ReqUrl.ctrlNotifier, function (reqbody) {
             // reqbody = JSON.parse(reqbody);
             return reqbody.id && reqbody.control_type == 'as' && reqbody.ctlflag !== undefined;
         }).respond(function () {
-            console.debug('mock backend->管控代理商财务员');
+            console.debug('mock backend->控制代理商财务员');
+            return [200, {flag: failOrNot()}, {}];
+        });
+        bkd.whenPOST(ReqUrl.ctrlFAdmin, function (reqbody) {
+            return reqbody.id && reqbody.control_type == 'am' && reqbody.ctlflag !== undefined;
+        }).respond(function (method, url, reqbody) {
+            console.debug('mock backend->控制代理商管理员', reqbody);
             return [200, {flag: failOrNot()}, {}];
         });
 
@@ -915,7 +990,7 @@
                 var t = {
                     time: randIn([2015, 2016]) + '-' + randInRange(1, 12) + '-' + randInRange(1, 30),
                     username: randIn(['路飞', '鸣人']),
-                    usertype: randIn(['客户', '代理商财务', '管理员']),
+                    usertype: randIn(appConf.opLogUserRoles),
                     content: randIn(['放炸弹', '种树', '卖烧烤']),
                     result: randIn(['成功', '失败'])
                 };
@@ -931,10 +1006,11 @@
         }).respond(function (method, url, reqbody) {
             console.debug('mock backend ->操作日志');
             oplogs = oplogs || opLogs(randInRange(10000, 20000));
-            return [200, resPage(reqbody.pagenum, oplogs, {flag: failOrNot()})];
+            return [200, resPage(reqbody.pagenum, oplogs, {flag: failOrNot()}, reqbody)];
         });
 
-        bkd.whenPOST(ReqUrl.fetchAgents).respond(function () {
+        bkd.whenPOST(ReqUrl.fetchAgents).respond(function (method,url,reqbody) {
+            console.debug('mock->代理商列表',reqbody);
             var items = [{code: 'gd0001', name: '广东代理商'}, {code: 'ah0001', name: '安徽代理商'}];
             var extra = 2;
             for (var i = 0; i < randInRange(0, extra); i++) {
@@ -946,5 +1022,76 @@
             }
             return [200, {flag: failOrNot(0), data: items}];
         });
+
+
+        function randScoreInfo(itemCount) {
+            var items = [];
+            for (var i = 0; i < itemCount; i++) {
+                var item = {
+                    agentName: '代理商'
+                    , username: '用户名'
+                    , realName: '真实姓名'
+                    , weiXin: '微信'
+                    , company: '客户名'
+                    , score: randInRange(100, 200)
+                    , exchangedScore: randInRange(50, 100)
+                    , exchangingScore: randInRange(0, 50)
+                    , status: randIn(appConf.scoreStatusInTable)
+                };
+                items.push(item);
+            }
+            return items;
+        }
+
+        var scoreAll;
+        bkd.whenPOST(ReqUrl.scoreInAllAgents).respond(function (method, url, reqbody) {
+            console.debug('mock->所有客户积分情况',reqbody);
+            scoreAll = scoreAll || randScoreInfo(randInRange(100, 200));
+            return [200, resPage(reqbody.pagenum, scoreAll, {flag: failOrNot()}, reqbody)];
+        });
+        bkd.whenPOST(ReqUrl.scoreInAgent).respond(function (method, url, reqbody) {
+            console.debug('mock->代理商客户积分情况',reqbody);
+            scoreAll = scoreAll || randScoreInfo(randInRange(100, 200));
+            return [200, resPage(reqbody.pagenum, scoreAll, {flag: failOrNot()}, reqbody)];
+        });
+
+        function genScoreMgmt(itemCount) {
+            var items = [];
+            for (var i = 0; i < itemCount; i++) {
+                var item = {
+                    agentName: '代理商'
+                    , username: '用户名'
+                    , realName: '真实姓名'
+                    , weiXin: '微信'
+                    , company: '客户名'
+                    , exchangeScore: randInRange(50, 100)
+                    , exchangeType: randIn(appConf.exchangeTypes)
+                    , exchangeCategory: '礼品类型'
+                    , applicaTime: $filter('date')(randInRange(new Date(2014, 1, 1), new Date()), appConf.tmFmtLong)
+                    , finishTime: $filter('date')(randInRange(new Date(2014, 1, 1), new Date()), appConf.tmFmtLong)
+                    , status: randIn(['兑换中', '已兑换', '未领取'])
+                    , description: '说明'
+                };
+                items.push(item);
+            }
+            return items;
+        }
+
+        var scoreMgmtAll;
+        bkd.whenPOST(ReqUrl.scoreMgmtAll).respond(function (method, url, reqbody) {
+            console.debug('mock->超级管理员 积分管理表',reqbody);
+            scoreMgmtAll = scoreMgmtAll || genScoreMgmt(randInRange(100, 200));
+            return [200, resPage(reqbody.pagenum, scoreMgmtAll, {flag: failOrNot()}, reqbody)]
+        });
+        bkd.whenPOST(ReqUrl.approveScoreExchg).respond(function (method, url, reqbody) {
+            console.debug('mock->确认礼品兑换',reqbody);
+            return [200, {flag: failOrNot()}];
+        });
+        bkd.whenPOST(ReqUrl.scoreMgmtInAgent).respond(function (method, url, reqbody) {
+            console.debug('mock->财务员 积分管理表',reqbody);
+            scoreMgmtAll = scoreMgmtAll || genScoreMgmt(randInRange(100, 200));
+            return [200, resPage(reqbody.pagenum, scoreMgmtAll, {flag: failOrNot()}, reqbody)]
+        });
+
     }]);
 })();

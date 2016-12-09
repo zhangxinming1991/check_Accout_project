@@ -28,6 +28,10 @@ Object.defineProperty(
     }
 );
 
+function requireReauth() {
+    loginModal.modal('show');
+}
+
 // 后端请求相关服务
 app.factory('HttpReqService', ['$http', '$q', function (http, Q) {
     var svc = {};
@@ -51,16 +55,25 @@ app.factory('HttpReqService', ['$http', '$q', function (http, Q) {
                 resPkg.data = resPkg === undefined ? undefined : JSON.parse(resPkg.data);
                 var resbody = resPkg.data;
                 if (isOkResBody(resbody)) {
-                    if (okfnc === undefined) {
-                        okfnc = function (resbody) {
-                            if ($.isArray(resbody.data) && !resbody.items) {
-                                resbody.items = resbody.data;
-                                return resbody;
-                            }
+                    (function preExtractData(resbody) {
+                        if ($.isArray(resbody.data) && !resbody.items) {
+                            resbody.items = resbody.data;
+                            return resbody;
+                        }
+                    })(resbody);
+
+                    okfnc = okfnc || function (resbody) {
                             return resbody.data;
                         };
+
+                    var ret = okfnc && okfnc(resbody);
+                    if (!ret) {
+                        console.warn('no return value???');
+                        // ret = resbody.items ? resbody : resbody.data;
                     }
-                    deferred.resolve(okfnc(resbody));
+
+                    // extract data by provided function, or return resbody.data if function not provided or returns nothing
+                    deferred.resolve(ret);
                 } else {
                     console.debug('negative resbody:', resbody);
                     errfnc = errfnc || function (resbody) {
@@ -100,6 +113,20 @@ app.factory('AccountService', ['$rootScope', '$cookies', '$q', 'HttpReqService',
      */
     var userStorageKey = 'formUser';
 
+
+    svc.isAuthenticated = function () {
+        return rootsgop.loggedInUser;
+    };
+
+
+    (function readAuthEnv() {
+        var storedUser = getStoredUser();
+        if (storedUser) {
+            rootsgop.loggedInUser = storedUser;
+        }
+        // console.debug('read auth, have auth info=', svc.isAuthenticated());
+    })();
+
     function getStoredUser(storage) {
         storage = storage || sessionStorage;
         try {
@@ -137,6 +164,8 @@ app.factory('AccountService', ['$rootScope', '$cookies', '$q', 'HttpReqService',
             };
             if (!formUser.rememberMe) {
                 storeUser(undefined, localStorage);
+            } else {
+                storeUser(reqUser, localStorage);
             }
             Req.req(ReqUrl.signIn, reqUser, function (resbody) {
                 return resbody;
@@ -152,7 +181,7 @@ app.factory('AccountService', ['$rootScope', '$cookies', '$q', 'HttpReqService',
                 if (formUser.rememberMe) {
                     storeUser(reqUser, localStorage);
                 }
-                storeUser(reqUser);
+                storeUser($.extend({}, reqUser, userInfo));
 
                 // var newItemsNum = resbody.isnewpay ? resbody.newpay_num : 0;
                 // console.debug('Login newItemsNum:' + newItemsNum);
@@ -172,12 +201,9 @@ app.factory('AccountService', ['$rootScope', '$cookies', '$q', 'HttpReqService',
         return deferred.promise;
     };
 
-    svc.isAuthenticated = function () {
-        return rootsgop.loggedInUser !== undefined;
-    };
-
 // 浏览器标签页内自动登陆
     svc.signInBySessionStorage = function () {
+        // console.debug('sign in by session storeage');
         var deferred = Q.defer();
         try {
             var stored = getStoredUser();
@@ -217,6 +243,7 @@ app.factory('AccountService', ['$rootScope', '$cookies', '$q', 'HttpReqService',
 // 注销（登出）
     svc.signOut = function () {
         if (rootsgop.loggedInUser) {
+            console.debug('remote request to sign out');
             // remove logged in user object
             delete rootsgop.loggedInUser;
             // process cookie
@@ -245,7 +272,7 @@ app.factory('AccountService', ['$rootScope', '$cookies', '$q', 'HttpReqService',
 // 代理商列表获取，为注册时提供自动补全输入以及避免输入不存在的代理商
     svc.sellerAgents = function () {
         var deferred = Q.defer();
-        if (svc.agents && length > 0)
+        if (svc.agents && svc.agents.length)
             deferred.resolve(svc.agents);
         Req.req(ReqUrl.fetchAgents).then(function (items) {
             svc.agents = items;
@@ -258,12 +285,25 @@ app.factory('AccountService', ['$rootScope', '$cookies', '$q', 'HttpReqService',
 
 // 注册申请中的对账联系人列表
     svc.regPendingPaymentNotifiers = function (reqParams) {
-        return Req.req(ReqUrl.regPendingNotifiers, $.extend({watch_type: 'reg_cp'}, reqParams));
+        return Req.req(ReqUrl.regPendingNotifiers, $.extend({watch_type: 'reg_cp'}, reqParams), function (resbody) {
+            var items = resbody.data;
+            items.registerWays = appConf.userRegisterWays;
+            return resbody;
+        });
     };
 
 // 注册申请中的财务员列表
     svc.regPendingFinancialWorker = function (reqParams) {
-        return Req.req(ReqUrl.regPendingFworkers, $.extend({watch_type: 'reg_as'}, reqParams));
+        return Req.req(ReqUrl.regPendingFworkers, $.extend({watch_type: 'reg_as'}, reqParams), function (resbody) {
+            return resbody;
+        });
+    };
+
+    //注册申请中的代理商方面的管理员
+    svc.regPendingFinancialAdmins = function (reqParams) {
+        return Req.req(ReqUrl.regPendingFAdmins, $.extend({watch_type: 'reg_am'}, reqParams), function (resbody) {
+            return resbody;
+        });
     };
 
 // 拒绝对账联系人的注册申请
@@ -302,6 +342,24 @@ app.factory('AccountService', ['$rootScope', '$cookies', '$q', 'HttpReqService',
         });
     };
 
+// 接受财务员的注册申请
+    svc.acceptFinancialAdminReg = function (uid) {
+        return Req.req(ReqUrl.approveFAdmin, {
+            id: uid
+            , reg_type: 'am'
+            , regflag: 0
+        });
+    };
+
+// 拒绝财务员的注册申请
+    svc.rejectFinancialAdminReg = function (uid) {
+        return Req.req(ReqUrl.approveFAdmin, {
+            id: uid
+            , reg_type: 'am'
+            , regflag: -2
+        });
+    };
+
 // 对账联系人列表
     svc.paymentNotifiers = function (reqParams) {
         return Req.req(ReqUrl.notifiers, $.extend({
@@ -325,6 +383,18 @@ app.factory('AccountService', ['$rootScope', '$cookies', '$q', 'HttpReqService',
             return resbody;
         });
     };
+
+    // 代理商方面管理员列表
+    svc.financialAdmins = function (reqParams) {
+        return Req.req(ReqUrl.fadmins, $.extend({
+            watch_type: 'reged_am'
+        }, reqParams), function (resbody) {
+            resbody.data.forEach(function (ele) {
+                ele.ctlflag = ele.flag;
+            });
+            return resbody;
+        });
+    }
 
 // 锁定对账联系人
     svc.lockNotifier = function (id) {
@@ -364,6 +434,27 @@ app.factory('AccountService', ['$rootScope', '$cookies', '$q', 'HttpReqService',
         return Req.req(ReqUrl.ctrlNotifier, {
             id: id
             , control_type: 'as'
+            , ctlflag: 0
+        }, function () {
+            return 0;
+        });
+    };
+
+    // 锁定代理商管理员
+    svc.lockFAdmin = function (id) {
+        return Req.req(ReqUrl.ctrlFAdmin, {
+            id: id
+            , control_type: 'am'
+            , ctlflag: -3
+        }, function () {
+            return -3;
+        });
+    };
+    // 解锁代理商管理员
+    svc.unlockFAdmin = function (id) {
+        return Req.req(ReqUrl.ctrlFAdmin, {
+            id: id
+            , control_type: 'am'
             , ctlflag: 0
         }, function () {
             return 0;
@@ -654,21 +745,19 @@ app.factory('MgmtSvc', ['HttpReqService', function (Req) {
         return Req.req(ReqUrl.viewLog, $.extend({
             watch_type: 'op_log'
         }, reqParams), function (resbody) {
-            var userTypes = [];
-            var resultTypes = [];
-            resbody.data.forEach(function (ele) {
-                if (userTypes.indexOf(ele.usertype) == -1) {
-                    userTypes.push(ele.usertype);
-                }
-                // // 动态生成
-                // if(resultTypes.indexOf(ele.result)==-1){
-                //     resultTypes.push(ele.result);
-                // }
-            });
-            resbody.data['itemTypes'] = userTypes;
-            // resbody.data['resultTypes'] = resultTypes;
-            // 或者静态配置
-            resbody.data['resultTypes'] = appConf.opLogResultTypes;
+            var userTypes = appConf.opLogUserRoles;
+            var resultTypes = appConf.opLogResultTypes;
+            /*resbody.data.forEach(function (ele) {
+             if (userTypes.indexOf(ele.usertype) == -1) {
+             userTypes.push(ele.usertype);
+             }
+             // 动态生成
+             if(resultTypes.indexOf(ele.result)==-1){
+             resultTypes.push(ele.result);
+             }
+             });*/
+            resbody.data['userTypes'] = userTypes;
+            resbody.data['resultTypes'] = resultTypes;
             return resbody;
         });
     };
@@ -691,6 +780,45 @@ app.factory('MgmtSvc', ['HttpReqService', function (Req) {
 
     svc.restoreDB = function (id) {
         return Req.req(ReqUrl.restoredb, {id: id});
+    };
+
+    return svc;
+}]);
+
+// 积分相关服务
+app.factory('ScoreService', ['HttpReqService', function (Req) {
+    var svc = {};
+
+    function scoreInfoExtractor(resbody) {
+        resbody.items = resbody.items || resbody.data;
+        return resbody;
+    }
+
+    // 超级管理员获取所有客户的积分信息
+    svc.scoreInAllAgents = function (reqParams) {
+        return Req.req(ReqUrl.scoreInAllAgents, reqParams, scoreInfoExtractor);
+    };
+
+    // 财务员获取客户积分信息
+    svc.scoreInAgent = function (reqParams) {
+        return Req.req(ReqUrl.scoreInAgent, reqParams, scoreInfoExtractor);
+    };
+
+    // 客户积分详情
+    svc.scoreDetail = function (reqParams) {
+        return Req.req(ReqUrl.scoreDetail, reqParams);
+    };
+
+    // 超级管理员 积分管理
+    svc.scoreMgmtAll = function (reqParams) {
+        return Req.req(ReqUrl.scoreMgmtAll, reqParams, scoreInfoExtractor);
+    };
+    svc.approveScoreExchange = function (id) {
+        return Req.req(ReqUrl.approveScoreExchg, {randKey: id});
+    };
+    // 财务员 积分管理
+    svc.scoreMgmtInAgent = function (reqParams) {
+        return Req.req(ReqUrl.scoreMgmtInAgent, reqParams, scoreInfoExtractor);
     };
 
     return svc;

@@ -44,7 +44,8 @@ import sun.util.logging.resources.logging;
 /**
  * Person_Manage 人员管理服务，管理包括注册审阅，权限控制，操作日志，数据库备份等
  * @author zhangxinming
- * @version 1.0.0
+ * @modfiy LinLi
+ * @version 1.1.0
  */
 public class Person_Manage {
 	
@@ -118,7 +119,7 @@ public class Person_Manage {
 	 * @return
 	 * @author zhangxinming
 	 */
-	public JSONObject Watch(String watch_type,int offset,int pagesize){
+	public JSONObject Watch(String watch_type,int offset,int pagesize, String user_type, String agent_id){
 		JSONObject re_json = new JSONObject();
 		int num = 0;
 		List re_list = null;
@@ -128,31 +129,61 @@ public class Person_Manage {
 		if (watch_type.equals("reg_cp")) {//查看新注册的对账联系人
 			logger.info("查看新注册的对账联系人");
 			//re_list = cDao.GetTotalTbByElement("flag",REG_NEW);
-			re_list = cDao.GetConnectTbByElement_ByPage("flag",REG_NEW,offset,pagesize);
+			if(user_type.equals("bm")){
+				re_list = cDao.GetConnectTbByElement_ByPage("flag",REG_NEW,offset,pagesize);
+				num = cDao.GetConnectTbByElement_Num_ByPage("flag",REG_NEW);
+			}
+			else if(user_type.equals("ba")){
+				re_list = cDao.GetConnectTbByElement_ByPage_ByAgent("flag",REG_NEW,offset,pagesize, agent_id);
+				num = cDao.GetConnectTbByElement_Num_ByPage_ByAgent("flag",REG_NEW, agent_id);
+			}
+			else{
+				logger.error("用户身份错误");
+				return null;
+			}
 			for (int i = 0; i < re_list.size(); i++) {
 				ConnectPerson cPerson = (ConnectPerson) re_list.get(i);
 				cPerson.setAgent(ChangeAgentToChinese(cPerson.getAgent()));
 				cPerson.setRegisterWay(ChangeRegTypeToChinese(cPerson.getRegisterWay()));
 				re_list_new.add(cPerson);
 			}
-			num = cDao.GetConnectTbByElement_Num_ByPage("flag",REG_NEW);
 		}
 		else if (watch_type.equals("reg_as")) {//查看新注册的财务人员
 			logger.info("查看新注册的财务人员");
 		//	re_list = aS_Dao.GetTotalTbByElement("flag", REG_NEW);
-			re_list = aS_Dao.GetTotalTbByElement_ByPage("flag", REG_NEW,offset,pagesize);
+			re_list = aS_Dao.GetTotalTbByElement_ByPage_ByUserType("flag", REG_NEW,offset,pagesize, "bu");
 			for (int i = 0; i < re_list.size(); i++) {
 				Assistance cPerson = (Assistance) re_list.get(i);
 				cPerson.setAgentid((ChangeAgentToChinese(cPerson.getAgentid())));
 				re_list_new.add(cPerson);
 			}
-			num = aS_Dao.GetTotalTbByElement_Num_ByPage("flag", REG_NEW);
+			num = aS_Dao.GetTotalTbByElement_Num_ByPage_ByUserType("flag", REG_NEW, "bu");
+		}
+		else if(watch_type.equals("reg_am")){
+			logger.info("查看新注册的代理商管理人员");
+			re_list = aS_Dao.GetTotalTbByElement_ByPage_ByUserType("flag", REG_NEW,offset,pagesize, "ba");
+			for (int i = 0; i < re_list.size(); i++) {
+				Assistance cPerson = (Assistance) re_list.get(i);
+				cPerson.setAgentid((ChangeAgentToChinese(cPerson.getAgentid())));
+				re_list_new.add(cPerson);
+			}
+			num = aS_Dao.GetTotalTbByElement_Num_ByPage_ByUserType("flag", REG_NEW, "ba");
 		}
 		else if (watch_type.equals("reged_cp")) {//查看已注册的对账联系人
 			logger.info("查看已注册的对账联系人");
 		//	re_list = cDao.GetTotalTbByElement("flag",REG_SUCCESS);
-			re_list = cDao.GetConnectTbByElement_ByPage_And("flag",REG_SUCCESS,"flag", LOCKED,offset,pagesize);
-			num = cDao.GetConnectTbByElement_Num_ByPage_And("flag",REG_SUCCESS,"flag", LOCKED);
+			if(user_type.equals("bm")){
+				re_list = cDao.GetConnectTbByElement_ByPage_And("flag",REG_SUCCESS,"flag", LOCKED,offset,pagesize);
+				num = cDao.GetConnectTbByElement_Num_ByPage_And("flag",REG_SUCCESS,"flag", LOCKED);
+			}
+			else if(user_type.equals("ba")){
+				re_list = cDao.GetConnectTbByElement_ByPage_ByAgent_And("flag",REG_SUCCESS,"flag", LOCKED,offset,pagesize, agent_id);
+				num = cDao.GetConnectTbByElement_Num_ByPage_ByAgent_And("flag",REG_SUCCESS,"flag", LOCKED, agent_id);
+			}
+			else{
+				logger.error("用户身份错误");
+				return null;
+			}
 			logger.info(num);
 			for (int i = 0; i < re_list.size(); i++) {
 				ConnectPerson cPerson = (ConnectPerson) re_list.get(i);
@@ -172,8 +203,8 @@ public class Person_Manage {
 		}
 		else if (watch_type.equals("reged_as")) {//查看已注册的财务人员
 			logger.info("查看已注册的财务人员");
-			re_list = aS_Dao.GetTotalTbByElement_ByPage_And("flag", REG_SUCCESS,"flag",LOCKED,offset,pagesize);
-			num = aS_Dao.GetTotalTbByElement_Num_ByPage_And("flag", REG_SUCCESS,"flag",LOCKED);//获取满足条件的记录数目
+			re_list = aS_Dao.GetTotalTbByElement_ByPage_ByUserType_And("flag", REG_SUCCESS,"flag",LOCKED,offset,pagesize, "bu");
+			num = aS_Dao.GetTotalTbByElement_Num_ByPage_ByUserType_And("flag", REG_SUCCESS,"flag",LOCKED, "bu");//获取满足条件的记录数目
 			logger.info(re_list.size() + ":" + num);
 			for (int i = 0; i < re_list.size(); i++) {
 				Assistance cPerson = (Assistance) re_list.get(i);
@@ -185,6 +216,17 @@ public class Person_Manage {
 			re_list_new.addAll(re_list_locked);*/
 			
 			//num = aS_Dao.GetTotalTb_Num();
+		}
+		else if(watch_type.equals("reged_am")){ // 查看已注册的代理商管理员
+			logger.info("查看已注册的代理商管理员");
+			re_list = aS_Dao.GetTotalTbByElement_ByPage_ByUserType_And("flag", REG_SUCCESS,"flag",LOCKED,offset,pagesize, "ba");
+			num = aS_Dao.GetTotalTbByElement_Num_ByPage_ByUserType_And("flag", REG_SUCCESS,"flag",LOCKED, "ba");//获取满足条件的记录数目
+			logger.info(re_list.size() + ":" + num);
+			for (int i = 0; i < re_list.size(); i++) {
+				Assistance cPerson = (Assistance) re_list.get(i);
+				cPerson.setAgentid((ChangeAgentToChinese(cPerson.getAgentid())));
+				re_list_new.add(cPerson);
+			}
 		}
 		else if (watch_type.equals("op_log")) {//查看操作日志
 			logger.info("查看操作日志");
@@ -528,8 +570,8 @@ public class Person_Manage {
 			JSONObject jsonObject = new JSONObject();
 			
 			Agent fAgent = agent_Dao.findById(Agent.class, re_as.getAgentid());
-			if (fAgent != null) {
-				if (fAgent.getIsregister() == true) {
+			if (fAgent != null ) {
+				if (fAgent.getIsregister() == true && re_as.getUsertype().equals("bu")) {
 					logger.error("代理商已经绑定财务人员");
 					jsonObject.element("flag", -1);
 					jsonObject.element("errmsg", "代理商已经绑定财务人员");
@@ -581,7 +623,7 @@ public class Person_Manage {
 				re_jObject.element("flag", 0);
 				re_jObject.element("errmsg", "操作成功");
 			}
-			else if (reg_type.equals("as")) {
+			else if (reg_type.equals("as") ) {
 				Assistance re_as = aS_Dao.findById(Assistance.class, id);
 				String agentid = re_as.getAgentid();
 				Agent agent = agent_Dao.findById(Agent.class, agentid);
@@ -630,6 +672,15 @@ public class Person_Manage {
 					aS_Dao.update(re_as);
 				}
 			}
+			else{
+				logger.info(id);
+				Assistance re_as = aS_Dao.findById(Assistance.class, id);
+				re_as.setFlag(flag);
+				aS_Dao.update(re_as);
+				result = 0;
+				re_jObject.element("flag", 0);
+				re_jObject.element("errmsg", "操作成功");
+			}		
 			return re_jObject;
 		}
 	}

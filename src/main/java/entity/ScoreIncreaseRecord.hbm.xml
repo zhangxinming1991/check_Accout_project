@@ -1,0 +1,36 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+"http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping>
+    <class name="entity.ScoreIncreaseRecord" table="score_increase_record" catalog="check_a_db" optimistic-lock="version">
+        <id name="id" type="int">
+            <column name="id" />
+            <generator class="assigned" />
+        </id>
+        <property name="time" type="java.sql.Timestamp">
+            <column name="time">
+            </column>
+        </property>
+        <property name="increaseScore" type="int">
+            <column name="increase_score" not-null="true">
+            </column>
+        </property>
+        <property name="hander" type="string">
+            <column name="hander" length="50">
+            </column>
+        </property>
+        <property name="description" type="string">
+            <column name="description" length="50">
+            </column>
+        </property>
+        <property name="status" type="byte">
+            <column name="status">
+            </column>
+        </property>
+        <property name="username" type="string">
+            <column name="username" length="12">
+            </column>
+        </property>
+    </class>
+</hibernate-mapping>

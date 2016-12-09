@@ -84,7 +84,7 @@
                 <a rel="lightbox" href="{{r.linkCer}}"><span class="glyphicon glyphicon-eye-open"></span></a>
 
                 <!--eager load image-->
-                <img ng-src="{{r.linkCer}}" class="hidden">
+                <!--<img ng-src="{{r.linkCer}}" class="hidden">-->
 
                 <!-- <div id="imgMdl-{{r.id}}" role="dialog" class="modal fade" aria-hidden="true">
                      <div class="modal-dialog">
@@ -164,7 +164,7 @@
         <div class="modal-body">
             <table class="table">
                 <thead>
-                <th>合同号</th>
+                <th><!--合同号-->货款性质</th>
                 <th>金额/元</th>
                 </thead>
                 <tbody>
@@ -288,13 +288,6 @@
                     <span class="text-warning" ng-show="ctrl.attachErrMsg">操作失败：{{ctrl.attachErrMsg}}</span>
                 </div>
             </div>
-        </div>
-    </script>
-
-    <script id="stNumberRange.html" type="text/ng-template">
-        <div class="">
-            <input type="number" class="form-control input-sm" step="10000" ng-model="higher" placeholder="总额高于" min="0"/>
-            <input class="form-control input-sm" type="number" step="10000" ng-model="lower" placeholder="总额低于" min="0"/>
         </div>
     </script>
 </div>

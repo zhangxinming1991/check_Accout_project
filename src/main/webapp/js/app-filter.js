@@ -15,7 +15,7 @@ app.filter('ctrlStatusFilter', function () {
             case -3:
                 return '锁定';
             default:
-                console.warn('未匹配的管控状态：' + flag);
+                console.warn('未匹配的控制状态：' + flag);
                 return '';
         }
     }
@@ -47,6 +47,8 @@ app.filter('userRolePrinter', function () {
                 return '代理商财务';
             case 'bm':
                 return '管理员';
+            case 'ba':
+                return '代理商管理';
             default:
                 return '其他';
         }
@@ -149,3 +151,10 @@ app.filter('rmdsFilter', ['$filter', function ($filter) {
         return output;
     };
 }]);
+/*
+
+app.filter('scoreStatus', function () {
+    return function (statusCode) {
+        return appConf.mappings.scoreStatus[statusCode] || statusCode;
+    }
+});*/

@@ -1,0 +1,70 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+"http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+<hibernate-mapping>
+    <class name="entity.ConnectPersonScoreInfo" table="connect_person_score_info" catalog="check_a_db" optimistic-lock="version">
+        <id name="username" type="string">
+            <column name="username" length="12" />
+            <generator class="assigned" />
+        </id>
+        <property name="phone" type="string">
+            <column name="phone" length="11" />
+        </property>
+        <property name="weiXin" type="string">
+            <column name="weixin" length="20" />
+        </property>
+        <property name="company" type="string">
+            <column name="company" length="50">
+                <comment>&#181;&#165;&#206;&#187;&#195;&#251;&#179;&#198;&#163;&#168;&#184;&#182;&#191;&#238;&#200;&#203;&#195;&#251;&#179;&#198;&#163;&#169;</comment>
+            </column>
+        </property>
+        <property name="realName" type="string">
+            <column name="real_name" length="20">
+                <comment>&#213;&#230;&#202;&#181;&#208;&#213;&#195;&#251;</comment>
+            </column>
+        </property>
+        <property name="registerWay" type="string">
+            <column name="register_way" length="15">
+                <comment>
+                &#215;&#162;&#178;&#225;&#183;&#189;&#202;&#189;&#163;&#172;P&#163;&#186;&#184;&#246;&#200;&#203;&#163;&#187;C&#163;&#186;&#185;&#171;&#203;&#190;</comment>
+            </column>
+        </property>
+        <property name="agent" type="string">
+            <column name="agent" length="10">
+                <comment>&#203;&#249;&#202;&#244;&#180;&#250;&#192;&#237;&#201;&#204;</comment>
+            </column>
+        </property>
+        <property name="agentName" type="string">
+            <column name="agent_name">
+            </column>
+        </property>
+        <property name="companyId" type="string">
+            <column name="companyid" length="30">
+                <comment>&#185;&#171;&#203;&#190;&#177;&#234;&#202;&#182;</comment>
+            </column>
+        </property>
+        <property name="email" type="string">
+            <column name="email" length="20">
+                <comment>&#211;&#202;&#207;&#228;</comment>
+            </column>
+        </property>
+        <property name="cardId" type="string">
+            <column name="cardid" length="22">
+                <comment>&#201;&#237;&#183;&#221;&#214;&#164;</comment>
+            </column>
+        </property>
+        <property name="score" type="java.lang.Integer">
+            <column name="score">
+                <comment>&#187;&#253;&#183;&#214;</comment>
+            </column>
+        </property>
+        <property name="exchangedScore" type="java.lang.Integer">
+            <column name="exchanged_score">
+            </column>
+        </property>
+                <property name="exchangingScore" type="java.lang.Integer">
+            <column name="exchanging_score">
+            </column>
+        </property>
+    </class>
+</hibernate-mapping>

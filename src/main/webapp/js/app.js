@@ -59,18 +59,26 @@ var ReqUrl = {
     , regPendingNotifiers: '/check_Accout/PMController/watch'
     // 注册申请中的代理商列表获取
     , regPendingFworkers: '/check_Accout/PMController/watch'
+    // 注册申请中的代理商管理员列表获取
+    , regPendingFAdmins: '/check_Accout/PMController/watch'
     // 审阅对账联系人注册
     , approveNotifier: '/check_Accout/PMController/verify_register'
     // 审阅代理商注册
     , approveFw: '/check_Accout/PMController/verify_register'
+    // 审阅代理商管理员注册
+    , approveFAdmin: '/check_Accout/PMController/verify_register'
     // 已注册的对账联系人
     , notifiers: '/check_Accout/PMController/watch'
     // 已注册代理商财务员
     , fworkers: '/check_Accout/PMController/watch'
+    // 已注册的代理商方面的管理员列表
+    , fadmins: '/check_Accout/PMController/watch'
     // 锁定、解锁联系人
     , ctrlNotifier: '/check_Accout/PMController/control_power'
     // 锁定、解锁代理商财务员
     , ctrlFworker: '/check_Accout/PMController/control_power'
+    // 锁定、解锁代理商管理员
+    , ctrlFAdmin: '/check_Accout/PMController/control_power'
 
     // 备份数据库操作
     , backupdb: '/check_Accout/PMController/backupdb'
@@ -82,6 +90,20 @@ var ReqUrl = {
     , viewLog: '/check_Accout/PMController/watch'
     // 获取代理商列表
     , fetchAgents: '/check_Accout/PMController/get_agentcodeAname'
+
+    // 积分模块
+    // 超级管理员获取所有用户积分信息
+    , scoreInAllAgents: '/check_Accout/ScoreController/all_scoreinfos'
+    // 财务员获取所在代理商管理的用户的积分信息
+    , scoreInAgent: '/check_Accout/ScoreController/agent_scoreinfos'
+    // 用户积分详情
+    , scoreDetail: '/check_Accout/ScoreController/score_records'
+    // 超级管理员 积分管理表
+    , scoreMgmtAll: '/check_Accout/ScoreController/manage_exchange'
+    // 财务员 积分管理表
+    , scoreMgmtInAgent: '/check_Accout/ScoreController/agent_exchangeinfos'
+    // 确认 积分兑换
+    , approveScoreExchg: '/check_Accout/ScoreController/approval_exchange'
 };
 
 // string format
@@ -92,6 +114,15 @@ String.prototype.format = function () {
             return args[i];
         });
 };
+String.prototype.contains = function (substr) {
+    return this.indexOf(substr) !== -1;
+};
+String.prototype.startsWith = function (prefix) {
+    return this.indexOf(prefix) === 0;
+};
+/*String.prototype.endsWith=function (postfix) {
+
+ };*/
 //static
 String.format = function () {
     if (arguments.length == 0)
@@ -112,12 +143,28 @@ var appConf = {
     , tmFmtYMD: 'yyyy-MM-dd'
     // , numberPerPage: 10
     , opLogResultTypes: ['成功', '失败']
+    , opLogUserRoles: ['客户', '管理员', '代理商财务', '代理商管理']
+    , userRegisterWays: ['个人', '公司']
+    , scoreStatusInTable: ['兑换中', '正常']
+    // 兑换类型
+    , exchangeTypes: ['红包', '礼品']
+    , mappings: {
+        scoreStatus: {
+            '0': '已提交'
+            , '1': '兑换中'
+            , '2': '兑换成功'
+            , '-1': '兑换失败'
+        }
+    }
 };
 
 var frontBackEndMappping = {
     userRole: {
+        //三一管理员，
         'M': 'bm'
+        //代理商财务
         , 'U': 'bu'
+        , 'Z': 'ba'
     }
 };
 

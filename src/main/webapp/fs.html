@@ -3,8 +3,10 @@
         <ul class="nav nav-sidebar">
             <li ng-class="{active:activeState.indexOf('u.fs.a')==0}"><a data-ui-sref="u.fs.a" href title="审阅平台用户注册申请">注册审阅</a></li>
             <li ng-class="{active:activeState.indexOf('u.fs.c')==0}"><a data-ui-sref="u.fs.c" href title="锁定或解锁用户">用户控制</a></li>
+            <li ng-class="{active:activeState.indexOf('u.fs.s')==0}"><a data-ui-sref="u.fs.s" href >积分查看</a></li>
+            <li ng-class="{active:activeState.indexOf('u.fs.m')==0}"><a data-ui-sref="u.fs.m" href >积分管理</a></li>
             <li ng-class="{active:activeState.indexOf('u.fs.l')==0}"><a data-ui-sref="u.fs.l" href title="查看平台用户操作日志">用户日志</a></li>
-            <li ng-class="{active:activeState.indexOf('u.fs.d')==0}"><a data-ui-sref="u.fs.d" href title="">数据库</a></li>
+            <li ng-class="{active:activeState.indexOf('u.fs.d')==0}"><a data-ui-sref="u.fs.d" href title="数据库备份与恢复">数据库</a></li>
         </ul>
     </div>
     <div class="col-sm-offset-2 col-sm-10 col-md-offset-1 col-md-11 col-lg-offset-1 col-lg-11  main" data-ui-view=""></div>
