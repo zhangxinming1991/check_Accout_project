@@ -8,9 +8,18 @@
             <th><input class="input-sm form-control" type="search" st-search="realName" placeholder="真实姓名"></th>
             <th><input class="input-sm form-control" type="search" st-search="weiXin" placeholder="微信号"></th>
             <th><input class="input-sm form-control" type="search" st-search="company" placeholder="客户名"></th>
-            <th><input class="input-sm form-control" type="number" st-search="score" placeholder="当前积分"></th>
-            <th><input class="input-sm form-control" type="number" st-search="exchangedScore" placeholder="已兑积分"></th>
-            <th><input class="input-sm form-control" type="number" st-search="exchangingScore" placeholder="正在兑换"></th>
+            <th>
+                <input class="input-sm form-control" type="number" st-search="score" placeholder="当前积分">
+                <!--<st-number-range predicate="score" lower="query.lower" higher="query.higher"></st-number-range>-->
+            </th>
+            <th>
+                <input class="input-sm form-control" type="number" st-search="exchangedScore" placeholder="已兑积分">
+                <!--<st-number-range predicate="exchangedScore" lower="query.lower" higher="query.higher"></st-number-range>-->
+            </th>
+            <th>
+                <input class="input-sm form-control" type="number" st-search="exchangingScore" placeholder="正在兑换">
+                <!--<st-number-range predicate="exchangingScore" lower="query.lower" higher="query.higher"></st-number-range>-->
+            </th>
             <th>
                 <select class="input-sm form-control" type="search" st-search="status" placeholder="状态">
                     <option value="">所有</option>
@@ -80,11 +89,11 @@
 
     <script type="text/ng-template" id="fs-score-view-detail.html">
         <div>
-            <!--<div class="modal-header">
-            <span class="glyphicon glyphicon-remove top-right pull-right close" ng-click="closeMsgbox()"
-                  ng-hide="msgCfg.noCloseBtn"></span>
-                <h3 class="modal-title" ng-bind="msgCfg.title">消息</h3>
-            </div>-->
+            <div class="modal-header">
+                <!--<i class="glyphicon glyphicon-remove top-right pull-right close" ng-click="closeMsgbox()"
+                   ng-hide="msgCfg.noCloseBtn"></i>-->
+                <span class="modal-title h3">积分变动</span>
+            </div>
             <div class="modal-body">
                 <table class="table table-bordered">
                     <thead>
@@ -108,9 +117,19 @@
                     </tr>
                     </tbody>
                     <tbody ng-show="!(r.changes&&r.changes.length)">
-                        <tr>
-                            <td colspan="100" class="text-center text-info">无数据</td>
-                        </tr>
+                    <tr>
+                        <td colspan="100" class="text-center text-info">无数据</td>
+                    </tr>
+                    </tbody>
+                    <tbody ng-show="isLoading">
+                    <tr>
+                        <td colspan="100" class="text-center text-info">正在拼命为您加载数据……</td>
+                    </tr>
+                    </tbody>
+                    <tbody ng-show="errMsg">
+                    <tr>
+                        <td colspan="100" class="text-center text-warning">{{errMsg}}</td>
+                    </tr>
                     </tbody>
                 </table>
             </div>

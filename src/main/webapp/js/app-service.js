@@ -814,7 +814,9 @@ app.factory('ScoreService', ['HttpReqService', function (Req) {
         return Req.req(ReqUrl.scoreMgmtAll, reqParams, scoreInfoExtractor);
     };
     svc.approveScoreExchange = function (id) {
-        return Req.req(ReqUrl.approveScoreExchg, {randKey: id});
+        return Req.req(ReqUrl.approveScoreExchg, {randKey: id}, function (resbody) {
+            return resbody.data || '未领取';
+        });
     };
     // 财务员 积分管理
     svc.scoreMgmtInAgent = function (reqParams) {

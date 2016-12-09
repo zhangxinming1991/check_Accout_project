@@ -1054,6 +1054,21 @@
             scoreAll = scoreAll || randScoreInfo(randInRange(100, 200));
             return [200, resPage(reqbody.pagenum, scoreAll, {flag: failOrNot()}, reqbody)];
         });
+        bkd.whenPOST(ReqUrl.scoreDetail).respond(function (method,url,reqbody){
+            var items=[];
+            for(var i=0;i<randInRange(0,5);i++){
+                var item={
+                    time:$filter('date')(new Date(), appConf.tmFmtLong)
+                    ,change:randIn(['+','-'])+randInRange(50,100)
+                    ,status:randIn(['已到账','兑换中'])
+                    ,hander:'甲乙丙丁'
+                    ,serial:uuid(4)
+                    ,description:'……'
+                };
+                items.push(item);
+            }
+            return [200,{flag:failOrNot(),data:items}];
+        });
 
         function genScoreMgmt(itemCount) {
             var items = [];
@@ -1069,7 +1084,7 @@
                     , exchangeCategory: '礼品类型'
                     , applicaTime: $filter('date')(randInRange(new Date(2014, 1, 1), new Date()), appConf.tmFmtLong)
                     , finishTime: $filter('date')(randInRange(new Date(2014, 1, 1), new Date()), appConf.tmFmtLong)
-                    , status: randIn(['兑换中', '已兑换', '未领取'])
+                    , status: randIn(['兑换中', '已兑换', '未领取','未兑换'])
                     , description: '说明'
                 };
                 items.push(item);

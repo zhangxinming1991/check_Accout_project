@@ -4,8 +4,8 @@ app.config(['$stateProvider', '$urlRouterProvider', 'stateHelperProvider', funct
     // $urlRouterProvider.when('', '/login');
     // $urlRouterProvider.otherwise('/login');
     /*$urlRouterProvider.when(/.*!/, ['$state','$rootScope', function (state,rootsgop) {
-        console.info('authed=', rootsgop.loggedInUser !== undefined);
-    }]);*/
+     console.info('authed=', rootsgop.loggedInUser !== undefined);
+     }]);*/
     $urlRouterProvider.when('', '/index');
     $urlRouterProvider.when('/u/fw', '/u/fw/v');
     $urlRouterProvider.when('/u/fs', '/u/fs/a');
@@ -195,19 +195,19 @@ app.config(['$stateProvider', '$urlRouterProvider', 'stateHelperProvider', funct
                             }
                         }
                         }
-                         // 积分查看
-                        ,{
+                        // 积分查看
+                        , {
                             name: 's',
                             url: '/s',
                             templateUrl: 'fs-score-view.html'
-                            ,controller:fwsvCtrl
+                            , controller: fwsvCtrl
                         }
                         // 积分管理
-                        ,{
-                            name:'m'
-                            ,url:'/m'
-                            , templateUrl:'fs-score-mgmt.html'
-                            ,controller:fwsmCtrl
+                        , {
+                            name: 'm'
+                            , url: '/m'
+                            , templateUrl: 'fs-score-mgmt.html'
+                            , controller: fwsmCtrl
                         }
                     ]
                 },
@@ -221,25 +221,37 @@ app.config(['$stateProvider', '$urlRouterProvider', 'stateHelperProvider', funct
                         name: 'a',
                         url: '/a',
                         templateUrl: 'fs-reg-approval.html'
+                        , controller: ['$scope', function (scope) {
+                            console.debug('ctrl->用户审阅');
+                            scope.selectTab = function (tab) {
+                                scope.selectedTab = tab;
+                            };
+                        }]
                     }
-                    ,{
+                    , {
                         name: 'c',
                         url: '/c',
                         templateUrl: 'fs-user-ctrl.html'
+                        , controller: ['$scope', function (scope) {
+                            console.debug('ctrl->用户控制');
+                            scope.selectTab = function (tab) {
+                                scope.selectedTab = tab;
+                            };
+                        }]
                     }
                     // 积分查看
-                    ,{
+                    , {
                         name: 's',
                         url: '/s',
                         templateUrl: 'fs-score-view.html'
-                        ,controller:fssvCtrl
+                        , controller: fssvCtrl
                     }
                     // 积分管理
-                    ,{
-                        name:'m'
-                        ,url:'/m'
-                        , templateUrl:'fs-score-mgmt.html'
-                        ,controller:fssmCtrl
+                    , {
+                        name: 'm'
+                        , url: '/m'
+                        , templateUrl: 'fs-score-mgmt.html'
+                        , controller: fssmCtrl
                     }
                     , {
                         name: 'l',
@@ -256,7 +268,7 @@ app.config(['$stateProvider', '$urlRouterProvider', 'stateHelperProvider', funct
                 ]
                 }
                 // 代理商方的管理员
-                ,  {
+                , {
                     name: 'fm',
                     url: '/fm'
                     , templateUrl: 'fm.html'
@@ -272,18 +284,18 @@ app.config(['$stateProvider', '$urlRouterProvider', 'stateHelperProvider', funct
                             url: '/c',
                             templateUrl: 'fm-user-ctrl.html'
                         }
-                       /* , {
-                            name: 'l',
-                            url: '/l',
-                            templateUrl: 'fs-user-log.html',
-                            controller: fslCtrl
-                        }
-                        , {
-                            name: 'd',
-                            url: '/d',
-                            templateUrl: 'fs-db.html',
-                            controller: fsdCtrl
-                        }*/
+                        /* , {
+                         name: 'l',
+                         url: '/l',
+                         templateUrl: 'fs-user-log.html',
+                         controller: fslCtrl
+                         }
+                         , {
+                         name: 'd',
+                         url: '/d',
+                         templateUrl: 'fs-db.html',
+                         controller: fsdCtrl
+                         }*/
                     ]
                 }
             ]

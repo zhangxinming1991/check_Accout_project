@@ -2,11 +2,11 @@
     <!--<div><p class="text-center h2">用户控制</p></div>-->
     <uib-tabset>
 
-        <uib-tab>
+        <uib-tab select="selectTab(1)">
             <uib-tab-heading>
                 <span class=""></span>代理商财务员管理
             </uib-tab-heading>
-            <div ng-controller="fscwCtrl">
+            <div ng-controller="fscwCtrl" ng-if="selectedTab==1">
                 <table st-table="dispItems"  st-pipe="refreshGrid"  class="table table-bordered table-striped">
                     <!--<caption class="caption h4 text-center" title="">代理商财务管理</caption>-->
                     <thead>
@@ -92,11 +92,11 @@
             </div>
         </uib-tab>
 
-        <uib-tab>
+        <uib-tab select="selectTab(2)">
             <uib-tab-heading>
                 <span class=""></span>代理商管理员管理
             </uib-tab-heading>
-            <div ng-controller="fscmCtrl">
+            <div ng-controller="fscmCtrl" ng-if="selectedTab==2">
                 <table st-table="dispItems"  st-pipe="refreshGrid"  class="table table-bordered table-striped">
                     <!--<caption class="caption h4 text-center" title="">代理商财务管理</caption>-->
                     <thead>

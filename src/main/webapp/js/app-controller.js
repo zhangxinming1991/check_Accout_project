@@ -1580,36 +1580,95 @@ var fsdCtrl = ['$scope', '$timeout', 'MgmtSvc', '$uibModal', function (sgop, tim
 }];
 
 // 超级管理员客户积分
-var fssvCtrl = ['$scope', '$filter', 'ScoreService',
-    function (sgop, $filter, ScoreSvc) {
+var fssvCtrl = ['$scope', '$filter', 'ScoreService', '$uibModal',
+    function (sgop, $filter, ScoreSvc, msgbox) {
         console.debug('ctrl->超级管理员客户积分查看');
 
         sgop.refreshGrid = function (tableState) {
             gridPage(sgop, tableState, $filter, ScoreSvc.scoreInAllAgents);
         };
 
-        // TODO
+        // 查看积分变动详情
         sgop.detail = function (item) {
-            'fs-client-score-detail.html'
+            msgbox.open({
+                templateUrl: 'fs-score-view-detail.html'
+                , controller: ['$scope', function (scope) {
+                    scope.r = item;
+                    if (!(item.changes && item.changes.length)) {
+                        scope.isLoading = true;
+                        ScoreSvc.scoreDetail({username: item.username}).then(function (changes) {
+                            item.changes = changes;
+                        }, function (errObj) {
+                            scope.errMsg = ensureErrMsg(errObj);
+                        }).finally(function () {
+                            scope.isLoading = false;
+                        });
+                    }
+                }]
+            });
         };
     }];
 
 // 超级管理员积分管理
-var fssmCtrl = ['$scope', '$filter', 'ScoreService',
-    function (sgop, $filter, ScoreSvc) {
+var fssmCtrl = ['$scope', '$filter', 'ScoreService', '$uibModal', '$timeout',
+    function (sgop, $filter, ScoreSvc, msgbox, timeout) {
         console.debug('ctrl->超级管理员客户积分管理');
 
         sgop.refreshGrid = function (tableState) {
             gridPage(sgop, tableState, $filter, ScoreSvc.scoreMgmtAll);
         };
 
-        // 详情 TODO
+        // 详情
         sgop.detail = function (item) {
+            console.error('未实现');
+            
+            function giftDetail() {
+                msgbox.open({
+                    templateUrl: 'fs-score-mgmt-gift.html'
+                    , controller: ['$scope', function (scope) {
+                        scope.r = item;
+                    }]
+                    , size: 'lg'
+                });
+            }
 
+            function moneyDetail() {
+                msgbox.open({
+                    templateUrl: 'fs-score-mgmt-money.html'
+                    , controller: ['$scope', function (scope) {
+                        scope.r = item;
+                    }]
+                    , size: 'lg'
+                });
+
+            }
+
+            if (item.exchangeType == '红包') {
+                moneyDetail();
+            } else if (item.exchangeType == '礼品') {
+                giftDetail();
+            }
         };
-        // 确认礼品 TODO
+        // 确认礼品 
         sgop.confirm = function (item) {
-
+            var msgcfg = {
+                msgbox: msgbox
+                , title: '确认兑换礼品'
+                , msgHtml: '操作<strong class="text-info">进行中……</strong>'
+            };
+            var boxInst = showMsg(msgcfg);
+            ScoreSvc.approveScoreExchange(item.randKey).then(function (newStatus) {
+                item.status = newStatus;
+                msgcfg.msgHtml = '操作<strong class="text-success">成功</strong>';
+                timeout(function () {
+                    boxInst.close();
+                }, msgOkTimeout);
+            }, function (fail) {
+                msgcfg.msgHtml = '操作<strong class="text-warning">失败</strong>，' + ensureErrMsg(fail);
+                timeout(function () {
+                    boxInst.dismiss();
+                }, msgErrTimeout);
+            });
         };
     }];
 
@@ -1625,15 +1684,24 @@ var fwsvCtrl = ['$scope', '$filter', 'ScoreService', '$uibModal',
             gridPage(sgop, tableState, $filter, ScoreSvc.scoreInAgent);
         };
 
-        // TODO
+        // 查看积分变动详情
         sgop.detail = function (item) {
-            ScoreSvc.scoreDetail({username:item.username}).then(function (changes) {
-               /* msgbox.open({
-                    templateUrl: 'fs-score-view-detail.html'
-                });*/
-            }, function (fail) {
+            msgbox.open({
+                templateUrl: 'fs-score-view-detail.html'
+                , controller: ['$scope', function (scope) {
+                    scope.r = item;
+                    if (!(item.changes && item.changes.length)) {
+                        scope.isLoading = true;
+                        ScoreSvc.scoreDetail({username: item.username}).then(function (changes) {
+                            item.changes = changes;
+                        }, function (errObj) {
+                            scope.errMsg = ensureErrMsg(errObj);
+                        }).finally(function () {
+                            scope.isLoading = false;
+                        });
+                    }
+                }]
             });
-
         };
     }];
 
@@ -1650,7 +1718,19 @@ var fwsmCtrl = ['$scope', '$filter', 'ScoreService',
 
         // 详情 TODO
         sgop.detail = function (item) {
+            function giftDetail() {
+                msg.open({});
+            }
 
+            function moneyDetail() {
+
+            }
+
+            if (item.exchangeType == '红包') {
+
+            } else if (item.exchangeType == '礼品') {
+
+            }
         };
     }];
 
