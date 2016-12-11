@@ -394,7 +394,7 @@ var fwCtrl = ['$scope', '$state', '$timeout', '$uibModal', 'FncRmindService', 'C
 
         sgop.checkingEnv = function () {
             ChkSvc.initCheckingEnv().then(function (data) {
-                $.extend(sgop.lastUpload, data.lastUpload);
+                // $.extend(sgop.lastUpload, data.lastUpload);
                 var caid = data.caid;
                 var dash1 = caid.indexOf('-');
                 var stateParams = {};
@@ -540,9 +540,6 @@ var uploadCtrl = ['$scope', 'Upload', '$timeout', '$state', '$rootScope', '$filt
          }
          };*/
 
-        var str = sessionStorage.getItem(lastUploadInfoKey);
-        rootsgop.lastUpload = rootsgop.lastUpload || {};
-        $.extend(rootsgop.lastUpload, str ? JSON.parse(str).lastUpload : {});
 
         sgop.formSubmit = function () {
             var info = sgop.uploadInfo;
@@ -1621,7 +1618,7 @@ var fssmCtrl = ['$scope', '$filter', 'ScoreService', '$uibModal', '$timeout',
         // 详情
         sgop.detail = function (item) {
             console.error('未实现');
-            
+
             function giftDetail() {
                 msgbox.open({
                     templateUrl: 'fs-score-mgmt-gift.html'

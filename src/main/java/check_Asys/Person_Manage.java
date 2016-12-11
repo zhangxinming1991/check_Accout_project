@@ -281,7 +281,7 @@ public class Person_Manage {
 		public static final String restore_cmd_wd = "cmd /c start e:/restore.bat";
 		public static final String dirname = "backup_database";
 		public static final String db_name = "check_a_db";
-		public static final String db_passwd = "ldwz#r@24#";
+		public static final String db_passwd = "";
 		public static final String db_user = "root";
 		/**
 		 * BackUp_db 备份数据库
@@ -838,11 +838,42 @@ public class Person_Manage {
 		}
 		else if (agent.equals("xj0001")) {
 			chinese_agent = "新疆代理商";
-			
+		}
+		else if (agent.equals("bj0001")) {
+			chinese_agent = "北京/天津代理商";
+		}
+		else if (agent.equals("cq0001")) {
+			chinese_agent = "重庆代理商";
+		}
+		else if (agent.equals("nm0001")) {
+			chinese_agent = "内蒙古代理商";
+		}
+		else if (agent.equals("hn0001")) {
+			chinese_agent = "湖南代理商";
+		}
+		else if (agent.equals("js0001")) {
+			chinese_agent = "江苏代理商";
+		}
+		else if (agent.equals("gz0001")) {
+			chinese_agent = "贵州代理商";
+		}
+		else if (agent.equals("ln0001")) {
+			chinese_agent = "辽宁代理商";
+		}
+		else if (agent.equals("hainan0001")) {
+			chinese_agent = "海南代理商";
+		}
+		else if (agent.equals("hebei0001")) {
+			chinese_agent = "河北代理商";
+		}
+		else if (agent.equals("hl0001")) {
+			chinese_agent = "黑龙江代理商";
+		}
+		else if (agent.equals("gs0001")) {
+			chinese_agent = "甘肃代理商";
 		}
 		else {
 			chinese_agent = "未知代理商";
-			
 		}
 		
 		return chinese_agent;

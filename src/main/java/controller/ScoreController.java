@@ -216,6 +216,7 @@ public class ScoreController {
 		Common_return_en(response, re_jsonobject);
 			
 	}
+	
 	/**
 	 * 下载用户积分信息报表
 	 * @address: /check_Accout/ScoreController/download_scoreinfo

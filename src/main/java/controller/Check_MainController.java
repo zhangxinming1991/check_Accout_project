@@ -3,6 +3,7 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
 import java.io.Writer;
+import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -27,6 +28,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import com.mysql.fabric.xmlrpc.base.Data;
 import com.sun.jndi.url.corbaname.corbanameURLContextFactory;
 import com.sun.org.apache.bcel.internal.generic.NEW;
 
@@ -47,8 +49,10 @@ import entity.BankInput;
 import entity.CaresultHistory;
 import entity.CusSecondstore;
 import entity.OriOrder;
+import entity.OriOrderId;
 import entity.PayRecord;
 import entity.PayRecordCache;
+import entity.ScoreIncreaseRecord;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 
@@ -92,7 +96,7 @@ public class Check_MainController {
 		owner.work_id = agentid;
 		
 //		String caid = (String) cOp.OpSelect(CheckAcManage.ENTRER_CaModel, null,owner);//处理进入对账就模式操作
-		 jsonObject = (JSONObject) cOp.OpSelect(CheckAcManage.ENTRER_CaModel, who,owner);//处理进入对账就模式操作
+		jsonObject = (JSONObject) cOp.OpSelect(CheckAcManage.ENTRER_CaModel, who,owner);//处理进入对账就模式操作
 		if (jsonObject.getString("caid") != null) {
 			oLog_Service.AddLog(OpLog_Service.utype_as, who, OpLog_Service.ENTRER_CaModel, OpLog_Service.result_success);//插入操作日志
 			jsonObject.element("flag", 0);
@@ -240,7 +244,8 @@ public class Check_MainController {
 			return;
 		}
 		String agent_id = (String)session.getAttribute("agentid");
-
+		String who = (String) session.getAttribute("workId");
+		
 		Owner owner = cOp.new Owner();
 		owner.work_id = agent_id;
 		
@@ -266,6 +271,22 @@ public class Check_MainController {
 		if (map_op.equals("cer_map")) {//确定匹配
 			bank_id = jstr.getInt("bank_id");
 			map_Object = cOp.new Map_Object(map_op, pay_id,bank_id);
+			
+			/*插入积分*/
+			ScoreIncreaseRecord in_sr = new ScoreIncreaseRecord();
+			in_sr.setHander(who);
+			
+			String client = cOp.dao_List.pDao.findById(PayRecord.class, pay_id).getPayer();
+			in_sr.setUsername(client);
+			
+			Date date = new Date();
+			Timestamp time = new Timestamp(date.getTime());
+			in_sr.setTime(time);
+			in_sr.setDescription("匹配通过，获得积分");
+			Integer source = 5;
+			in_sr.setStatus(source.byteValue());
+			cOp.dao_List.sRc_Dao.add(in_sr);
+			/*插入积分*/
 		}
 		else if(map_op.equals("find_map")){//查找匹配
 			map_Object = cOp.new Map_Object(map_op, pay_id);
@@ -649,7 +670,7 @@ public class Check_MainController {
 		Owner owner = cOp.new Owner();
 		owner.work_id = (String)session.getAttribute("agentid");
 		String who = (String) session.getAttribute("workId");
-		
+		owner.who = who;
 		String request_s;
 		JSONObject jstr;
 		String caid = null;
@@ -673,7 +694,7 @@ public class Check_MainController {
 			
 			cOp.auccount.HisCancelAndCaAgain(owner.work_id, caid, savedir_A, savedir_B, filenameA, filenameB);*/
 		}
-		cOp.OpSelect(CheckAcManage.CANCEL_CaAgain, caid, owner);
+		jsonObject = (JSONObject) cOp.OpSelect(CheckAcManage.CANCEL_CaAgain, caid, owner);
 		
 		oLog_Service.AddLog(OpLog_Service.utype_as, who, OpLog_Service.CANCEL_CaAgain, OpLog_Service.result_success);
 		jsonObject.element("flag", 0);
@@ -744,7 +765,14 @@ public class Check_MainController {
 			Common_return_en(response,jsonObject);
 		}
 		else {
-			OneKeyData_return(response, jsonObject, "caid", caid);
+			Owner owner = cOp.new Owner();
+			owner.who = who;
+			owner.work_id = agentid;
+			jsonObject = (JSONObject) cOp.OpSelect(CheckAcManage.HISCA, caid, owner);
+			jsonObject.element("caid", caid);
+			jsonObject.element("flag", 0);
+			//OneKeyData_return(response, jsonObject, "caid", caid);
+			Common_return_en(response,jsonObject);
 		}
 	}
 
@@ -771,7 +799,7 @@ public class Check_MainController {
 		
 		Owner owner = cOp.new Owner();
 		owner.work_id = agent_id;
-		
+		owner.who = work_id;
 		cOp.OpSelect(CheckAcManage.FREEBACK, null, owner);
 		
 		jsonObject.element("flag", 0);
@@ -849,8 +877,12 @@ public class Check_MainController {
 				for (int j = 0; j < jmany_c.size(); j++) {
 					JSONObject jObject = (JSONObject) jmany_c.get(j);
 					String contract = (String)jObject.get("contract");
-					OriOrder fOrder = cOp.dao_List.tDao.findById(OriOrder.class, contract);
-					jforder.add(fOrder);
+					//OriOrder fOrder = cOp.dao_List.tDao.findById(OriOrder.class, contract);
+					List<OriOrder> fList = cOp.dao_List.tDao.FindBySpeElement_S("client",bankInput.getPayer());
+					if (!fList.isEmpty()) {
+						OriOrder fOrder = fList.get(0);
+						jforder.add(fOrder);						
+					}
 				}
 				wRes_ReObject = new wRes_ReObject(bankInput, jforder); 
 				data.add(wRes_ReObject);

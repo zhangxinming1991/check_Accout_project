@@ -161,7 +161,8 @@
                 </thead>
                 <tbody>
                 <tr ng-repeat="row in gridRows track by $index">
-                    <td>{{row.orderNum}}</td>
+                    <!--<td>{{row.orderNum}}</td>-->
+                    <td>{{row.id.paymentNature}}</td>
                     <td>{{row.client}}</td>
                     <td>{{row.input}}</td>
                     <td>{{row.debt}}</td>
@@ -282,7 +283,8 @@
 
         <tbody ng-show="isNonEmptyGrid">
         <tr ng-repeat="row in rows">
-            <td>{{row.orderNum}}</td>
+            <!--<td>{{row.orderNum}}</td>-->
+            <td>{{row.id.paymentNature}}</td>
             <td>{{row.client}}</td>
             <td>{{row.input}}</td>
             <td>{{row.debt}}</td>

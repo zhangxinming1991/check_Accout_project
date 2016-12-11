@@ -80,7 +80,7 @@ public class PayRecord_Dao {
 			
 			session = sessionFactory.openSession();
 			Query query = session.createQuery(hql_getmaxid);
-			java.util.List<PayRecordCache> pCaches = query.list();
+			java.util.List<PayRecord> pCaches = query.list();
 			session.close();
 			
 			if (pCaches.size() > 0) {

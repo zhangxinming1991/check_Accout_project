@@ -638,10 +638,12 @@ public class Excel_RW {
 		bInput.setInputTime(eRow.list.get(NameToValue_BankInput("inTime")));//设置到帐日期
 		bInput.setActualPayer(eRow.list.get(NameToValue_BankInput("actualPayer")));//设置实际付款人
 		
+		logger.info(NameToValue_BankInput("inMoney"));
 		Double inMoney = Double.valueOf(eRow.list.get(NameToValue_BankInput("inMoney"))).doubleValue();
 		bInput.setMoney(inMoney);//设置收款金额
 		
 		bInput.setPayer(eRow.list.get(NameToValue_BankInput("client")));//设置付款人名称
+		bInput.setCuscompanyid(eRow.list.get(NameToValue_BankInput("cuscompanyid")));//客户码
 		bInput.setPayerAccount(eRow.list.get(NameToValue_BankInput("outAccount")));//设置付款人帐号
 		bInput.setPaymentNature(eRow.list.get(NameToValue_BankInput("paymentNature")));
 		bInput.setStatus(false);
@@ -753,6 +755,7 @@ public class Excel_RW {
 		piaohao,//票号
 		inMoney,//收款金额
 		client,//法定客户名称
+		cuscompanyid,//客户码
 		paymentNature,//货款性质
 		partMoney,//拆分金额
 		remark//收款摘要

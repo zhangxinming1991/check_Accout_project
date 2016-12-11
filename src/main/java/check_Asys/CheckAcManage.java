@@ -2,6 +2,7 @@ package check_Asys;
 
 import java.io.File;
 import java.io.IOException;
+import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -35,6 +36,7 @@ import dao.Ori_BackUp_Dao;
 import dao.PayRecordCache_Dao;
 import dao.PayRecordHistory_Dao;
 import dao.PayRecord_Dao;
+import dao.ScoreIncreaseRecord_Dao;
 import dao.SendStore_Dao;
 import dao.Total_Account_Dao;
 import en_de_code.ED_Code;
@@ -47,6 +49,7 @@ import entity.OpLog;
 import entity.OriOrder;
 import entity.PayRecord;
 import entity.PayRecordHistory;
+import entity.ScoreIncreaseRecord;
 import file_op.AnyFile_Op;
 import file_op.Excel_RW;
 import file_op.AnyFile_Op.AnyFileElement;
@@ -82,6 +85,7 @@ public class CheckAcManage {
 	public static final String ENTRER_CaModel = "enter_camodel";//进入对账模式
 	public static final String CANCEL_CaAgain = "cancel_calagin";//取消并重新对账
 	public static final String FREEBACK = "freeback";//返回积分
+	public static final String HISCA = "historyca";
 	
 	public static final String SaveDirName_Orider = "OrderForms";
 	public static final String SaveDirName_BankInput = "BankinputForms";
@@ -135,9 +139,9 @@ public class CheckAcManage {
 			//Enter_CaModel(owner.work_id);
 			String who = (String) object;
 			String caid = auccount.Enter_CaModel(owner.work_id);
-			
+			JSONObject jsonObject = new JSONObject();
 			/*查找上次上传的时间和上传的结果*/
-			List<OpLog> fLogs = dao_List.opLog_Dao.FindBySpeElement_S_ByOwner("content", OpLog_Service.IMPORT, who);
+		/*	List<OpLog> fLogs = dao_List.opLog_Dao.FindBySpeElement_S_ByOwner("content", OpLog_Service.IMPORT, who);
 			
 			JSONObject jsonObject = new JSONObject();
 			if (fLogs.size() == 0) {
@@ -150,7 +154,11 @@ public class CheckAcManage {
 				String time = fLogs.get(fLogs.size() - 1).getTime();
 				String result = fLogs.get(fLogs.size() - 1).getResult();
 				String curym = new SimpleDateFormat("yyyy/MM").format(new Date());
-				if (time.contains(curym)) {
+				
+				String yearanmonth = caid.substring(0, 7);
+				String newym = yearanmonth.replace('-', '/');
+				//if (time.contains(curym)) {
+				if (time.contains(newym)) {
 					jsonObject.element("caid", caid);
 					jsonObject.element("flag", 0);
 					jsonObject.element("lastUploadResult", result);
@@ -162,17 +170,29 @@ public class CheckAcManage {
 					jsonObject.element("lastUploadResult", "本月没有上传记录");
 					jsonObject.element("lastUploadTime", "1997/00/00/_00:00:00");
 				}
-			}	
-			/*查找上次上传的时间和上传的结果*/
-			
+			}	*/
+			jsonObject = FindLastUploadTime(who,caid);
+			jsonObject.element("caid", caid);
+			jsonObject.element("flag", 0);
+			/*查找上次上传的时间和上传的结果*/	
 			re_object = jsonObject;
 		}
 		else if (operation.equals(CANCEL_CaAgain)) {
 			String caid = (String)object;
 			CancelAndCaAgain(owner.work_id,caid);
+			
+			JSONObject jsonObject = new JSONObject();
+			jsonObject = FindLastUploadTime(owner.who, caid);
+			re_object = jsonObject;
 		}
 		else if (operation.equals(FREEBACK)) {
-			FreeBackToCustom(owner.work_id);
+			FreeBackToCustom(owner.work_id,owner.who);
+		}
+		else if (operation.equals(HISCA)) {
+			String caid = (String)object;
+			JSONObject jsonObject = new JSONObject();
+			jsonObject = FindLastUploadTime(owner.who, caid);
+			re_object = jsonObject;
 		}
 		else{
 			System.out.println("unknow operation");
@@ -181,14 +201,70 @@ public class CheckAcManage {
 		return re_object;
 	}
 	
+	public JSONObject FindLastUploadTime(String who,String caid){
+		/*查找上次上传的时间和上传的结果*/
+		List<OpLog> fLogs = dao_List.opLog_Dao.FindBySpeElement_S_ByOwner("content", OpLog_Service.IMPORT, who);
+		
+		JSONObject jsonObject = new JSONObject();
+		if (fLogs.size() == 0) {
+			jsonObject.element("lastUploadResult", "没有上传记录");
+			jsonObject.element("lastUploadTime", "1997/00/00/_00:00:00");
+		}
+		else {
+			String time = fLogs.get(fLogs.size() - 1).getTime();
+			String result = fLogs.get(fLogs.size() - 1).getResult();
+			String curym = new SimpleDateFormat("yyyy/MM").format(new Date());
+			
+			String yearanmonth = caid.substring(0, 7);
+			String newym = yearanmonth.replace('-', '/');
+			//if (time.contains(curym)) {
+			if (time.contains(newym)) {
+				jsonObject.element("lastUploadResult", result);
+				jsonObject.element("lastUploadTime", time.replace('/', '-'));
+			}
+			else {
+				jsonObject.element("lastUploadResult", "本月没有上传记录");
+				jsonObject.element("lastUploadTime", "1997/00/00/_00:00:00");
+			}
+		}	
+		/*查找上次上传的时间和上传的结果*/
+		
+		return jsonObject;
+	}
+	
 	/*统一返利客户*/
-	public void FreeBackToCustom(String owner){
+	public void FreeBackToCustom(String owner,String hander){
 		List<PayRecord> pList = dao_List.pDao.GetPrecordTbByElement("owner", owner);
 		
 		for (int i = 0; i < pList.size(); i++) {
 			PayRecord pRecord = pList.get(i);
-			auccount.isFreeBack(pRecord,owner);
+			boolean freeback = auccount.isFreeBack(pRecord,owner);
+			if (freeback) {
+				/*插入积分*/
+				ScoreIncreaseRecord in_sr = new ScoreIncreaseRecord();
+				in_sr.setHander(hander);
+				
+				String connectp = pRecord.getConnPerson();
+				in_sr.setUsername(connectp);
+				
+				Date date = new Date();
+				Timestamp time = new Timestamp(date.getTime());
+				in_sr.setTime(time);
+				in_sr.setDescription("匹配通过，获得积分");
+				
+				Integer status = 2;
+				in_sr.setStatus(status.byteValue());
+				int source = ChangeMoneyTosource(pRecord.getPayMoney(),0.001);
+				in_sr.setIncreaseScore(source);
+				dao_List.sRc_Dao.add(in_sr);
+				/*插入积分*/
+			}
 		}
+	}
+	
+	/**/
+	public int ChangeMoneyTosource(Double pay_money,Double coefficient){
+		return (int) (pay_money * coefficient);
 	}
 	
 	/*进入对账模式*/
@@ -735,6 +811,7 @@ public class CheckAcManage {
 		public BInput_Backup_Dao bInput_Backup_Dao;
 		public CusSdStore_Backup_Dao cBackup_Dao;
 		public OpLog_Dao opLog_Dao;
+		public ScoreIncreaseRecord_Dao sRc_Dao;
 		
 		public Dao_List(SessionFactory wFactory){
 			  tDao = new Total_Account_Dao(wFactory); 
@@ -751,6 +828,7 @@ public class CheckAcManage {
 			  bInput_Backup_Dao = new BInput_Backup_Dao(wFactory);
 			  cBackup_Dao = new CusSdStore_Backup_Dao(wFactory);
 			  opLog_Dao = new OpLog_Dao(wFactory);
+			  sRc_Dao = new ScoreIncreaseRecord_Dao(wFactory);
 		}
 	}
 	
@@ -776,8 +854,9 @@ public class CheckAcManage {
 	}
 	
 	public class Owner{
-		public String work_id;
+		public String work_id;//代理商id
 		public String user_type;
+		public String who;//用户名
 		public Owner() {
 	}
 		// TODO Auto-generated constructor stub

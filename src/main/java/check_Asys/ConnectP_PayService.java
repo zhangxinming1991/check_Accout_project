@@ -60,7 +60,7 @@ public class ConnectP_PayService {
 	 * @param fileName 凭证保存的文件名
 	 * @author zhangxinming
 	 */
-	public void Upload_Pay(PayRecordCache pRecord,MultipartFile mfile,String savedir,String fileName){
+	public boolean Upload_Pay(PayRecordCache pRecord,MultipartFile mfile,String savedir,String fileName){
 		
 		if (mfile != null) {
 			AnyFile_Op aOp= new AnyFile_Op();
@@ -72,13 +72,25 @@ public class ConnectP_PayService {
 			aOp.CreateDir(aElement.dirname);
 			File upload_file = aOp.CreateFile(aElement.dirname, aElement.filename);
 			byte read_b[] = aOp.ReadFile(mfile);
-			aOp.WriteFile(aElement, read_b, upload_file);
+			if (read_b == null) {
+				return false;
+			}
+			boolean wresult = aOp.WriteFile(aElement, read_b, upload_file);
+			if (wresult == false) {
+				return false;
+			}
 			/*读取并保存文件*/	
 		}
 		
 		pRecord.setPass(false);
 		pRecord.setLinkCer("/check_Accout/" + "付款记录/" + pRecord.getOwner() + "/" + pRecord.getPayer() + "/" + fileName);
-		pCDao.add(pRecord);
+		boolean aresult = pCDao.add(pRecord);
+		if (aresult == false) {
+			return false;
+		}
+		else {
+			return true;
+		}
 	}
 	
 	public void Save_UploadPicture(MultipartFile mfile,String savedir,String fileName){

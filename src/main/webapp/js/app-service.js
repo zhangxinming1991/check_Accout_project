@@ -54,6 +54,7 @@ app.factory('HttpReqService', ['$http', '$q', function (http, Q) {
                 // console.debug('Decrypted:', resPkg.data);
                 resPkg.data = resPkg === undefined ? undefined : JSON.parse(resPkg.data);
                 var resbody = resPkg.data;
+                console.debug('req recvd(json) Decrypted:', resbody);
                 if (isOkResBody(resbody)) {
                     (function preExtractData(resbody) {
                         if ($.isArray(resbody.data) && !resbody.items) {
@@ -68,7 +69,7 @@ app.factory('HttpReqService', ['$http', '$q', function (http, Q) {
 
                     var ret = okfnc && okfnc(resbody);
                     if (!ret) {
-                        console.warn('no return value???');
+                        console.debug('okfnc no return value???');
                         // ret = resbody.items ? resbody : resbody.data;
                     }
 
@@ -597,26 +598,35 @@ app.factory('ChkRsltSvc', ['HttpReqService', '$rootScope', function (Req, rootsg
     svc.caid = svc.caid || sessionStorage.getItem('caid');
     rootsgop.caid = svc.caid;
 
+//*******//
+//     2016-12-11
+
+    if(!rootsgop.lastUpload){
+        // 浏览器刷新？？
+        var str = sessionStorage.getItem(lastUploadInfoKey);
+        rootsgop.lastUpload =  {};
+        $.extend(rootsgop.lastUpload, str ? JSON.parse(str) : {});
+        console.info(rootsgop.lastUpload)
+    }
+    function setLastUploadInfo(lastUploadInfo) {
+        rootsgop.lastUpload = rootsgop.lastUpload || {};//保证.lastUpload字段非undefined，$.extend不会在rootsgop增加字段
+        $.extend(rootsgop.lastUpload, lastUploadInfo);
+        sessionStorage.setItem(lastUploadInfoKey, JSON.stringify(rootsgop.lastUpload));
+    }
+    //*******//
 
 // 对账操作环境准备
     svc.initCheckingEnv = function () {
         return Req.req(ReqUrl.prepareChkEnv, {}, function (resbody) {
             svc.caid = resbody.caid || resbody.data && resbody.data.caid;
-            var obj = {
-                caid: svc.caid
-                , lastUpload: {
+            var lastUpload = {
                     time: resbody.lastUploadTime || resbody.data && resbody.data.lastUploadTime
                     , result: resbody.lastUploadResult || resbody.data && resbody.data.lastUploadResult
-                }
             };
-            //*******//
-            rootsgop.lastUpload = rootsgop.lastUpload || {};//保证.lastUpload字段非undefined，否则extend无效
-            $.extend(rootsgop.lastUpload, obj);
-            sessionStorage.setItem(lastUploadInfoKey, JSON.stringify(obj));
-            //*******//
+            setLastUploadInfo(lastUpload);
             sessionStorage.setItem('caid', svc.caid);
             rootsgop.caid = svc.caid;
-            return obj;
+            return {caid:svc.caid};
         });
     };
 
@@ -632,7 +642,16 @@ app.factory('ChkRsltSvc', ['HttpReqService', '$rootScope', function (Req, rootsg
         var thisDate = new Date();
         var year = thisDate.getFullYear();
         var month = thisDate.getMonth() + 1;
-        return Req.req(ReqUrl.reCheck, {caid: svc.caid, year: year, month: month});
+        return Req.req(ReqUrl.reCheck, {caid: svc.caid, year: year, month: month},function (resbody) {
+            // 2016-12-11
+            var lastUpload={
+                time:resbody.lastUploadTime,
+                result:resbody.lastUploadResult
+            };
+            setLastUploadInfo(lastUpload);
+
+            return resbody.data;
+        });
     };
 
     // 历史对账操作
@@ -642,6 +661,14 @@ app.factory('ChkRsltSvc', ['HttpReqService', '$rootScope', function (Req, rootsg
             svc.caid = caid;
             sessionStorage.setItem('caid', svc.caid);
             rootsgop.caid = svc.caid;
+
+            // 2016-12-11
+            var lastUpload={
+                time:resbody.lastUploadTime,
+                result:resbody.lastUploadResult
+            };
+            setLastUploadInfo(lastUpload);
+
             return caid;
         });
     };

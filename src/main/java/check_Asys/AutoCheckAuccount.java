@@ -86,9 +86,11 @@ public class AutoCheckAuccount {
 				
 				payRecord.setFreeback(true);
 				pDao.update(payRecord);
+				return true;
 			}
-			return true;
-
+			else {
+				return false;
+			}
 		}
 	}
 	
@@ -288,6 +290,7 @@ public class AutoCheckAuccount {
 				re_object.element("errmsg", "客户公司id为null");
 				return re_object;
 			}
+			logger.info(cuscompanyid + ":" + paymentNature);
 			fOrder = tDao.findById(OriOrder.class, new OriOrderId(cuscompanyid, paymentNature));
 			if (fOrder == null || fOrder.getOwner().equals(owner) == false) {
 		//		logger.info(fOrder.getOwner() + ":" + owner);
@@ -346,7 +349,7 @@ public class AutoCheckAuccount {
 		boolean connectResult = false;
 
 		logger.info(cInput.getPayer());
-	//	fOrder = tDao.FindByClient(cInput.getPayer()).get(0);
+		fOrder = tDao.FindByClient(cInput.getPayer()).get(0);
 		String cuscompanyid = cInput.getCuscompanyid();
 
 		/*绑定需要完成的业务功能*/
@@ -371,7 +374,7 @@ public class AutoCheckAuccount {
 		if (connectResult == true) {
 			cInput.setConnectNum(cInput.getConnectNum() + 1);
 			JSONObject jObject = new JSONObject();
-			jObject.put("contract", fOrder.getOrderNum());
+			jObject.put("contract", fOrder.getId().getPaymentNature());
 			jObject.put("money", cInput.getMoney());
 			JSONArray jArray = new JSONArray();
 			jArray.add(jObject);
@@ -418,7 +421,8 @@ public class AutoCheckAuccount {
 		if (fcustom == null) {//客户表中不存在客户信息，则新建用户
 			fcustom = new CusSecondstore();
 			
-			contract_mes.put("contract", order.getOrderNum());
+	//		contract_mes.put("contract", order.getOrderNum());
+			contract_mes.put("contract", order.getId().getPaymentNature());
 			contract_mes.put("debt", order.getDebt());
 			acontract_mes.add(contract_mes);
 			
@@ -439,7 +443,7 @@ public class AutoCheckAuccount {
 				acontract_mes = JSONArray.fromObject(fcustom.getContractMes());
 			}
 			
-			contract_mes.put("contract", order.getOrderNum());
+			contract_mes.put("contract", order.getId().getPaymentNature());
 			contract_mes.put("debt", order.getDebt());
 			acontract_mes.add(contract_mes);//插入新的合同
 			
@@ -527,14 +531,22 @@ public class AutoCheckAuccount {
 			logger.info("开始新月份的对账");
 			
 			/*查找上次对账id,重置为false*/
-			CaresultHistory fHLast = cDao.FindBySpeElement("lastcaid", true, owner).get(0);//查找瓶颈
-			if (fCrHistories == null) {
+			List<CaresultHistory> fList = cDao.FindBySpeElement("lastcaid", true, owner);
+			if (fList.isEmpty()) {
+				logger.info("第一次使用系统");
+			}
+			else{
+				CaresultHistory fHLast = fList.get(0);
+				if (fCrHistories == null) {
 				logger_error.error("上次对账caid不存在");
+				}
+				else {
+					fHLast.setLastcaid(false);//将上次对账的lastcaid设为false
+					cDao.update(fHLast);
+				}
 			}
-			else {
-				fHLast.setLastcaid(false);//将上次对账的lastcaid设为false
-				cDao.update(fHLast);
-			}
+			//CaresultHistory fHLast = cDao.FindBySpeElement("lastcaid", true, owner).get(0);//查找瓶颈
+
 			/*查找上次对账id,重置为false*/
 			
 			CaresultHistory in_crhistory = new CaresultHistory();//记录的状态为进行中
@@ -670,7 +682,7 @@ public class AutoCheckAuccount {
 			fOrder.setInput(input);
 			fOrder.setDebt(debet);
 			fOrder.setUpdateTime(null);
-//			fOrder.setConnectBank(null);
+			fOrder.setConnectBank(null);
 			tDao.update(fOrder);
 		}
 	}
@@ -697,7 +709,7 @@ public class AutoCheckAuccount {
 		List<CusSecondstore> cList = sDao.FindBySpeElement_Big("input", 0d, owner);
 		
 		for (int i = 0; i < cList.size(); i++) {
-			CusSecondstore custom = cList.get(0);
+			CusSecondstore custom = cList.get(i);
 			custom.setInput(0d);
 			custom.setUpdateTime(null);
 			sDao.update(custom);
@@ -968,11 +980,32 @@ public class AutoCheckAuccount {
 		logger.info("进入取消并重新对账处理");
 		
 //		TransferPrecord_CAreaToWArea(owner, caid);//根据对账id从付款缓冲中取记录
-		
-		CaresultHistory cHistory = (CaresultHistory) cDao.FindBySpeElement("caid", caid, owner).get(0);//根据对账id找到相应的对账结果记录
-		cHistory.setCaresult('D');//修改对账结果记录的结果字段为F
-		cDao.update(cHistory);
-		
+		List<CaresultHistory> cList = cDao.FindBySpeElement("caid", caid, owner);
+		if (cList.isEmpty()) {
+			logger.info("对账历史中不存在该月的对账记录");
+			CaresultHistory in_crhistory = new CaresultHistory();//记录的状态为进行中
+			in_crhistory.setCaid(caid);
+			String dateys = caid.substring(0, 4);
+			String datems = caid.substring(5, 7);
+			logger.info(dateys + ":" + datems);
+			in_crhistory.setCayear(dateys);
+			in_crhistory.setCamonth(datems);
+			in_crhistory.setOwner(owner);
+			in_crhistory.setCaresult('D');
+			in_crhistory.setLastcaid(true);
+			cDao.add(in_crhistory);
+		}
+		else{
+			CaresultHistory cHistory = cList.get(0);
+			if (cHistory != null) {
+				cHistory.setCaresult('D');//修改对账结果记录的结果字段为F
+				cDao.update(cHistory);				
+			}
+			else {
+				logger_error.info("cHistory 为空");
+			}
+		}
+	
 		ResetOrider(owner);//重设货款表信息
 		ResetBinputs(owner);//重设出纳信息
 		ResetCustom(owner);//重设客户信息

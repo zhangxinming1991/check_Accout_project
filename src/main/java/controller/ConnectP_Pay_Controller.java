@@ -303,11 +303,19 @@ public class ConnectP_Pay_Controller {
 			
 		}
 		
-		cps.Upload_Pay(ipayRecord,null,savedir,newfilename);
+		boolean flag = cps.Upload_Pay(ipayRecord,null,savedir,newfilename);
 		
-		re_jsonobject.element("flag", 0);
-		re_jsonobject.element("errmsg", "上传成功");
-		oLog_Service.AddLog(OpLog_Service.utype_cp, username, OpLog_Service.Upload_Pay_Wexin, OpLog_Service.result_success);
+		if (flag == true) {
+			re_jsonobject.element("flag", 0);
+			re_jsonobject.element("errmsg", "上传成功");
+			oLog_Service.AddLog(OpLog_Service.utype_cp, username, OpLog_Service.Upload_Pay_Wexin, OpLog_Service.result_success);			
+		}
+		else {
+			re_jsonobject.element("flag", -1);
+			re_jsonobject.element("errmsg", "上传失败");
+			oLog_Service.AddLog(OpLog_Service.utype_cp, username, OpLog_Service.Upload_Pay_Wexin, OpLog_Service.result_failed);			
+		}
+		
 		Common_return(response,re_jsonobject);
 		return;
 	}

@@ -678,7 +678,6 @@ public class PMController {
 	//	Signout_return(response);
 
 	}
-	
 
 	/**
 	 * Asssistance_login 代理商财务登录
@@ -767,8 +766,7 @@ public class PMController {
 			}
         }  	
     }
-    
-    
+        
     /**
      * Assistance_register 财务人员注册
      * @category 代理商财务人员注册接口
@@ -1300,6 +1298,42 @@ public class PMController {
 					}
 					else if (agentid.equals("jx0001")) {
 						userJ.element("agentname", "江西代理商(jx0001)");
+					}
+					else if (agentid.equals("bj0001")) {
+						userJ.element("agentname", "北京/天津代理商(bj0001)");
+					}
+					else if (agentid.equals("cq0001")) {
+						userJ.element("agentname", "重庆代理商(cq0001)");
+					}
+					else if (agentid.equals("nm0001")) {
+						userJ.element("agentname", "内蒙古代理商(nm0001)");
+					}
+					else if (agentid.equals("hn0001")) {
+						userJ.element("agentname", "湖南代理商(hn0001)");
+					}
+					else if (agentid.equals("js0001")) {
+						userJ.element("agentname", "江苏代理商(js0001)");
+					}
+					else if (agentid.equals("gz0001")) {
+						userJ.element("agentname", "贵州代理商(gz0001)");
+					}
+					else if (agentid.equals("ln0001")) {
+						userJ.element("agentname", "辽宁代理商(ln0001)");
+					}
+					else if (agentid.equals("hainan0001")) {
+						userJ.element("agentname", "海南代理商(hainan0001)");
+					}
+					else if (agentid.equals("hebei0001")) {
+						userJ.element("agentname", "河北代理商(hebei0001)");
+					}
+					else if (agentid.equals("hl0001")) {
+						userJ.element("agentname", "黑龙江代理商(hl0001)");
+					}
+					else if (agentid.equals("xj0001")) {
+						userJ.element("agentname", "新疆代理商(xj0001)");
+					}
+					else if (agentid.equals("gs0001")) {
+						userJ.element("agentname", "甘肃代理商(gs0001)");
 					}
 					else{
 						userJ.element("agentname", "未知代理商");

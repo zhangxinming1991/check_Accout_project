@@ -12,7 +12,7 @@ import entity.Backup;
 
 public class BackUp_Dao {
 	private static Logger logger = LogManager.getLogger(BackUp_Dao.class);
-	
+	private static Logger logger_error = LogManager.getLogger("error");
 	protected SessionFactory sessionFactory;
 	protected Session session;
 	protected Transaction transaction;
@@ -27,7 +27,7 @@ public class BackUp_Dao {
 				transaction = session.beginTransaction();
 		} catch (RuntimeException e) {
 			// TODO: handle exception
-			logger.error("beginTransaction failed:" + e);
+			logger_error.error("beginTransaction failed:" + e);
 		}
 
 	}
@@ -41,11 +41,12 @@ public class BackUp_Dao {
 		try {
 			beginTransaction();
 			session.save(in_backup);
-			endTransaction();	
+			endTransaction();
+			logger.info("添加日志成功");
 			return true;
 		} catch (RuntimeException e) {
 			// TODO: handle exception
-			logger.error("添加备份sql记录" +in_backup.getId()+ "失败" + e);
+			logger_error.error("添加备份sql记录" +in_backup.getId()+ "失败" + e);
 			return false;
 		}
 	}
@@ -57,7 +58,7 @@ public class BackUp_Dao {
 			endTransaction();			
 		} catch (RuntimeException e) {
 			// TODO: handle exception
-			logger.error("删除备份sql" + de_backup.getId() + "失败" + e);
+			logger_error.error("删除备份sql" + de_backup.getId() + "失败" + e);
 		}
 	}
 	
@@ -69,7 +70,7 @@ public class BackUp_Dao {
 			return find_backup;	
 		} catch (RuntimeException e) {
 			// TODO: handle exception
-			logger.error("根据id" + "=" + id + "查找备份sql记录失败" + e);
+			logger_error.error("根据id" + "=" + id + "查找备份sql记录失败" + e);
 			return null;
 		}
 	}
@@ -84,7 +85,7 @@ public class BackUp_Dao {
 			return backups;
 		} catch (RuntimeException e) {
 			// TODO: handle exception
-			logger.error("查找整张Backup表失败" + e);
+			logger_error.error("查找整张Backup表失败" + e);
 			return null;
 		}
 

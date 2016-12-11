@@ -56,14 +56,16 @@ public class PayRecordCache_Dao {
 		}
 	}
 	
-	public void add(PayRecordCache in_pR){
+	public boolean add(PayRecordCache in_pR){
 		try {
 			beginTransaction();
 			session.save(in_pR);
-			endTransaction();	
+			endTransaction();
+			return true;
 		} catch (RuntimeException e) {
 			// TODO: handle exception
 			logger.error("≤Â»Î ß∞‹" + e);
+			return false;
 			//System.out.println("save failed");
 		}
 	}
