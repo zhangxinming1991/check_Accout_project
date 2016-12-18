@@ -50,6 +50,7 @@ import dao.Assistance_Dao;
 import dao.ConnectPerson_Dao;
 import en_de_code.ED_Code;
 import encrypt_decrpt.AES;
+import encrypt_decrpt.CreateMD5;
 import entity.Assistance;
 import entity.Backup;
 import entity.ConnectPerson;
@@ -254,7 +255,8 @@ public class PMController {
 			return;
 		}
 		
-		fAssistance.setPassword(pwd);
+		String md5_pwd = CreateMD5.getMd5(pwd);
+		fAssistance.setPassword(md5_pwd);
 		fAssistance.setResetId("****");
 		pManage.aS_Dao.update(fAssistance);
 		

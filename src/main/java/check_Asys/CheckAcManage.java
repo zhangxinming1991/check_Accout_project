@@ -18,6 +18,7 @@ import org.apache.logging.log4j.Logger;
 import org.apache.xmlbeans.impl.xb.xsdschema.Public;
 import org.hibernate.SessionFactory;
 import org.springframework.web.multipart.MultipartFile;
+import org.w3c.dom.css.ElementCSSInlineStyle;
 
 import com.sun.org.apache.bcel.internal.generic.GOTO;
 import com.sun.org.apache.regexp.internal.recompile;
@@ -25,9 +26,11 @@ import com.sun.org.apache.xml.internal.resolver.helpers.PublicId;
 
 import check_Asys.CheckAcManage.Watch_Object;
 import dao.Agent_Dao;
+import dao.AllPayRecord_Dao;
 import dao.Assistance_Dao;
 import dao.BInput_Backup_Dao;
 import dao.BankInput_Dao;
+import dao.BankInput_His_Dao;
 import dao.CaresultHistory_Dao;
 import dao.ConnectPerson_Dao;
 import dao.CusSdStore_Backup_Dao;
@@ -96,7 +99,11 @@ public class CheckAcManage {
 	public CheckAcManage(SessionFactory wFactory) {
 		// TODO Auto-generated constructor stub
 		  dao_List = new Dao_List(wFactory);
-		  auccount = new AutoCheckAuccount(dao_List.bDao,dao_List.pDao,dao_List.tDao,dao_List.sDao,dao_List.pHDao,dao_List.cDao,dao_List.pCDao,dao_List.cPerson_Dao,dao_List.oUp_Dao,dao_List.bInput_Backup_Dao,dao_List.agent_Dao,dao_List.cBackup_Dao);
+		  auccount = new AutoCheckAuccount(dao_List.bDao,dao_List.pDao,dao_List.tDao,dao_List.sDao
+				  ,dao_List.pHDao,dao_List.cDao,dao_List.pCDao
+				  ,dao_List.cPerson_Dao,dao_List.oUp_Dao
+				  ,dao_List.bInput_Backup_Dao,dao_List.agent_Dao
+				  ,dao_List.cBackup_Dao,dao_List.bHis_Dao);
 		  cARseult = new CheckARseult(dao_List);
 		  formProduce = new FormProduce(wFactory, dao_List,cARseult);
 	}
@@ -137,8 +144,9 @@ public class CheckAcManage {
 		}
 		else if (operation.equals(ENTRER_CaModel)) {
 			//Enter_CaModel(owner.work_id);
-			String who = (String) object;
-			String caid = auccount.Enter_CaModel(owner.work_id);
+			Import_Object import_Object = (Import_Object) object;
+			String who = owner.who;
+			String caid = auccount.Enter_CaModel(owner.work_id,import_Object.savepath,import_Object.filename);
 			JSONObject jsonObject = new JSONObject();
 			/*查找上次上传的时间和上传的结果*/
 		/*	List<OpLog> fLogs = dao_List.opLog_Dao.FindBySpeElement_S_ByOwner("content", OpLog_Service.IMPORT, who);
@@ -269,7 +277,7 @@ public class CheckAcManage {
 	
 	/*进入对账模式*/
 	public void Enter_CaModel(String owner){
-		auccount.Enter_CaModel(owner);
+		//auccount.Enter_CaModel(owner);
 	}
 	
 	/**
@@ -293,7 +301,7 @@ public class CheckAcManage {
 		else {//历史对账
 			if (import_type == 'A') {
 				dao_List.tDao.DeleteOoriderByElement("owner", owner);
-				dao_List.sDao.DeleteTbByElement("owner", owner);
+				dao_List.sDao.DeleteTbByElement("owner", owner);//清除现有的客户表中的信息
 			}
 			else if (import_type == 'B') {
 				dao_List.bDao.DeleteBinputTbByElement("owner", owner);
@@ -404,7 +412,15 @@ public class CheckAcManage {
 				
 				order.setConnectBank(null);
 				dao_List.tDao.add(order);
-				auccount.ConnectAccountWithCustom(order);  //添加或者刷新客户合同信息
+				
+				/*货款记录的客户类型为公司主体时，才会被录入客户表中*/
+				String clientname = order.getClient();
+				int len = clientname.length();
+				if ((clientname.contains("公司") || clientname.contains("有限公司")) && (len > 3)) {
+					logger.info(clientname + "符合公司类型，将被录入客户表");
+					auccount.ConnectAccountWithCustom(order);  //添加或者刷新客户合同信息
+				}
+				/*货款记录的客户类型为公司主体时，才会被录入客户表中*/
 			}
 			/*写入数据库*/
 			re_js.element("flag", 0);
@@ -427,11 +443,13 @@ public class CheckAcManage {
 			/*解析excel文件*/
 			
 			/*写入数据库*/
-			int offsetid = dao_List.bDao.GetMaxID();
+		//	int offsetid = dao_List.bDao.GetMaxID();
+			int offsetid = GetMaxId_InBinputCWH();
 			for (int i = 0; i < bankInputs.size(); i++) {
 				BankInput bankInput = bankInputs.get(i);
 				offsetid = offsetid + 1;
 				bankInput.setId(offsetid);
+				bankInput.setCaid(caid);
 				dao_List.bDao.add(bankInput);
 				auccount.ConnectBankinputWithCustom(bankInput);//获取客户的合同信息
 			}
@@ -440,12 +458,66 @@ public class CheckAcManage {
 			re_js.element("errmsg", "导入出纳表成功");
 			return re_js;
 		}
+		else if (import_type == 'I') {//增量式上传出纳记录
+			logger.info("import bank incre");
+			/*解析excel文件*/
+			Excel_RW excel_RW = new Excel_RW();//解析excel内容
+			ArrayList<Excel_Row> totalA_table = null;
+			try {
+				totalA_table = excel_RW.ReadExcel_Table(rfile.getInputStream());
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			ArrayList<BankInput> bankInputs = excel_RW.Table_To_Ob_BankIn(totalA_table,owner);
+			/*解析excel文件*/
+			
+			int offsetid = GetMaxId_InBinputCWH();
+			for (int i = 0; i < bankInputs.size(); i++) {
+				BankInput bankInput = bankInputs.get(i);
+				offsetid = offsetid + 1;
+				bankInput.setId(offsetid);
+				bankInput.setCaid(caid);
+				dao_List.bDao.add(bankInput);
+				auccount.ConnectBankinputWithCustom(bankInput);//获取客户的合同信息
+			}
+			/*写入数据库*/
+			re_js.element("flag", 0);
+			re_js.element("errmsg", "增量式上传出纳表成功");
+			return re_js;
+		}
 		else {
 			logger.info("[Import]:unknow import");
 			re_js.element("flag", -1);
 			re_js.element("errmsg", "未知导入类型");
 			return re_js;
 		}
+	}
+	
+	/**
+	 * GetMaxId_InPayCWH：获取付款记录三个区中的最大id记录的信息
+	 * @return
+	 */
+	public int GetMaxId_InBinputCWH(){
+		int maxid_c = -1;
+		int maxid_w = -1;
+		int maxid_h = -1;
+		int maxid = -1;
+		
+		maxid_c = dao_List.bInput_Backup_Dao.GetMaxID();
+		maxid_w = dao_List.bDao.GetMaxID();
+		maxid_h = dao_List.bHis_Dao.GetMaxID();
+		
+		if (maxid_w > maxid_c) {
+			maxid = maxid_w;
+		}
+		else {
+			maxid = maxid_c;
+		}
+		if (maxid_h > maxid) {
+			maxid = maxid_h;
+		}
+		return maxid;
 	}
 	
 	/*导出对账结果*/
@@ -465,6 +537,7 @@ public class CheckAcManage {
 				/*根据不同的用户类型获取不同的订单数据*/
 					if (owner.user_type.equals("bu")) {//对账人员
 						//list = dao_List.pDao.FindBySpeElement_S("owner", owner.work_id);
+						logger.info(offset);
 						list = dao_List.pDao.FindBySpeElement_S_Page("owner", owner.work_id, offset, pagesize);
 						num = dao_List.pDao.GetPayTb_Num_ByElement("owner", owner.work_id);
 					}
@@ -528,7 +601,9 @@ public class CheckAcManage {
 			}
 			else if(location.table_name.equals(CheckAcManage.RES_PAYCACHE)){
 				logger.info("查看预付款记录历史" + "owner=" + owner.work_id);
-				list = dao_List.pCDao.GetPayRecordsTb(owner.work_id);
+			//	list = dao_List.pCDao.GetPayRecordsTb(owner.work_id);
+				list = dao_List.allPayRecord_Dao.FindBySpeElement_S_Page("owner", owner.work_id, offset, pagesize);
+				num = dao_List.allPayRecord_Dao.GetPayTb_Num_ByElement("owner", owner.work_id);
 				logger.info(list.size());
 			}
 			else {
@@ -572,6 +647,15 @@ public class CheckAcManage {
 			
 			resultMapp = new ArrayList<BankInput>();
 			resultMapp.add(0, bInput);	
+			
+			ConnectPerson fPerson = dao_List.cPerson_Dao.findById(ConnectPerson.class, pRecord.getConnPerson());
+			if (fPerson != null) {
+				bInput.setCuscompanyid(fPerson.getCompanyid());
+				dao_List.bDao.update(bInput);
+			}
+			else {
+				logger_error.error("找不到对账联系人[" + pRecord.getConnPerson() + "]");
+			}
 		}
 		else if (map_Object.map_opString.equals("cancel_map")) {
 			auccount.CancelConnectBkAndPay(map_Object.pay_id, map_Object.bank_id);
@@ -618,7 +702,7 @@ public class CheckAcManage {
 					logger.info("使用合同号去关联出纳" + bInput.getPayer());
 					jmesg = auccount.ConnectBankWithAccount(bInput,owner);
 					if ((int)jmesg.get("flag") == -1) {
-						logger.info("使用合同号去关联出纳" + bInput.getPayer() + "失败");
+						logger.info("使用客户id及货款性质去关联出纳" + bInput.getPayer() + "失败");
 					}
 				}
 				
@@ -812,6 +896,8 @@ public class CheckAcManage {
 		public CusSdStore_Backup_Dao cBackup_Dao;
 		public OpLog_Dao opLog_Dao;
 		public ScoreIncreaseRecord_Dao sRc_Dao;
+		public AllPayRecord_Dao allPayRecord_Dao;
+		public BankInput_His_Dao bHis_Dao;
 		
 		public Dao_List(SessionFactory wFactory){
 			  tDao = new Total_Account_Dao(wFactory); 
@@ -829,6 +915,8 @@ public class CheckAcManage {
 			  cBackup_Dao = new CusSdStore_Backup_Dao(wFactory);
 			  opLog_Dao = new OpLog_Dao(wFactory);
 			  sRc_Dao = new ScoreIncreaseRecord_Dao(wFactory);
+			  allPayRecord_Dao = new AllPayRecord_Dao(wFactory);
+			  bHis_Dao = new BankInput_His_Dao(wFactory);
 		}
 	}
 	

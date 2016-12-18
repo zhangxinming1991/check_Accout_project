@@ -21,6 +21,7 @@ import com.sun.org.apache.xml.internal.resolver.helpers.PublicId;
 import dao.Agent_Dao;
 import dao.BInput_Backup_Dao;
 import dao.BankInput_Dao;
+import dao.BankInput_His_Dao;
 import dao.CaresultHistory_Dao;
 import dao.ConnectPerson_Dao;
 import dao.CusSdStore_Backup_Dao;
@@ -33,6 +34,7 @@ import dao.Total_Account_Dao;
 import entity.Agent;
 import entity.BankInput;
 import entity.BankInputBackup;
+import entity.BankInputHistory;
 import entity.CaresultHistory;
 import entity.ConnectPerson;
 import entity.CusSdstoreBackup;
@@ -69,6 +71,7 @@ public class AutoCheckAuccount {
 	BInput_Backup_Dao bInput_Backup_Dao = null;
 	Agent_Dao agent_Dao = null;
 	CusSdStore_Backup_Dao cBackup_Dao = null;
+	BankInput_His_Dao bHis_Dao = null;
 	
 	public boolean isFreeBack(PayRecord payRecord,String owner){
 		if (payRecord.getFreeback() == true) {
@@ -94,7 +97,7 @@ public class AutoCheckAuccount {
 		}
 	}
 	
-	public AutoCheckAuccount(BankInput_Dao bDao,PayRecord_Dao pDao,	Total_Account_Dao tDao,SendStore_Dao sDao,PayRecordHistory_Dao pHDao,CaresultHistory_Dao cDao,PayRecordCache_Dao pCDao,ConnectPerson_Dao cPerson_Dao,Ori_BackUp_Dao oUp_Dao,BInput_Backup_Dao bInput_Backup_Dao,Agent_Dao agent_Dao,CusSdStore_Backup_Dao cBackup_Dao) {
+	public AutoCheckAuccount(BankInput_Dao bDao,PayRecord_Dao pDao,	Total_Account_Dao tDao,SendStore_Dao sDao,PayRecordHistory_Dao pHDao,CaresultHistory_Dao cDao,PayRecordCache_Dao pCDao,ConnectPerson_Dao cPerson_Dao,Ori_BackUp_Dao oUp_Dao,BInput_Backup_Dao bInput_Backup_Dao,Agent_Dao agent_Dao,CusSdStore_Backup_Dao cBackup_Dao,BankInput_His_Dao bHis_Dao) {
 		this.bDao = bDao;
 		this.pDao = pDao;
 		this.tDao = tDao;
@@ -107,6 +110,7 @@ public class AutoCheckAuccount {
 		this.bInput_Backup_Dao = bInput_Backup_Dao;
 		this.agent_Dao = agent_Dao;
 		this.cBackup_Dao = cBackup_Dao;
+		this.bHis_Dao = bHis_Dao;
 	}
 
 	/**
@@ -506,13 +510,12 @@ public class AutoCheckAuccount {
 		return caid;
 	}
 	
-
 	/**
 	 * Enter_CaModel 进入对账模式
 	 * @param owner
 	 * @return
 	 */
-	public String Enter_CaModel(String owner){
+	public String Enter_CaModel(String owner,String savedirA,String filenameA){
 		logger.info("进入对账模式");
 		
 		//生成新的对账id
@@ -564,6 +567,8 @@ public class AutoCheckAuccount {
 			TransferPrecord_CAreaToHArea(owner,caid);
 			//从付款缓冲区取付款记录
 			TransferPrecord_CAreaToWArea(owner,caid);
+			//将出纳工作区的记录转移到历史区
+			TransferBinput_WareaToHistory(owner);
 		}
 		else{
 			//List<PayRecord> fpList = pDao.FindBySpeElement_S_limit("caid", caid);
@@ -578,10 +583,77 @@ public class AutoCheckAuccount {
 				
 				//清空货款表和出纳表信息
 				tDao.DeleteOoriderByElement("owner", owner);
-				bDao.DeleteBinputTbByElement("owner", owner);
+				
+				//将工作区的记录转移到历史区
+				TransferBinput_WareaToHistory(owner);
+				
 				//从backup区重新载入货款记录和出纳记录
-				TransferOri_BackupToWarea(owner);
-				TransferBinput_BackupToWarea(owner);
+			//	TransferOri_BackupToWarea(owner);
+				File fileA = new File(savedirA + "/" + filenameA);
+				if (!fileA.exists()) {
+					logger.warn("货款表" + filenameA + "不存在，请重新导入");
+				}
+				else{
+					//ResetCustomToCaDuring(owner);//重置客户表
+					
+					Excel_RW excel_RW = new Excel_RW();//解析excel内容
+					InputStream inputStream = null;
+					try {
+						inputStream = new FileInputStream(new File(savedirA + "/" + filenameA));
+					} catch (FileNotFoundException e) {
+						// TODO Auto-generated catch block
+						logger_error.error("读取货款表出错：" + e);
+						e.printStackTrace();
+					}
+					ArrayList<Excel_Row> totalA_table = excel_RW.ReadExcel_Table(inputStream);
+			
+					Agent fagent = agent_Dao.findById(Agent.class, owner);
+					JSONObject jsonObject = excel_RW.Table_To_Ob_OriOrders(totalA_table,fagent);//将excel表转换成对象
+					
+					OriOrder[] in_orders = (OriOrder[]) JSONArray.toArray(jsonObject.getJSONArray("orders"), OriOrder.class);
+					/*解析excel表内容*/
+					
+					/*写入数据库*/
+					for (OriOrder order:in_orders) {
+
+						
+						/*填补对账联系人信息*/
+						List<ConnectPerson> fPersons = cPerson_Dao.FindBySpeElement("companyid", order.getId().getCuscompanyid(), owner);
+						if (fPersons.isEmpty() !=  true) {
+							order.setCustomname(fPersons.get(0).getRealName());
+							order.setCustomphone(fPersons.get(0).getPhone());
+							order.setCustomweixin(fPersons.get(0).getWeixin());
+						}
+						/*填补对账联系人信息*/
+						
+						/*填补代理商财务信息*/
+						Agent agent = agent_Dao.findById(Agent.class, owner);
+						order.setAsname(agent.getAgentConnectpname());
+						order.setAsphone(agent.getAgentCpphone());
+						order.setAsemail(agent.getAgentCpemail());
+						/*填补代理商财务信息*/
+						
+						order.setConnectBank(null);
+						tDao.add(order);
+					//	ConnectAccountWithCustom(order);
+						
+						/*货款记录的客户类型为公司主体时，才会被录入客户表中*/
+						String clientname = order.getClient();
+						int len = clientname.length();
+						if ((clientname.contains("公司") || clientname.contains("有限公司")) && (len > 3)) {
+							logger.info(clientname + "符合公司类型，将被录入客户表");
+							ConnectAccountWithCustom(order);  //添加或者刷新客户合同信息
+						}
+						/*货款记录的客户类型为公司主体时，才会被录入客户表中*/
+						
+					}
+					/*写入数据库*/
+				}
+				
+				//TransferBinput_BackupToWarea(owner);
+				//将本月的记录转于到工作区，将历史记录转移到历史区
+				TransferBinput_BackupToWarea_AND(owner,caid);
+				TransferBinput_BackupToHisarea(owner);
 				
 				//将付款缓冲区的记录转于到付款区
 				TransferPrecord_CAreaToWArea(owner,caid);
@@ -853,7 +925,7 @@ public class AutoCheckAuccount {
 	}
 	
 	/**
-	 * TransferBinput_BackupToWarea 转移出纳备份区的记录到工作区
+	 * TransferBinput_BackupToWarea 转移出纳备份区的=owner记录到工作区
 	 * @param owner
 	 */
 	public void TransferBinput_BackupToWarea(String owner){
@@ -871,10 +943,64 @@ public class AutoCheckAuccount {
 			bInput.setManyContract(bInputBackups.get(i).getManyContract());
 			bInput.setConnectClient(bInputBackups.get(i).getConnectClient());
 			bInput.setId(bInputBackups.get(i).getId());
+			bInput.setCuscompanyid(bInputBackups.get(i).getCuscompanyid());
 			bDao.add(bInput);
 		}
 		
 		bInput_Backup_Dao.DeleteBInputBupByElement("owner", owner);//删除出纳备份区的记录，实现转移
+	}
+	
+	/**
+	 * TransferBinput_BackupToHisarea 转移出纳备份区的=owner记录到历史区
+	 * @param owner
+	 */
+	public void TransferBinput_BackupToHisarea(String owner){
+		List<BankInputBackup> bInputBackups = bInput_Backup_Dao.GetBInputBupByElment("owner", owner);
+		if (bInputBackups.isEmpty() == true) {
+			logger.warn("出纳备份区的记录为空");
+			return;
+		}
+		
+		for (int i = 0; i < bInputBackups.size(); i++) {
+			JSONObject jsonObject = JSONObject.fromObject(bInputBackups.get(i));
+			BankInputHistory bInput = (BankInputHistory) JSONObject.toBean(jsonObject,BankInputHistory.class);
+			bInput.setPayid(bInputBackups.get(i).getPayid());
+			bInput.setConnectNum(bInputBackups.get(i).getConnectNum());
+			bInput.setManyContract(bInputBackups.get(i).getManyContract());
+			bInput.setConnectClient(bInputBackups.get(i).getConnectClient());
+			bInput.setId(bInputBackups.get(i).getId());
+			bInput.setCuscompanyid(bInputBackups.get(i).getCuscompanyid());
+			bHis_Dao.add(bInput);
+		}
+		
+		bInput_Backup_Dao.DeleteBInputBupByElement("owner", owner);//删除出纳备份区的记录，实现转移
+	}
+	
+	/**
+	 * TransferBinput_BackupToWarea_AND 转移出纳备份区的=owner&&caid记录到工作区
+	 * @param owner
+	 * @param caid
+	 */
+	public void TransferBinput_BackupToWarea_AND(String owner,String caid){
+		List<BankInputBackup> bInputBackups = bInput_Backup_Dao.GetBInputBupByElment_AND("owner", owner,"caid",caid);
+		if (bInputBackups.isEmpty() == true) {
+			logger.warn("出纳备份区的记录为空");
+			return;
+		}
+		
+		for (int i = 0; i < bInputBackups.size(); i++) {
+			JSONObject jsonObject = JSONObject.fromObject(bInputBackups.get(i));
+			BankInput bInput = (BankInput) JSONObject.toBean(jsonObject,BankInput.class);
+			bInput.setPayid(bInputBackups.get(i).getPayid());
+			bInput.setConnectNum(bInputBackups.get(i).getConnectNum());
+			bInput.setManyContract(bInputBackups.get(i).getManyContract());
+			bInput.setConnectClient(bInputBackups.get(i).getConnectClient());
+			bInput.setId(bInputBackups.get(i).getId());
+			bInput.setCuscompanyid(bInputBackups.get(i).getCuscompanyid());
+			bDao.add(bInput);
+		}
+		
+		bInput_Backup_Dao.DeleteBInputBupByElement_AND("owner", owner,"caid",caid);//删除出纳备份区的记录，实现转移
 	}
 	
 	/**
@@ -897,6 +1023,7 @@ public class AutoCheckAuccount {
 			bankInputBackup.setManyContract(bInputs.get(i).getManyContract());
 			bankInputBackup.setConnectClient(bInputs.get(i).getConnectClient());
 			bankInputBackup.setId(bInputs.get(i).getId());
+			bankInputBackup.setCuscompanyid(bInputs.get(i).getCuscompanyid());
 			bInput_Backup_Dao.add(bankInputBackup);
 		}
 		
@@ -904,10 +1031,64 @@ public class AutoCheckAuccount {
 	}
 	
 	/**
+	 * TransferBinput_WareaToHistory 转移工作区的出纳记录到历史区
+	 * @param owner
+	 */
+	public void TransferBinput_WareaToHistory(String owner) {
+		List<BankInput> bInputs = bDao.GetTolBankInsByElement("owner",owner);
+		if (bInputs.isEmpty() == true) {
+			logger.info("出纳工作区为空");
+			return;
+		}
+		
+		for (int i = 0; i < bInputs.size(); i++) {
+			JSONObject jsonObject = JSONObject.fromObject(bInputs.get(i));
+			BankInputHistory bankInputHistory = (BankInputHistory) JSONObject.toBean(jsonObject,BankInputHistory.class);
+			
+			bankInputHistory.setPayid(bInputs.get(i).getPayid());
+			bankInputHistory.setConnectNum(bInputs.get(i).getConnectNum());
+			bankInputHistory.setManyContract(bInputs.get(i).getManyContract());
+			bankInputHistory.setConnectClient(bInputs.get(i).getConnectClient());
+			bankInputHistory.setId(bInputs.get(i).getId());
+			bankInputHistory.setCuscompanyid(bInputs.get(i).getCuscompanyid());
+			bHis_Dao.add(bankInputHistory);
+		}
+		
+		bDao.DeleteBinputTbByElement("owner", owner);
+	}
+	
+	/**
+	 * TransferBinput_HisToWarea 转移历史去的出纳记录到工作区
+	 */
+	public void TransferBinput_HisToWarea(String owner,String caid){
+		List<BankInputHistory> bHistories = bHis_Dao.FindBySpeElement_AND("owner", "caid", owner, caid);
+		
+		if (bHistories.isEmpty() == true) {
+			logger.info("出纳历史区为空");
+			return;
+		}
+		
+		for (int i = 0; i < bHistories.size(); i++) {
+			JSONObject jsonObject = JSONObject.fromObject(bHistories.get(i));
+			BankInput bankInput = (BankInput) JSONObject.toBean(jsonObject,BankInput.class);
+			
+			bankInput.setPayid(bHistories.get(i).getPayid());
+			bankInput.setConnectNum(bHistories.get(i).getConnectNum());
+			bankInput.setManyContract(bHistories.get(i).getManyContract());
+			bankInput.setConnectClient(bHistories.get(i).getConnectClient());
+			bankInput.setId(bHistories.get(i).getId());
+			bankInput.setCuscompanyid(bHistories.get(i).getCuscompanyid());
+			bDao.add(bankInput);
+		}
+		
+		bHis_Dao.DeleteBInputHisByElement_AND("owner", owner,"caid",caid);
+	}
+	
+	/**
 	 * TransferCus_WareaToBackup 将cus_secondstore表内容转移到backup区
 	 * @param owner
 	 */
-	public void TransferCus_WareaToBackup(String owner){
+ 	public void TransferCus_WareaToBackup(String owner){
 		List<CusSecondstore> cList = sDao.GetCustomTb(owner);
 		
 		for (int i = 0; i < cList.size(); i++) {
@@ -1025,7 +1206,7 @@ public class AutoCheckAuccount {
 		CaresultHistory	fHLast = fHLasts.get(0);
 		
 		String curmonthcaid = CreateCaid(owner);
-		if (fHLast.getCaid().equals(curmonthcaid) == false) {//从历史对账中再次跳转到历史对账
+	/*	if (fHLast.getCaid().equals(curmonthcaid) == false) {//从历史对账中再次跳转到历史对账
 			logger_error.error("操作非法，不允许从历史对账中跳转到历史对账");
 			return -2;
 		}
@@ -1033,12 +1214,18 @@ public class AutoCheckAuccount {
 		if (caid.equals(curmonthcaid) == true) {//选择的历史月份为本月
 			logger.info("选择的历史月份为本月");
 			return 1;
+		}*/
+		
+		if (fHLast.getCaid().equals(caid) == true) {//历史对账选择的月份为上次对账的月份
+			logger.info("历史对账选择的月份为上次对账的月份");
+			return 1;
 		}
 		
-		cBackup_Dao.DeleteTbByElement("owner", owner);
-		TransferCus_WareaToBackup(owner);//将客户信息转移到备份区
+	/*	cBackup_Dao.DeleteTbByElement("owner", owner);
+		TransferCus_WareaToBackup(owner);//将客户信息转移到备份区*/
 		
-		TransferOri_WareaToBackup(owner);//转移货款工作表到备份区
+	//	TransferOri_WareaToBackup(owner);//转移货款工作表到备份区
+		tDao.DeleteOoriderByElement("owner", owner);//删除货款工作区记录
 		
 		TransferBinput_WareaToBackup(owner);//转移出纳工作表到备份区
 		
@@ -1094,35 +1281,8 @@ public class AutoCheckAuccount {
 			}
 			/*写入数据库*/
 		}
-		File fileB = new File(savedirB + "/" + filenameB);
-		if (!fileB.exists()) {
-			logger.warn("出纳表" + filenameB + "不存在，请重新导入");
-		}
-		else{
-			ResetCustomAccoutMsg(owner);
-			/*解析excel文件*/
-			Excel_RW excel_RW = new Excel_RW();//解析excel内容
-			InputStream inputStream = null;
-			try {
-				inputStream = new FileInputStream(new File(savedirB + "/" + filenameB));
-			} catch (FileNotFoundException e) {
-				// TODO Auto-generated catch block
-				logger_error.error("读取出纳表出错：" + e);
-				e.printStackTrace();
-				return -4;
-			}
-			ArrayList<Excel_Row> totalA_table = excel_RW.ReadExcel_Table(inputStream);
-			ArrayList<BankInput> bankInputs = excel_RW.Table_To_Ob_BankIn(totalA_table,owner);
-			/*解析excel文件*/
-			
-			/*写入数据库*/
-			for (int i = 0; i < bankInputs.size(); i++) {
-				BankInput bankInput = bankInputs.get(i);
-				bDao.add(bankInput);
-				ConnectBankinputWithCustom(bankInput);//获取客户的合同信息
-			}
-			/*写入数据库*/
-		}
+		
+		TransferBinput_HisToWarea(owner, caid);//将出纳历史区的记录转移到工作区
 		
 		TransferPrecord_WAreaToHArea(owner);//将付款工作区的记录转移到历史区
 		

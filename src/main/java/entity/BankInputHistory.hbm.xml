@@ -3,7 +3,7 @@
 "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
 <!-- Generated 2016-12-17 23:35:50 by Hibernate Tools 5.1.0.Beta1 -->
 <hibernate-mapping>
-    <class name="entity.BankInput" table="bank_input" catalog="check_a_db" optimistic-lock="version">
+    <class name="entity.BankInputHistory" table="bank_input_history" catalog="check_a_db" optimistic-lock="version">
         <id name="id" type="int">
             <column name="id" />
             <generator class="assigned" />
@@ -24,7 +24,9 @@
             </column>
         </property>
         <property name="payerAccount" type="string">
-            <column name="payer_account" length="30" />
+            <column name="payer_account" length="30">
+                <comment>&#184;&#182;&#191;&#238;&#213;&#202;&#186;&#197;</comment>
+            </column>
         </property>
         <property name="payid" type="java.lang.Integer">
             <column name="payid">
@@ -49,13 +51,8 @@
                 <comment>&#202;&#213;&#191;&#238;&#200;&#203;</comment>
             </column>
         </property>
-        <property name="caid" type="string">
-            <column name="caid" length="30">
-                <comment>&#182;&#212;&#213;&#203;id</comment>
-            </column>
-        </property>
         <property name="payeeAccount" type="string">
-            <column name="payee_account" length="30">
+            <column name="payee_account" length="20">
                 <comment>&#202;&#213;&#191;&#238;&#213;&#202;&#186;&#197;</comment>
             </column>
         </property>
@@ -85,23 +82,22 @@
                 <comment>&#201;&#207;&#180;&#171;&#213;&#223;id</comment>
             </column>
         </property>
-        <property name="actualPayer" type="string">
-            <column name="actualPayer" length="50">
-                <comment>&#202;&#181;&#188;&#202;&#184;&#182;&#191;&#238;&#200;&#203;</comment>
-            </column>
-        </property>
-        <property name="paymentNature" type="string">
-            <column name="paymentNature" length="50" />
-        </property>
         <property name="num" type="java.lang.Integer">
             <column name="num">
                 <comment>&#208;&#242;&#186;&#197;</comment>
             </column>
         </property>
+        <property name="actualPayer" type="string">
+            <column name="actualPayer" length="50" />
+        </property>
+        <property name="paymentNature" type="string">
+            <column name="paymentNature" length="50" />
+        </property>
         <property name="cuscompanyid" type="string">
-            <column name="cuscompanyid" length="50">
-                <comment>&#191;&#205;&#187;&#167;&#185;&#171;&#203;&#190;id</comment>
-            </column>
+            <column name="cuscompanyid" length="50" />
+        </property>
+        <property name="caid" type="string">
+            <column name="caid" length="30" />
         </property>
     </class>
 </hibernate-mapping>

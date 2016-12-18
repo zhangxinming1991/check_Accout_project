@@ -193,7 +193,6 @@ public class PayRecord_Dao {
 			logger.error("获取总条数失败" + e);
 			return -1;
 		}
-		
 	}
 	
 	/*根据指定字段进行查找，字段类型为字符串类型*/

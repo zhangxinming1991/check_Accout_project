@@ -30,6 +30,7 @@ import dao.PayRecordCache_Dao;
 import dao.Weixinba_Dao;
 import dao.Weixinbc_Dao;
 import encrypt_decrpt.AES;
+import encrypt_decrpt.CreateMD5;
 import entity.Agent;
 import entity.Assistance;
 import entity.Backup;
@@ -39,7 +40,6 @@ import entity.WeixinBindConnectPerson;
 import file_op.AnyFile_Op;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
-import sun.util.logging.resources.logging;
 
 /**
  * Person_Manage 人员管理服务，管理包括注册审阅，权限控制，操作日志，数据库备份等
@@ -470,7 +470,9 @@ public class Person_Manage {
 				else{
 					
 					f_as.setLastLogTime(cur_time);
-					if (f_as.getPassword().equals(password)){
+					//String md5_pwd = CreateMD5.getMd5(password);
+					String md5_pwd = password;
+					if (f_as.getPassword().equals(md5_pwd)){
 						f_as.setLogNum(0);				
 						jsonObject.element("flag", 0);
 						jsonObject.element("role", f_as.getUsertype());
@@ -581,6 +583,10 @@ public class Person_Manage {
 				re_as.setFlag(reg_wait_check);
 				re_as.setLogLock(false);
 				re_as.setLastLogTime(Double.parseDouble(new SimpleDateFormat("yyyyMMddHHmmss").format(new Date())));
+				
+				String md5_pwd = CreateMD5.getMd5(re_as.getPassword());
+				re_as.setPassword(md5_pwd);
+				
 				int add_result = aS_Dao.add(re_as);
 				if (add_result == 0) {//注册成功,等待审核
 					jsonObject.element("flag", 0);

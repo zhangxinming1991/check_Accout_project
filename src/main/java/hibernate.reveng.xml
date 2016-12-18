@@ -33,17 +33,16 @@
 	<table-filter match-name="pay_record_history"
 		match-catalog="check_a_db">
 	</table-filter>
-	<table-filter match-name="score_exchange_record"
-		match-catalog="check_a_db">
-	</table-filter>
-	<table-filter match-name="score_increase_record"
-		match-catalog="check_a_db">
-	</table-filter>
 	<table-filter match-name="weixin_bind_assistance"
 		match-catalog="check_a_db">
 	</table-filter>
-	<table-filter match-name="weixin_bind_connect_person" match-catalog="check_a_db"></table-filter>
-	<table-filter match-name="score_exchange_record" match-catalog="check_a_db"></table-filter>
-	<table-filter match-name="score_increase_record" match-catalog="check_a_db"></table-filter>
-	<table-filter match-name="connect_person_score_info" match-catalog="check_a_db"></table-filter>
+	<table-filter match-name="weixin_bind_connect_person"
+		match-catalog="check_a_db">
+	</table-filter>
+	<table-filter match-name="all_payrecord"
+		match-catalog="check_a_db">
+	</table-filter>
+	<table-filter match-name="bank_input_history"
+		match-catalog="check_a_db">
+	</table-filter>
 </hibernate-reverse-engineering>

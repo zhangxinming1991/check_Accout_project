@@ -1,0 +1,76 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+"http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+<!-- Generated 2016-12-17 23:35:50 by Hibernate Tools 5.1.0.Beta1 -->
+<hibernate-mapping>
+    <class name="entity.AllPayrecord" table="all_payrecord" catalog="check_a_db" optimistic-lock="version">
+        <composite-id name="id" class="entity.AllPayrecordId">
+            <key-property name="payer" type="string">
+                <column name="payer" length="30" />
+            </key-property>
+            <key-property name="payMoney" type="double">
+                <column name="payMoney" precision="22" scale="0" />
+            </key-property>
+            <key-property name="payWay" type="string">
+                <column name="payWay" length="30" />
+            </key-property>
+            <key-property name="payAccount" type="string">
+                <column name="payAccount" length="30" />
+            </key-property>
+            <key-property name="id" type="int">
+                <column name="id" />
+            </key-property>
+            <key-property name="vicePayer" type="string">
+                <column name="vicePayer" length="15" />
+            </key-property>
+            <key-property name="receiver" type="string">
+                <column name="receiver" length="60" />
+            </key-property>
+            <key-property name="connPerson" type="string">
+                <column name="connPerson" length="15" />
+            </key-property>
+            <key-property name="linkCer" type="string">
+                <column name="linkCer" length="100" />
+            </key-property>
+            <key-property name="bankinputId" type="java.lang.Integer">
+                <column name="bankinputId" />
+            </key-property>
+            <key-property name="owner" type="string">
+                <column name="owner" length="60" />
+            </key-property>
+            <key-property name="checkResult" type="java.lang.Character">
+                <column name="checkResult" length="1" />
+            </key-property>
+            <key-property name="pass" type="java.lang.Byte">
+                <column name="pass" />
+            </key-property>
+            <key-property name="isconnect" type="java.lang.Byte">
+                <column name="isconnect" />
+            </key-property>
+            <key-property name="manyPay" type="string">
+                <column name="manyPay" length="65535" />
+            </key-property>
+            <key-property name="uploadTime" type="string">
+                <column name="uploadTime" length="20" />
+            </key-property>
+            <key-property name="contractNum" type="string">
+                <column name="contractNum" length="10" />
+            </key-property>
+            <key-property name="caid" type="string">
+                <column name="caid" length="30" />
+            </key-property>
+            <key-property name="freeback" type="java.lang.Byte">
+                <column name="freeback" />
+            </key-property>
+            <key-property name="actualPayer" type="string">
+                <column name="actualPayer" length="50" />
+            </key-property>
+            <key-property name="paymentNature" type="string">
+                <column name="paymentNature" length="65535" />
+            </key-property>
+            <key-property name="actualPayTime" type="string">
+                <column name="actualPayTime" length="30" />
+            </key-property>
+        </composite-id>
+    </class>
+</hibernate-mapping>
