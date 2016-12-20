@@ -44,6 +44,7 @@ import dao.SendStore_Dao;
 import dao.Total_Account_Dao;
 import en_de_code.ED_Code;
 import entity.Agent;
+import entity.AllPayrecord;
 import entity.BankInput;
 import entity.CaresultHistory;
 import entity.ConnectPerson;
@@ -602,9 +603,10 @@ public class CheckAcManage {
 			else if(location.table_name.equals(CheckAcManage.RES_PAYCACHE)){
 				logger.info("查看预付款记录历史" + "owner=" + owner.work_id);
 			//	list = dao_List.pCDao.GetPayRecordsTb(owner.work_id);
+				logger.info(offset + ":" + pagesize);
 				list = dao_List.allPayRecord_Dao.FindBySpeElement_S_Page("owner", owner.work_id, offset, pagesize);
 				num = dao_List.allPayRecord_Dao.GetPayTb_Num_ByElement("owner", owner.work_id);
-				logger.info(list.size());
+				logger.info(num);
 			}
 			else {
 				logger.error("未知查看类型");
@@ -749,7 +751,6 @@ public class CheckAcManage {
 			return jmesg;
 		}
 	}
-
 	
 	/*对账后查看对账结果*/
 	public Object Watch_CheckAResult(Watch_CAResObject wCaResObject,String owner){

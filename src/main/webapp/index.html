@@ -407,9 +407,10 @@
             <li><a>&nbsp;</a></li>
             <li>
                 <a><!--value="{{currentPage}}"-->
-                    跳转：<input ng-model="pageInput" min="1" max="{{numPages}}" size="{{(''+numPages).length}}" placeholder="页码" type="number"
-                    style="margin: -1px;padding: 0;border: 1px groove;"> / {{numPages}}
-                    <a href ng-click="selectPage(pageInput)" ng-class="{disabled:!pageInput||pageInput<1||pageInput>numPages}" type="submit"><i class="glyphicon glyphicon-arrow-right"></i></a>
+                    <!--跳转：--><input ng-model="pageInput" min="1" max="{{numPages}}" size="{{(''+numPages).length}}" placeholder="页码" type="number"
+                    style="margin: -1px;padding: 0;border: 1px groove;"
+                    onkeypress="if(event.keyCode==13){$('#goPageBtn')[0].click();return false;}"> / {{numPages}}
+                    <a id="goPageBtn" href ng-click="selectPage(pageInput)" ng-class="{disabled:!pageInput||pageInput<1||pageInput>numPages}" type="submit"><i class="glyphicon glyphicon-arrow-right"></i></a>
                 </a>
             </li>
         </ul>
@@ -441,6 +442,5 @@
 <script src="js/app-service.js"></script>
 <script src="js/app-controller.js"></script>
 <script src="js/app-state.js"></script>
-<script src="js/app-mock.js"></script>
 </body>
 </html>

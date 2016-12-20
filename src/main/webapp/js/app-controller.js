@@ -1896,8 +1896,8 @@ var fssmCtrl = ['$scope', '$filter', 'ScoreService', '$uibModal', '$timeout', 'U
 
 
 // 财务员积分查看
-var fwsvCtrl = ['$scope', '$filter', 'ScoreService', '$uibModal',
-    function (sgop, $filter, ScoreSvc, msgbox) {
+var fwsvCtrl = ['$scope', '$filter', 'ScoreService', '$uibModal', '$timeout',
+    function (sgop, $filter, ScoreSvc, msgbox, timeout) {
         console.debug('ctrl->财务员客户积分查看');
 
         sgop.refreshGrid = function (tableState) {
@@ -2176,6 +2176,8 @@ app.run(['$rootScope', function (rootsgop) {
             });
         }
     });
+
+    rootsgop.appConf = appConf;
 }]);
 
 app.config(['stConfig', function (stConfig) {
@@ -2183,14 +2185,3 @@ app.config(['stConfig', function (stConfig) {
     stConfig.pagination.itemsByPage = 10;
     stConfig.pagination.displayedPages = 10;
 }]);
-
-var c = {
-    "data": [
-        {
-            "id": {"actualPayTime": "2016-11-22",}
-        },
-        {
-            "id": {}
-        }
-    ], "totalpage": 3, "flag": 0, "errmsg": "查看成功"
-}

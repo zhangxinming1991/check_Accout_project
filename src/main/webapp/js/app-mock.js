@@ -266,6 +266,8 @@
         }
 
         function notifications(itemCount) {
+            return notifPreviews(itemCount);
+
             var resdata = [];
             var t =
             {
@@ -320,7 +322,7 @@
                         "freeback": 0,
                         "id": 1,
                         "isconnect": 0,
-                        "linkCer": "/check_Accout/付款记录/gd0001/安福县名骏商品混凝土有限责任公司/2016-12-09_15_48_30.jpg",
+                        "linkCer": "welcome.jpg",
                         "manyPay": [{"contract": "主机款", "money": 1547}],
                         "owner": "gd0001",
                         "pass": 0,
@@ -332,9 +334,8 @@
                         "receiver": "sb",
                         "uploadTime": "2016年12月09日15:48:30",
                         "vicePayer": ""
-                    },
-                    "checkResult": "V",
-                    "result": "V",
+                    }
+                    ,
                 };
                 items.push(item);
             }
@@ -380,6 +381,9 @@
         var notifsInChk;
 
         function resPage(pagenum, data, resbody, reqbody) {
+            if(!reqbody.pagenum){
+                console.error('no pagenum', reqbody);
+            }
             /* if (reqbody.sort) {
              console.debug('server side search', reqbody.search);
              var data = $filter('rmdsFilter')(data, reqbody.search);
@@ -809,7 +813,7 @@
             return reqbody.watch_type == 'T' && reqbody.table_name == 'pay_cache';
         }).respond(function (method, url, reqbody) {
             console.debug('mock backend->预览付款通知数据（用户上传）', reqbody);
-            notifsInPreview = notifsInPreview || notifPreviews(randInRange(100, 150));
+            notifsInPreview = notifsInPreview || notifPreviews(randInRange(0, 150));
             var resbody = {
                 flag: failOrNot()
             };

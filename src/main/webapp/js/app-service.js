@@ -54,7 +54,7 @@ app.factory('HttpReqService', ['$http', '$q', function (http, Q) {
                 // console.debug('Decrypted:', resPkg.data);
                 resPkg.data = resPkg === undefined ? undefined : JSON.parse(resPkg.data);
                 var resbody = resPkg.data;
-                console.debug('req recvd(parsed as json) Decrypted:', resbody);
+                console.debug('req recvd(parsed as json) Decrypted:', angular.copy(resPkg.data));
                 if (isOkResBody(resbody)) {
                     (function preExtractData(resbody) {
                         if ($.isArray(resbody.data) && !resbody.items) {
@@ -508,7 +508,7 @@ app.factory('AccountService', ['$rootScope', '$cookies', '$q', 'HttpReqService',
 app.factory('FncRmindService', ['$q', 'HttpReqService', function (Q, Req) {
     var svc = {};
 
-    function notifTransFnc(resbody) {
+/*    function notifTransFnc(resbody) {
         var resdata = resbody.data;
         var payWaysInItems = [];
         for (var k in resdata) {
@@ -526,6 +526,14 @@ app.factory('FncRmindService', ['$q', 'HttpReqService', function (Q, Req) {
         resdata.payWaysInItems = payWaysInItems;
 
         return $.extend({}, resbody, {items: resdata});
+    }*/
+
+    function notifTransFnc2(resbody) {
+        for (var idx = 0; idx < resbody.data.length; idx++) {
+            resbody.data[idx].renameProperty("id", "idObj");
+            $.extend(resbody.data[idx], resbody.data[idx].idObj);
+        }
+        return resbody;
     }
 
     svc.fncReminds = function (cfg) {
@@ -535,7 +543,7 @@ app.factory('FncRmindService', ['$q', 'HttpReqService', function (Q, Req) {
         };
         $.extend(reqBody, cfg);
 
-        return Req.req(ReqUrl.fwFncReminds, reqBody, notifTransFnc);
+        return Req.req(ReqUrl.fwFncReminds, reqBody, notifTransFnc2);
     };
 
     function opPaymentNotification(approveCfg, type, okfnc) {
@@ -587,13 +595,7 @@ app.factory('FncRmindService', ['$q', 'HttpReqService', function (Q, Req) {
         return Req.req(ReqUrl.notifView, $.extend({
             watch_type: "T",
             table_name: "pay_cache"
-        }, reqParams), function (resbody) {
-            for (var idx = 0; idx < resbody.data.length; idx++) {
-                resbody.data[idx].renameProperty("id", "idObj");
-                $.extend(resbody.data[idx], resbody.data[idx].idObj);
-            }
-            return resbody;
-        });
+        }, reqParams), notifTransFnc2);
     };
 
     return svc;

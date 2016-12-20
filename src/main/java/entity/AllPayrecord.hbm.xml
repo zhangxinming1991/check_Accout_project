@@ -4,73 +4,102 @@
 <!-- Generated 2016-12-17 23:35:50 by Hibernate Tools 5.1.0.Beta1 -->
 <hibernate-mapping>
     <class name="entity.AllPayrecord" table="all_payrecord" catalog="check_a_db" optimistic-lock="version">
-        <composite-id name="id" class="entity.AllPayrecordId">
-            <key-property name="payer" type="string">
-                <column name="payer" length="30" />
-            </key-property>
-            <key-property name="payMoney" type="double">
-                <column name="payMoney" precision="22" scale="0" />
-            </key-property>
-            <key-property name="payWay" type="string">
-                <column name="payWay" length="30" />
-            </key-property>
-            <key-property name="payAccount" type="string">
-                <column name="payAccount" length="30" />
-            </key-property>
-            <key-property name="id" type="int">
-                <column name="id" />
-            </key-property>
-            <key-property name="vicePayer" type="string">
-                <column name="vicePayer" length="15" />
-            </key-property>
-            <key-property name="receiver" type="string">
-                <column name="receiver" length="60" />
-            </key-property>
-            <key-property name="connPerson" type="string">
-                <column name="connPerson" length="15" />
-            </key-property>
-            <key-property name="linkCer" type="string">
-                <column name="linkCer" length="100" />
-            </key-property>
-            <key-property name="bankinputId" type="java.lang.Integer">
-                <column name="bankinputId" />
-            </key-property>
-            <key-property name="owner" type="string">
-                <column name="owner" length="60" />
-            </key-property>
-            <key-property name="checkResult" type="java.lang.Character">
-                <column name="checkResult" length="1" />
-            </key-property>
-            <key-property name="pass" type="java.lang.Byte">
-                <column name="pass" />
-            </key-property>
-            <key-property name="isconnect" type="java.lang.Byte">
-                <column name="isconnect" />
-            </key-property>
-            <key-property name="manyPay" type="string">
-                <column name="manyPay" length="65535" />
-            </key-property>
-            <key-property name="uploadTime" type="string">
-                <column name="uploadTime" length="20" />
-            </key-property>
-            <key-property name="contractNum" type="string">
-                <column name="contractNum" length="10" />
-            </key-property>
-            <key-property name="caid" type="string">
-                <column name="caid" length="30" />
-            </key-property>
-            <key-property name="freeback" type="java.lang.Byte">
-                <column name="freeback" />
-            </key-property>
-            <key-property name="actualPayer" type="string">
-                <column name="actualPayer" length="50" />
-            </key-property>
-            <key-property name="paymentNature" type="string">
-                <column name="paymentNature" length="65535" />
-            </key-property>
-            <key-property name="actualPayTime" type="string">
-                <column name="actualPayTime" length="30" />
-            </key-property>
-        </composite-id>
+       <id name="id" type="int">
+            <column name="id" />
+            <generator class="assigned" />
+        </id>
+        <property name="payer" type="string">
+            <column name="payer" length="30" not-null="true">
+                <comment>&#184;&#182;&#191;&#238;&#200;&#203;</comment>
+            </column>
+        </property>
+        <property name="payMoney" type="double">
+            <column name="payMoney" precision="22" scale="0" not-null="true">
+                <comment>&#184;&#182;&#191;&#238;&#189;&#240;&#182;&#238;</comment>
+            </column>
+        </property>
+        <property name="payWay" type="string">
+            <column name="payWay" length="30" not-null="true">
+                <comment>&#184;&#182;&#191;&#238;&#183;&#189;&#202;&#189;</comment>
+            </column>
+        </property>
+        <property name="payAccount" type="string">
+            <column name="payAccount" length="30">
+                <comment>&#184;&#182;&#191;&#238;&#213;&#203;&#187;&#167;</comment>
+            </column>
+        </property>
+        <property name="vicePayer" type="string">
+            <column name="vicePayer" length="15" />
+        </property>
+        <property name="receiver" type="string">
+            <column name="receiver" length="60">
+                <comment>&#191;&#238;&#207;&#238;&#189;&#211;&#202;&#220;&#200;&#203;</comment>
+            </column>
+        </property>
+        <property name="connPerson" type="string">
+            <column name="connPerson" length="15">
+                <comment>&#182;&#212;&#213;&#203;&#193;&#170;&#207;&#181;&#200;&#203;</comment>
+            </column>
+        </property>
+        <property name="linkCer" type="string">
+            <column name="linkCer" length="100">
+                <comment>&#198;&#190;&#214;&#164;&#177;&#163;&#180;&#230;&#194;&#183;&#190;&#182;</comment>
+            </column>
+        </property>
+        <property name="bankinputId" type="java.lang.Integer">
+            <column name="bankinputId">
+                <comment>&#185;&#216;&#193;&#170;&#181;&#196;&#179;&#246;&#196;&#201;id</comment>
+            </column>
+        </property>
+        <property name="owner" type="string">
+            <column name="owner" length="60">
+                <comment>&#184;&#182;&#191;&#238;&#208;&#197;&#207;&#162;&#203;&#249;&#202;&#244;&#180;&#250;&#192;&#237;</comment>
+            </column>
+        </property>
+        <property name="checkResult" type="java.lang.Character">
+            <column name="checkResult" length="1">
+                <comment>&#201;&#243;&#212;&#196;&#189;&#225;&#185;&#251;</comment>
+            </column>
+        </property>
+        <property name="pass" type="java.lang.Boolean">
+            <column name="pass" />
+        </property>
+        <property name="isconnect" type="java.lang.Boolean">
+            <column name="isconnect">
+                <comment>&#202;&#199;&#183;&#241;&#186;&#205;&#179;&#246;&#196;&#201;&#185;&#216;&#193;&#170;</comment>
+            </column>
+        </property>
+        <property name="manyPay" type="string">
+            <column name="manyPay" length="1000">
+                <comment>&#184;&#182;&#191;&#238;&#181;&#196;&#186;&#207;&#205;&#172;&#186;&#197;&#188;&#176;&#189;&#240;&#182;&#238;</comment>
+            </column>
+        </property>
+        <property name="uploadTime" type="string">
+            <column name="uploadTime" length="20">
+                <comment>&#201;&#207;&#180;&#171;&#202;&#177;&#188;&#228;</comment>
+            </column>
+        </property>
+        <property name="contractNum" type="string">
+            <column name="contractNum" length="10" />
+        </property>
+        <property name="caid" type="string">
+            <column name="caid" length="30">
+                <comment>&#182;&#212;&#213;&#203;id</comment>
+            </column>
+        </property>
+        <property name="freeback" type="java.lang.Boolean">
+            <column name="freeback">
+                <comment>&#183;&#181;&#192;&#251;&#177;&#234;&#214;&#190;</comment>
+            </column>
+        </property>
+        <property name="actualPayer" type="string">
+            <column name="actualPayer" length="50" />
+        </property>
+        <property name="paymentNature" type="string">
+            <column name="paymentNature" length="1000" />
+        </property>
+        <property name="actualPayTime" type="string">
+            <column name="actualPayTime" length="30" />
+        </property>
     </class>
 </hibernate-mapping>

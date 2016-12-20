@@ -160,8 +160,9 @@ var appConf = {
     // , numberPerPage: 10
     , opLogResultTypes: ['成功', '失败']
     , opLogUserRoles: ['客户', '管理员', '代理商财务', '代理商管理']
-    , userRegisterWays: ['个体户', '公司']
-    , scoreStatusInTable: ['兑换中', '正常']
+    , userRegisterWays: ['个体户', '公司'],
+    payWays:['现金','银行转账','电汇'],
+    scoreStatusInTable: ['兑换中', '正常']
     // 兑换类型
     , exchangeTypes: ['红包', '礼品'],
     regEmailDomainRestrict: ['sanygroup.com']
