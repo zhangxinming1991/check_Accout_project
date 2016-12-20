@@ -85,9 +85,14 @@ public class ScoreManage {
 	 * 插入一条积分兑换记录
 	 * @param ser
 	 */
-	public void insertExchangeRecord(ScoreExchangeRecord ser){
+	public int insertExchangeRecord(ScoreExchangeRecord ser){
 		logger.info("插入一条客户积分兑换申请");
-		ser_Dao.add(ser);
+		Gift gift = gift_Dao.getInfoById(ser.getExchangeType());
+		if(gift.getStock() <= 0)
+			return -1;
+		else
+			ser_Dao.add(ser);
+		return 0;
 	}
 	
 	/** 

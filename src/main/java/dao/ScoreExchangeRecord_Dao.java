@@ -9,6 +9,7 @@ import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
 import org.hibernate.query.Query;
 
+import entity.Gift;
 import entity.ScoreExchangeRecord;
 
 /**
@@ -18,7 +19,7 @@ import entity.ScoreExchangeRecord;
  *
  */
 public class ScoreExchangeRecord_Dao {
-	private static Logger logger = LogManager.getLogger(PayRecord_Dao.class);
+	private static Logger logger = LogManager.getLogger(ScoreExchangeRecord_Dao.class);
 	protected SessionFactory sessionFactory;
 	protected Session session;
 	protected Transaction transaction;
@@ -43,6 +44,9 @@ public class ScoreExchangeRecord_Dao {
 		try {
 			beginTransaction();
 			session.save(in_ser);
+			Gift gift = session.get(Gift.class, in_ser.getExchangeType());
+			gift.setStock(gift.getStock() - 1);
+			session.update(gift);
 			endTransaction();			
 		} catch (RuntimeException e) {
 			// TODO: handle exception
@@ -216,7 +220,6 @@ public class ScoreExchangeRecord_Dao {
 	{
 		try{
 			beginTransaction();
-			
 			String sqlString = "update ScoreExchangeRecord set status = :status where randKey = :randKey";
 			Query query = session.createQuery(sqlString);
 			query.setParameter("status", status);
@@ -225,7 +228,25 @@ public class ScoreExchangeRecord_Dao {
 			endTransaction();
 			return result;
 		}catch(RuntimeException e){
-			System.out.println("get info failed");
+			System.out.println("update status  failed");
+			return 0;
+		}
+	}
+
+	public int updateStatus(String randKey, byte status, String hander)
+	{
+		try{
+			beginTransaction();
+			String sqlString = "update ScoreExchangeRecord set status = :status, hander = :hander  where randKey = :randKey";
+			Query query = session.createQuery(sqlString);
+			query.setParameter("hander", hander);
+			query.setParameter("status", status);
+			query.setParameter("randKey", randKey);
+			int result = query.executeUpdate();
+			endTransaction();
+			return result;
+		}catch(RuntimeException e){
+			System.out.println("update status  failed");
 			return 0;
 		}
 	}

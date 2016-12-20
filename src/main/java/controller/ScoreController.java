@@ -92,10 +92,17 @@ public class ScoreController {
 				logger_error.error("当前拥有积分少于所申请积分");
 				Common_return_en(response,re_jsonobject);
 			}
-			ScoreExchangeRecord scoreExchangeRecord = new ScoreExchangeRecord(username,exchangeScore, exchangeType, status, applicaTime, randKey, description);
-			scoreManage.insertExchangeRecord(scoreExchangeRecord);
-			re_jsonobject.element("flag", 0);
-			re_jsonobject.element("errmsg", "兑换申请提交成功");
+			ScoreExchangeRecord scoreExchangeRecord = new ScoreExchangeRecord(username,
+					exchangeScore, exchangeType, status, applicaTime, randKey, description);
+			int result = scoreManage.insertExchangeRecord(scoreExchangeRecord);
+			if(result != 0 ){
+				re_jsonobject.element("flag", -1);
+				re_jsonobject.element("errmsg", "库存不足，请选择其他礼物");
+			}
+			else{			
+				re_jsonobject.element("flag", 0);
+				re_jsonobject.element("errmsg", "兑换申请提交成功");
+			}
 			Common_return_en(response,re_jsonobject);
 		}catch(Exception e){
 			logger_error.error("获取提交参数失败" + e);
@@ -206,7 +213,6 @@ public class ScoreController {
 		Common_return_en(response, re_jsonobject);
 			
 	}
-	
 	/**
 	 * 下载用户积分信息报表
 	 * @address: /check_Accout/ScoreController/download_scoreinfo
