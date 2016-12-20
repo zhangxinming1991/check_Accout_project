@@ -860,4 +860,7 @@ public class Person_Manage {
 			return "¸öÌå»§";
 		}
 	}
+	public Agent getAgentById(String agentId){
+		return agent_Dao.findById(Agent.class, agentId);
+	}
 }

@@ -46,10 +46,12 @@ import check_Asys.Person_Manage.Login_Mange;
 import check_Asys.Person_Manage.Register_Manage;
 import check_Asys.Person_Manage.Weixin_Managr;
 import check_Asys.Person_Manage.DB_Operator;
+import dao.Agent_Dao;
 import dao.Assistance_Dao;
 import dao.ConnectPerson_Dao;
 import en_de_code.ED_Code;
 import encrypt_decrpt.AES;
+import entity.Agent;
 import entity.Assistance;
 import entity.Backup;
 import entity.ConnectPerson;
@@ -1287,23 +1289,13 @@ public class PMController {
 				userJ.element("name", fAssistance.getName());
 				userJ.element("phone", fAssistance.getPhone());
 				userJ.element("email", fAssistance.getEmail());
-				if (role.equals("bu")) {
+				if (role.equals("bu") || role.equals("ba")) {
 					String agentid = fAssistance.getAgentid();
-					if (agentid.equals("gd0001")) {
-						userJ.element("agentname", "广东代理商(gd0001)");
-					}
-					else if (agentid.equals("ah0001")) {
-						userJ.element("agentname", "安徽代理商(ah0001)");
-					}
-					else if (agentid.equals("xj0001")) {
-						userJ.element("agentname", "新疆代理商(xj0001)");
-					}
-					else if (agentid.equals("jx0001")) {
-						userJ.element("agentname", "江西代理商(jx0001)");
-					}
-					else{
-						userJ.element("agentname", "未知代理商");
-					}
+					Agent agentInfo = pManage.getAgentById(agentid);
+					if(agentInfo != null)
+						userJ.element("agentname", agentInfo.getAgentName());
+					else 
+						userJ.element("agentname","未知代理商");
 				}
 				
 				if (newpay_num > 0) {
