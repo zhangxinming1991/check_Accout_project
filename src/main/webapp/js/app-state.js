@@ -4,7 +4,7 @@ app.config(['$stateProvider', '$urlRouterProvider', 'stateHelperProvider', funct
     // $urlRouterProvider.when('', '/login');
     // $urlRouterProvider.otherwise('/login');
     /*$urlRouterProvider.when(/.*!/, ['$state','$rootScope', function (state,rootsgop) {
-     console.info('authed=', rootsgop.loggedInUser !== undefined);
+     console.debug('authed=', rootsgop.loggedInUser !== undefined);
      }]);*/
     $urlRouterProvider.when('', '/index');
     $urlRouterProvider.when('/u/fw', '/u/fw/v');
@@ -222,7 +222,7 @@ app.config(['$stateProvider', '$urlRouterProvider', 'stateHelperProvider', funct
                         url: '/a',
                         templateUrl: 'fs-reg-approval.html'
                         , controller: ['$scope', function (scope) {
-                            console.debug('ctrl->用户审阅');
+                            // console.debug('ctrl->用户审阅');
                             scope.selectTab = function (tab) {
                                 scope.selectedTab = tab;
                             };
@@ -233,7 +233,7 @@ app.config(['$stateProvider', '$urlRouterProvider', 'stateHelperProvider', funct
                         url: '/c',
                         templateUrl: 'fs-user-ctrl.html'
                         , controller: ['$scope', function (scope) {
-                            console.debug('ctrl->用户控制');
+                            // console.debug('ctrl->用户控制');
                             scope.selectTab = function (tab) {
                                 scope.selectedTab = tab;
                             };

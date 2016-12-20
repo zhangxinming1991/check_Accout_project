@@ -84,6 +84,16 @@ public class PMController {
 	private static AES ase = new AES();
 	
 	/**
+	 * ModifyClientMes 客户修改个人信息
+	 * @param request
+	 * @param response
+	 */
+	@RequestMapping(value="/modifyClientMes")
+	public void ModifyClientMes(HttpServletRequest request,HttpServletResponse response){
+		logger.info("***Get modifyClientMes request***");
+	}
+	
+	/**
 	 * GetResetPwdVerifyCode 获取重设密码的验证码
 	 */
 	@RequestMapping(value="/getresetpwdverifycode")
@@ -724,9 +734,10 @@ public class PMController {
         
         JSONObject jsonObject = login_Mange.LgEnter_Select(work_id, password);
         int isillegal = jsonObject.getInt("flag");
-        String role = jsonObject.getString("role");
+        
         
         if (isillegal == 0) {
+        	String role = jsonObject.getString("role");
         	String agentid = (String) pManage.aS_Dao.findById(Assistance.class, work_id).getAgentid();
         	HttpSession session = request.getSession();//创建session
     		System.out.println("login success");
@@ -753,8 +764,8 @@ public class PMController {
     		
 		}
         else{
-        	Asssistance_login_return(isillegal,work_id,password,role,newpay_num,response);
-    		if (role.equals("bu")) {
+        	Asssistance_login_return(isillegal,work_id,password,null,newpay_num,response);
+    	/*	if (role.equals("bu")) {
     			oLog_Service.AddLog(OpLog_Service.utype_as, work_id, OpLog_Service.Log, OpLog_Service.result_failed);
 			}
     		else if (role.equals("bm")) {
@@ -765,7 +776,7 @@ public class PMController {
     		}
     		else{
     			oLog_Service.AddLog(OpLog_Service.utype_un, work_id, OpLog_Service.Log, OpLog_Service.result_failed);
-			}
+			}*/
         }  	
     }
         

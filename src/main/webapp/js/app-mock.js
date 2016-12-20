@@ -32,36 +32,46 @@
 
     var assert = console.assert;
 
-// var delay = 2000;
+    var uploadUrls = [ReqUrl.fwOrderUpload, ReqUrl.fwOrderIncrUpload, ReqUrl.uploadShipInfo, ReqUrl.uploadGiftCat];
     var delay = 0;
     app.config(function ($provide) {
-        $provide.decorator('$httpBackend', function ($delegate) {
+        $provide.decorator('$httpBackend', function ($delegate, $timeout) {
+            // console.debug('decorator');
             var proxy = function (method, url, data, callback, headers) {
-                console.debug('mock-> request url', url);
-                var encrypedReq = method === 'POST' && url != ReqUrl.fwOrderUpload;
-                if (encrypedReq) {
+                console.debug('mock-> request method url reqdata headers', method, url, data, headers);
+
+                var encryptedReq = method === 'POST';
+                if (encryptedReq) {
                     // console.debug('request data(before decrypted):', data);
                     data = Decrypt(data);
                 }
-                var jsonReq = data !== undefined && url != ReqUrl.fwOrderUpload;
+                var jsonReq = data !== undefined && uploadUrls.indexOf(url) == -1;
                 if (jsonReq) {
                     data = JSON.parse(data);
                 }
                 console.debug('mock-> request data:', data);
 
                 var interceptor = function () {
+                    // console.debug('interceptor');
                     var _this = this,
                         _arguments = arguments;
                     // arguments: status, data, ?, ?
-                    if (encrypedReq) {
+                    if (encryptedReq) {
                         console.debug('response data(before encrypted)', arguments[1]);
                         arguments[1] = Encrypt(/*JSON.stringify*/(arguments[1]));
                         // console.debug('response data(encrypted)', arguments[1]);
                     }
 
-                    setTimeout(function () {
+                    if (delay > 0) {
+                        console.debug('mock->simulate network delay(' + delay + 'ms)');
+                        $timeout(function () {
+                            callback.apply(_this, _arguments);
+                        }, delay);
+                        // reset delay
+                        delay = 0;
+                    } else {
                         callback.apply(_this, _arguments);
-                    }, delay);
+                    }
                 };
                 return $delegate.call(this, method, url, data, interceptor, headers);
             };
@@ -295,6 +305,42 @@
             return resdata;
         }
 
+        function notifPreviews(itemCount) {
+            var items = [];
+            for (var i = 0; i < itemCount; i++) {
+                var item = {
+                    "id": {
+                        "actualPayTime": "2016-12-07",
+                        "actualPayer": "手表一",
+                        "bankinputId": 0,
+                        "caid": "2016-12-gd0001",
+                        "checkResult": "N",
+                        "connPerson": "dengfa",
+                        "contractNum": "",
+                        "freeback": 0,
+                        "id": 1,
+                        "isconnect": 0,
+                        "linkCer": "/check_Accout/付款记录/gd0001/安福县名骏商品混凝土有限责任公司/2016-12-09_15_48_30.jpg",
+                        "manyPay": [{"contract": "主机款", "money": 1547}],
+                        "owner": "gd0001",
+                        "pass": 0,
+                        "payAccount": "444",
+                        "payMoney": 1547,
+                        "payWay": "现金",
+                        "payer": "安福县名骏商品混凝土有限责任公司",
+                        "paymentNature": [{"contract": "主机款", "money": "1547"}],
+                        "receiver": "sb",
+                        "uploadTime": "2016年12月09日15:48:30",
+                        "vicePayer": ""
+                    },
+                    "checkResult": "V",
+                    "result": "V",
+                };
+                items.push(item);
+            }
+            return items;
+        }
+
         function transcash(itemCount) {
             var resdata = [];
             var t = {
@@ -479,12 +525,17 @@
                 tc.orderNum += '' + i;
                 resbody.data.push(tc);
             }
-            sleep(1000);
+            delay = 1000;
             // resbody.lastUploadTime = $filter('date')(new Date(), 'yyyy-MM-dd HH:mm:ss');
             // resbody.lastUploadResult = randIn(['成功', '失败']);
             console.debug('respond client now', resbody);
-            resbody = Encrypt(resbody);
+            // resbody = Encrypt(resbody); // 装饰器中加密
             return [200, resbody];
+        });
+        bkd.whenPOST(ReqUrl.fwOrderIncrUpload).respond(function (method, url, reqbody) {
+            console.debug('mock->增量上传出纳表', reqbody);
+            delay = 1000;
+            return [200, {flag: failOrNot()}];
         });
 
         // //出纳
@@ -758,7 +809,7 @@
             return reqbody.watch_type == 'T' && reqbody.table_name == 'pay_cache';
         }).respond(function (method, url, reqbody) {
             console.debug('mock backend->预览付款通知数据（用户上传）', reqbody);
-            notifsInPreview = notifsInPreview || notifications(randInRange(100, 150));
+            notifsInPreview = notifsInPreview || notifPreviews(randInRange(100, 150));
             var resbody = {
                 flag: failOrNot()
             };
@@ -793,7 +844,7 @@
                     , email: 'k' + i + '@sany.com'
                     , weixin: 'wechat-' + i
                     , registerWay: randIn(appConf.userRegisterWays)
-                    , company: '恒大地产-' + i
+                    , company: '恒大地产-.......................' + i
                     , companyid: 'cid-' + i
                     , contractMes: '合同号啊～～～～～'
                     , agent: '代理商 ' + i
@@ -1009,8 +1060,8 @@
             return [200, resPage(reqbody.pagenum, oplogs, {flag: failOrNot()}, reqbody)];
         });
 
-        bkd.whenPOST(ReqUrl.fetchAgents).respond(function (method,url,reqbody) {
-            console.debug('mock->代理商列表',reqbody);
+        bkd.whenPOST(ReqUrl.fetchAgents).respond(function (method, url, reqbody) {
+            console.debug('mock->代理商列表', reqbody);
             var items = [{code: 'gd0001', name: '广东代理商'}, {code: 'ah0001', name: '安徽代理商'}];
             var extra = 2;
             for (var i = 0; i < randInRange(0, extra); i++) {
@@ -1045,29 +1096,29 @@
 
         var scoreAll;
         bkd.whenPOST(ReqUrl.scoreInAllAgents).respond(function (method, url, reqbody) {
-            console.debug('mock->所有客户积分情况',reqbody);
+            console.debug('mock->所有客户积分情况', reqbody);
             scoreAll = scoreAll || randScoreInfo(randInRange(100, 200));
             return [200, resPage(reqbody.pagenum, scoreAll, {flag: failOrNot()}, reqbody)];
         });
         bkd.whenPOST(ReqUrl.scoreInAgent).respond(function (method, url, reqbody) {
-            console.debug('mock->代理商客户积分情况',reqbody);
+            console.debug('mock->代理商客户积分情况', reqbody);
             scoreAll = scoreAll || randScoreInfo(randInRange(100, 200));
             return [200, resPage(reqbody.pagenum, scoreAll, {flag: failOrNot()}, reqbody)];
         });
-        bkd.whenPOST(ReqUrl.scoreDetail).respond(function (method,url,reqbody){
-            var items=[];
-            for(var i=0;i<randInRange(0,5);i++){
-                var item={
-                    time:$filter('date')(new Date(), appConf.tmFmtLong)
-                    ,change:randIn(['+','-'])+randInRange(50,100)
-                    ,status:randIn(['已到账','兑换中'])
-                    ,hander:'甲乙丙丁'
-                    ,serial:uuid(4)
-                    ,description:'……'
+        bkd.whenPOST(ReqUrl.scoreDetail).respond(function (method, url, reqbody) {
+            var items = [];
+            for (var i = 0; i < randInRange(0, 5); i++) {
+                var item = {
+                    time: $filter('date')(new Date(), appConf.tmFmtLong)
+                    , change: randIn(['+', '-']) + randInRange(50, 100)
+                    , status: randIn(['已到账', '兑换中'])
+                    , hander: '确认人'
+                    , serial: uuid(4)
+                    , description: '……'
                 };
                 items.push(item);
             }
-            return [200,{flag:failOrNot(),data:items}];
+            return [200, {flag: failOrNot(), data: items}];
         });
 
         function genScoreMgmt(itemCount) {
@@ -1084,8 +1135,9 @@
                     , exchangeCategory: '礼品类型'
                     , applicaTime: $filter('date')(randInRange(new Date(2014, 1, 1), new Date()), appConf.tmFmtLong)
                     , finishTime: $filter('date')(randInRange(new Date(2014, 1, 1), new Date()), appConf.tmFmtLong)
-                    , status: randIn(['兑换中', '已兑换', '未领取','未兑换'])
+                    , status: randIn(['兑换中', '已兑换', '未领取', '未兑换'])
                     , description: '说明'
+                    , hander: '确认人'
                 };
                 items.push(item);
             }
@@ -1094,19 +1146,58 @@
 
         var scoreMgmtAll;
         bkd.whenPOST(ReqUrl.scoreMgmtAll).respond(function (method, url, reqbody) {
-            console.debug('mock->超级管理员 积分管理表',reqbody);
+            console.debug('mock->超级管理员 积分管理表', reqbody);
             scoreMgmtAll = scoreMgmtAll || genScoreMgmt(randInRange(100, 200));
             return [200, resPage(reqbody.pagenum, scoreMgmtAll, {flag: failOrNot()}, reqbody)]
         });
-        bkd.whenPOST(ReqUrl.approveScoreExchg).respond(function (method, url, reqbody) {
-            console.debug('mock->确认礼品兑换',reqbody);
+        bkd.whenPOST(ReqUrl.approveScoreExchg, function (reqbody) {
+            return reqbody.randKey;
+        }).respond(function (method, url, reqbody) {
+            console.debug('mock->确认礼品兑换', reqbody);
             return [200, {flag: failOrNot()}];
         });
         bkd.whenPOST(ReqUrl.scoreMgmtInAgent).respond(function (method, url, reqbody) {
-            console.debug('mock->财务员 积分管理表',reqbody);
+            console.debug('mock->财务员 积分管理表', reqbody);
             scoreMgmtAll = scoreMgmtAll || genScoreMgmt(randInRange(100, 200));
             return [200, resPage(reqbody.pagenum, scoreMgmtAll, {flag: failOrNot()}, reqbody)]
         });
+        bkd.whenPOST(ReqUrl.exportScoreExchgTbl).respond(function (method, url, reqbody) {
+            console.debug('mock->导出积分兑换报表', reqbody);
+            delay = 500;
+            return [200, {flag: failOrNot(), url: 'http://www.baidu.com?q=score-exchg' + uuid(2)}];
+        });
+        bkd.whenPOST(ReqUrl.exportScoreTbl).respond(function (method, url, reqbody) {
+            console.debug('mock-> 导出积分报表', reqbody);
+            return [200, {flag: failOrNot(), url: 'http://www.baidu.com?q=score-exchg' + uuid(2)}];
+        });
+        bkd.whenPOST(ReqUrl.exportGiftCat).respond(function (method, url, reqbody) {
+            console.debug('mock->超管 导出礼品类型', reqbody);
+            delay = 500;
+            return [200, {flag: failOrNot(), url: 'http://www.baidu.com?q=gift-cat' + uuid(2)}];
+        });
+        bkd.whenPOST(ReqUrl.shipDetail, function (reqbody) {
+            return reqbody.randkey;
+        }).respond(function (method, url, reqbody) {
+            console.debug('mock->超管 物流详情', reqbody);
+            var resdata = {
+                user: '用户',
+                phone: '13312349876',
+                address: '星光大道77号',
+                logisticCompany: '顺丰',
+                logisticNumber: 'SF-1111-1111',
+            };
+            return [200, {flag: failOrNot(), data: resdata}];
+        });
+        bkd.whenPOST(ReqUrl.uploadShipInfo).respond(function (method, url, reqbody) {
+            console.debug('mock->超管 上传物流单号');
+            delay = 2000;
+            return [200, {flag: failOrNot()}];
+        });
+        bkd.whenPOST(ReqUrl.uploadGiftCat).respond(function (method, url, reqbody) {
+            console.debug('mock->超管 上传礼品类型');
+            delay = 2000;
+            return [200, {flag: failOrNot()}];
+        })
 
     }]);
 })();

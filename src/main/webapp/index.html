@@ -9,13 +9,14 @@
     <link rel="stylesheet" href="css/progress-wizard.min.css">
     <link type="text/css" href="css/angular-bootstrap-lightbox.min.css">
     <link rel="stylesheet" href="css/picbox.css">
+    <link rel="stylesheet" href="css/ladda-themeless.min.css">
     <link rel="stylesheet" href="css/app.css">
 </head>
 <body data-ng-app="sany">
 <div ng-controller="MainCtrl">
     <nav class="navbar navbar-inverse navbar-fixed-top" role="navigation">
         <div class="container-fluid" style="position: relative">
-            <!--<div class="navbar-header">-->
+            <!--<div class="navbar-hear">-->
             <div>
                 <a id="brandBlock" class="navbar-brand" href ng-click="signOut()"
                    style="position:relative; display: inline-block; white-space: nowrap; float: left">
@@ -56,9 +57,11 @@
                          style="margin-right: 30px; margin-top: 15px; ">
                     <span uib-dropdown on-toggle="toggled(open)">
                         <button href id="infoOpMenu" uib-dropdown-toggle class="btn btn-primary"
+                                ng-class="{'btn-danger':loggedInUser.role=='bm'}"
                                 style="font-size: large; ">
-                            <span class="glyphicon glyphicon-user"></span><span style="color: white">{{loggedInUser.name | limitTo:4}}</span><span
-                                class="caret"></span>
+                            <i class="glyphicon glyphicon-user"></i>
+                            <span style="color: white">{{loggedInUser.name | limitTo:4}}</span>
+                            <i class="caret"></i>
                         </button>
                         <ul class="dropdown-menu" uib-dropdown-menu aria-labelledby="infoOpMenu">
                              <li>
@@ -128,7 +131,7 @@
                             <!--<label class=" control-label">登陆名：</label>-->
                             <input name="uid" id="loginUid" class="form-control input-lg" type="text"
                                    ng-model="formUser.uid"
-                                   placeholder="登陆名" style="ime-mode: inactive" data-error="登陆名格式有误"
+                                   placeholder="用户名" style="ime-mode: inactive" data-error="用户名格式有误"
                                    autofocus required>
                             <!--ng-class="{ 'has-error' : loginForm.uid.$invalid && !loginForm.uid.$pristine }"-->
 
@@ -193,7 +196,7 @@
                             </button>
                             <button ng-model="signUpCtrl.formUser.role" uib-btn-radio="'Z'" class="btn"
                                     ng-class="signUpCtrl.formUser.role=='Z'?'btn-primary':'btn-default'" type="button">
-                                代理商财务管理
+                                代理商管理员
                             </button>
                             <!--<button ng-model="signUpCtrl.formUser.role" uib-btn-radio="'S'" class="btn"-->
                             <!--ng-class="signUpCtrl.formUser.role=='S'?'btn-primary':'btn-default'" type="button">系统管理员-->
@@ -203,7 +206,7 @@
                         <div class="form-group">
                             <!--<label  class="control-label">登陆名：</label>-->
                             <input type="text" ng-model="signUpCtrl.formUser.uid"
-                                   placeholder="登陆名"
+                                   placeholder="用户名"
                                    class="form-control"
                                    required>
                             <!--<div class="help-block with-errors">无效/已存在</div>-->
@@ -231,18 +234,18 @@
                                    required>
                         </div>
                         <div class="form-group">
-                            <input type="email" ng-model="signUpCtrl.formUser.email" placeholder="电子邮箱"
-                                   class="form-control" required>
-                        </div>
-                        <div class="form-group">
                             <input type="tel" ng-model="signUpCtrl.formUser.phone" placeholder="电话" class="form-control"
                                    required>
+                        </div>
+                        <div class="form-group">
+                            <input type="email" ng-model="signUpCtrl.formUser.email" placeholder="电子邮箱"
+                                   class="form-control" required>
                         </div>
                         <div class="form-group has-feedback ">
                             <div class="">
                                 <input type="text" ng-model="signUpCtrl.formUser.agent" placeholder="所属代理商"
                                        uib-typeahead=" agent as agent.name for agent in agents | filter:{name:$viewValue}"
-                                       class="form-control" typeahead-editable="false"
+                                       class="form-control" typeahead-editable="false" required
                                        typeahead-show-hint="true" typeahead-min-length="0">
                             </div>
                             <!--<span class="glyphicon glyphicon-search " style="" ></span>-->
@@ -255,7 +258,8 @@
                          </div>-->
                         <div class="with-errors text-danger" ng-bind="signUpCtrl.errMsg"></div>
                         <div class="form-group">
-                            <button class="btn btn-primary btn-block" ng-click="signUpCtrl.submitForm()"
+                            <button class="btn btn-primary btn-block form-control" type="submit"
+                                    ng-click="signUpCtrl.submitForm()"
                             >注册
                                 <!--ng-disabled="signUpForm.$invalid"-->
                             </button>
@@ -380,9 +384,36 @@
 
 <script id="stNumberRange.html" type="text/ng-template">
     <div class="">
-        <input type="number" class="form-control input-sm" step="" ng-model="higher" placeholder="总额高于" min="0" max="{{lower}}"/>
-        <input class="form-control input-sm" type="number" step="" ng-model="lower" placeholder="总额低于" min="{{higher}}"/>
+        <input type="number" class="form-control input-sm" step="" ng-model="higher" placeholder="总额高于" min="0"
+               max="{{lower}}"/>
+        <input class="form-control input-sm" type="number" step="" ng-model="lower" placeholder="总额低于"
+               min="{{higher}}"/>
     </div>
+</script>
+
+<script type="text/ng-template" id="fw-grid-pagination.html">
+    <nav ng-if="numPages && pages.length >= 2">
+        <ul class="pagination">
+            <li><a href ng-click="selectPage(1)">首页</a></li>
+            <li ng-class="{disabled:currentPage<=1}"><a href ng-click="selectPage(currentPage-1)">上页</a></li>
+            <li ng-show="pages[0]>1"><a>…</a></li>
+            <li ng-repeat="page in pages" ng-class="{active: page==currentPage}">
+                <a href ng-click="selectPage(page)">{{page}}</a>
+            </li>
+            <li ng-show="pages[pages.length-1]<numPages"><a>…</a></li>
+            <li ng-class="{disabled:currentPage>=numPages}"><a href ng-click="">下页</a></li>
+            <li><a href ng-click="selectPage(numPages)">尾页</a></li>
+
+            <li><a>&nbsp;</a></li>
+            <li>
+                <a><!--value="{{currentPage}}"-->
+                    跳转：<input ng-model="pageInput" min="1" max="{{numPages}}" size="{{(''+numPages).length}}" placeholder="页码" type="number"
+                    style="margin: -1px;padding: 0;border: 1px groove;"> / {{numPages}}
+                    <a href ng-click="selectPage(pageInput)" ng-class="{disabled:!pageInput||pageInput<1||pageInput>numPages}" type="submit"><i class="glyphicon glyphicon-arrow-right"></i></a>
+                </a>
+            </li>
+        </ul>
+    </nav>
 </script>
 
 
@@ -400,6 +431,9 @@
 <script src="js/ng-file-upload-all.min.js"></script>
 <script src="js/angular-bootstrap-lightbox.min.js"></script>
 <script src="js/picbox.js"></script>
+<script src="js/spin.js"></script>
+<script src="js/ladda.js"></script>
+<script src="js/angular-ladda.min.js"></script>
 
 <script src="js/enc.js"></script>
 <script src="js/app.js"></script>

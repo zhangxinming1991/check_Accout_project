@@ -1,6 +1,7 @@
 "use strict";
 
-var app = angular.module('sany', ['ui.router', 'ngAnimate', 'ngSanitize', 'ui.bootstrap', 'smart-table', 'ngCookies', 'ui.router.stateHelper', 'ngFileUpload', 'bootstrapLightbox']);
+var app = angular.module('sany', ['ui.router', 'ngAnimate', 'ngSanitize', 'ui.bootstrap', 'smart-table', 'ngCookies',
+    'ui.router.stateHelper', 'ngFileUpload', 'bootstrapLightbox', 'angular-ladda']);
 
 // 修改后端请求URL
 var ReqUrl = {
@@ -21,6 +22,8 @@ var ReqUrl = {
     // fwOrderMonths: '/fw/ordermonths',
     // 财务人员 上传
     fwOrderUpload: '/check_Accout/Check_MainController/upload',
+    // 增量上传出纳表
+    fwOrderIncrUpload: '/check_Accout/Check_MainController/uploadBinput_incre',
     //财务人员 -> 系统无法关联的付款通知（用户上传的数数据）
     fwFncReminds: '/check_Accout/Check_MainController/Watch',
     // fwFncBadReminds:'fw/fncBadReminds',
@@ -96,14 +99,27 @@ var ReqUrl = {
     , scoreInAllAgents: '/check_Accout/ScoreController/all_scoreinfos'
     // 财务员获取所在代理商管理的用户的积分信息
     , scoreInAgent: '/check_Accout/ScoreController/agent_scoreinfos'
-    // 用户积分详情
+    // 超管、财务 -> 用户积分详情
     , scoreDetail: '/check_Accout/ScoreController/score_records'
     // 超级管理员 积分管理表
     , scoreMgmtAll: '/check_Accout/ScoreController/manage_exchange'
     // 财务员 积分管理表
     , scoreMgmtInAgent: '/check_Accout/ScoreController/agent_exchangeinfos'
+    // 超级管理员↓
+    // 导出积分报表
+    , exportScoreTbl: '/check_Accout/ScoreController/download_scoreinfo'
+    // 导出积分兑换报表
+    , exportScoreExchgTbl: '/check_Accout/ScoreController/download_exchangeinfo'
     // 确认 积分兑换
     , approveScoreExchg: '/check_Accout/ScoreController/approval_exchange'
+    // 下载礼品信息报表
+    , exportGiftCat: '/check_Accout/ScoreController/download_giftinfo'
+    // 物流详情
+    , shipDetail: '/check_Accout/ScoreController/logistic_info'
+    // 上传物流
+    , uploadShipInfo: '/check_Accout/ScoreController/upload_logistic'
+    // 上传礼品列表
+    , uploadGiftCat: '/check_Accout/ScoreController/upload_gift'
 };
 
 // string format
@@ -144,18 +160,30 @@ var appConf = {
     // , numberPerPage: 10
     , opLogResultTypes: ['成功', '失败']
     , opLogUserRoles: ['客户', '管理员', '代理商财务', '代理商管理']
-    , userRegisterWays: ['个人', '公司']
+    , userRegisterWays: ['个体户', '公司']
     , scoreStatusInTable: ['兑换中', '正常']
     // 兑换类型
-    , exchangeTypes: ['红包', '礼品']
+    , exchangeTypes: ['红包', '礼品'],
+    regEmailDomainRestrict: ['sanygroup.com']
     , mappings: {
         scoreStatus: {
             '0': '已提交'
             , '1': '兑换中'
             , '2': '兑换成功'
             , '-1': '兑换失败'
-        }
-    }
+        },
+        webUserRole: {
+            'bu': '代理商财务',
+            'ba': '代理商管理员',
+            'bm': '总部管理员',
+        },
+        /*webUserRoleShort:{
+         'bu':'财务',
+         'ba':'',
+         'bm':'',
+         },*/
+    },
+
 };
 
 var frontBackEndMappping = {

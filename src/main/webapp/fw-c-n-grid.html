@@ -14,8 +14,8 @@
             <th><input st-search="payer" placeholder="终端用户" type="search" class="input-sm form-control"></th>
             <th><input st-search="actualPayer" placeholder="实际付款人" type="search" class="input-sm form-control"></th>
             <th>
-                <!--<input st-search="payTime" placeholder="上传时间" type="search" class="input-sm form-control">-->
-                <st-date-range predicate="payTime" before="query.before" after="query.after"></st-date-range>
+                <!--<input st-search="uploadTime" placeholder="上传时间" type="search" class="input-sm form-control">-->
+                <st-date-range predicate="uploadTime" before="query.before" after="query.after"></st-date-range>
             </th>
             <th>
                 <!--<input st-search="payMoney" placeholder="付款金额" type="search" class="input-sm form-control">-->
@@ -49,7 +49,7 @@
             <!--<th st-sort="payer">付款人</th>-->
             <th st-sort="payer">终端用户</th>
             <th st-sort="actualPayer">实际付款人</th>
-            <th st-sort="payTime">上传时间</th>
+            <th st-sort="uploadTime">上传时间</th>
             <th st-sort="payMoney">付款金额（元）</th>
             <th st-sort="payWay">付款方式</th>
             <th st-sort="receiver">款项接收人</th>
@@ -67,13 +67,13 @@
             <td ng-hide="checkInoperable">{{r.id}}</td>
             <td>{{r.payer}}</td>  <!--之前的付款人，现在的终端用户-->
             <td>{{r.actualPayer}}</td>
-            <!--<td>{{r.payTime | date:'yyyy-MM-dd hh:mm:ss'}}</td>-->
-            <td>{{r.payTime}}</td>
+            <!--<td>{{r.uploadTime | date}}</td>-->
+            <td>{{r.uploadTime}}</td>
             <td title="总付款金额：{{r.payMoney}}">
                 <!--总额：-->
                 ￥{{r.payMoney}}
                 <br>
-                <span>合同{{r.mcontract_data.length}}个</span>
+                <span><!--合同-->拆分{{r.mcontract_data.length}}个</span>
                 <a><span class="glyphicon glyphicon-eye-open" ng-click="showCM(r)"></span></a>
             </td>
             <td>{{r.payWay}}</td>
@@ -83,8 +83,8 @@
                 <!--<a><span class="glyphicon glyphicon-eye-open" ng-click="showPicture(r.linkCer)"></span></a>-->
                 <a rel="lightbox" href="{{r.linkCer}}"><span class="glyphicon glyphicon-eye-open"></span></a>
 
-                <!--eager load image-->
-                <!--<img ng-src="{{r.linkCer}}" class="hidden">-->
+                <!--eager loading image-->
+                <img ng-src="{{r.linkCer}}" class="hidden">
 
                 <!-- <div id="imgMdl-{{r.id}}" role="dialog" class="modal fade" aria-hidden="true">
                      <div class="modal-dialog">
@@ -108,8 +108,8 @@
                  </div>-->
             </td>
             <td ng-hide="checkInoperable">
-                <button ng-click="attachPaymentNotification(r)"
-                        class=" btn btn-default">匹配出纳
+                <button ng-click="attachPaymentNotification(r)" class=" btn btn-default"><!--匹配出纳-->
+                    <i class="glyphicon glyphicon-transfer"></i> 操作
                 </button>
                 <!--<button class="btn btn-default hidden">修改</button>-->
                 <!--ng-disabled="r.result==='Y'||r.result==='M'"-->
@@ -117,12 +117,12 @@
                 <!--通过-->
                 <!--</button>-->
                 <!--ng-disabled="r.result==='N'||r.result==='M'"-->
-                <button ng-click="rejectPaymentNotification(r)" class="btn btn-default">
+                <!--<button ng-click="rejectPaymentNotification(r)" class="btn btn-default">
                     否决
-                </button>
+                </button>-->
                 <!--只有无状态时才可待定-->
                 <!--ng-disabled="r.result==='W'||r.result==='M'"-->
-                <button ng-click="tbdPaymentNotification(r)" class=" btn btn-default">待定</button>
+                <!--<button ng-click="tbdPaymentNotification(r)" class=" btn btn-default">待定</button>-->
                 <!--允许重新匹配？-->
                 <!--ng-disabled="r.result==='N'||r.result==='M'"-->
             </td>
@@ -151,7 +151,7 @@
 
         <tfoot>
         <tr>
-            <td class="text-center" st-pagination="" st-items-by-page="10" colspan="20" st-displayed-pages="20">
+            <td class="text-center" st-pagination=""  colspan="20">
             </td>
         </tr>
         </tfoot>
@@ -209,7 +209,7 @@
                     <tr>
                         <!--<td>{{ctrl.r.orderNum}}</td>-->
                         <td>{{ctrl.r.payer}}</td>
-                        <td>{{ctrl.r.payTime}}</td>
+                        <td>{{ctrl.r.uploadTime}}</td>
                         <td>{{ctrl.r.payMoney}}</td>
                         <td>{{ctrl.r.payWay}}</td>
                         <td>{{ctrl.r.receiver}}</td>
@@ -248,7 +248,7 @@
                             <td>{{t.money}}</td>
                             <td>{{t.payWay}}</td>
                             <td>{{t.acountNum}}</td>
-                            <!--<td>{{t.inputTime | date:'yyyy-MM-dd HH:mm:ss'}}</td>-->
+                            <!--<td>{{t.inputTime | date}}</td>-->
                             <td>{{t.inputTime}}</td>
                             <!--<td>{{t.status}}</td>-->
                             <td>{{t.comment}}</td>
@@ -280,9 +280,14 @@
 
             </div>
             <div class="modal-footer" id="assocPanelFooter">
-                <button class="btn btn-primary" ng-click="attachSubmit()" ng-disabled="!ctrl.attachCfg.targetId">匹配
+                <button ng-disabled="progress.rejecting||progressaccepting||progress.attaching||!ctrl.attachCfg.targetId"
+                        ladda="progress.attaching" class="btn btn-primary" ng-click="attachSubmit()"><i class="fa fa-exchange"></i> 匹配
                 </button>
-                <button class="btn btn-default" ng-click="closeMsgbox()">取消</button>
+                <button ng-disabled="progress.rejecting||progressaccepting||progress.attaching" ladda="progress.rejecting"
+                        ng-click="rejectPaymentNotification(ctrl.r)" class="btn btn-primary"><i class="fa fa-trash"></i> 否决</button>
+                <button ng-disabled="progress.rejecting||progressaccepting||progress.attaching" ladda="progress.accepting"
+                        ng-click="tbdPaymentNotification(ctrl.r)" class=" btn btn-primary"><i class="fa fa-hourglass"></i> 待定</button>
+                <!--<button class="btn btn-default" ng-click="closeMsgbox()">取消</button>-->
                 <div>
                     <span class="text-info" ng-show="ctrl.isProcessing">操作进行中……</span>
                     <span class="text-warning" ng-show="ctrl.attachErrMsg">操作失败：{{ctrl.attachErrMsg}}</span>

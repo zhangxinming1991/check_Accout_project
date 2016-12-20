@@ -1,140 +1,147 @@
 <div>
-    <table st-table="dispItems" st-pipe="refreshGrid" class="table table-bordered table-striped">
-        <thead>
-        <tr>
-            <th></th>
-            <th><input class="input-sm form-control" type="search" st-search="agentName" placeholder="代理商"></th>
-            <th><input class="input-sm form-control" type="search" st-search="username" placeholder="用户名"></th>
-            <th><input class="input-sm form-control" type="search" st-search="realName" placeholder="真实姓名"></th>
-            <th><input class="input-sm form-control" type="search" st-search="weiXin" placeholder="微信号"></th>
-            <th><input class="input-sm form-control" type="search" st-search="company" placeholder="客户名"></th>
-            <th>
-                <input class="input-sm form-control" type="number" st-search="score" placeholder="当前积分">
-                <!--<st-number-range predicate="score" lower="query.lower" higher="query.higher"></st-number-range>-->
-            </th>
-            <th>
-                <input class="input-sm form-control" type="number" st-search="exchangedScore" placeholder="已兑积分">
-                <!--<st-number-range predicate="exchangedScore" lower="query.lower" higher="query.higher"></st-number-range>-->
-            </th>
-            <th>
-                <input class="input-sm form-control" type="number" st-search="exchangingScore" placeholder="正在兑换">
-                <!--<st-number-range predicate="exchangingScore" lower="query.lower" higher="query.higher"></st-number-range>-->
-            </th>
-            <th>
-                <select class="input-sm form-control" type="search" st-search="status" placeholder="状态">
-                    <option value="">所有</option>
-                    <option>兑换中</option>
-                    <option>正常</option>
-                </select>
-            </th>
-            <th></th>
-        </tr>
-        <tr>
-            <th>序号</th>
-            <th>代理商</th>
-            <th>用户名</th>
-            <th>真实姓名</th>
-            <th>微信号</th>
-            <th>客户名</th>
-            <th>当前积分</th>
-            <th>已兑积分</th>
-            <th>正在兑换</th>
-            <th>状态</th>
-            <th>操作</th>
-        </tr>
-        </thead>
+    <div>
+        <button ladda="scoreCfg.exportTable.progress" ng-click="exportTable()" class="btn btn-primary">导出</button>
+    </div>
+    <br>
+    <div>
+        <table st-table="dispItems" st-pipe="refreshGrid" class="table table-bordered table-striped">
+            <thead>
+            <tr>
+                <th></th>
+                <th><input class="input-sm form-control" type="search" st-search="agentName" placeholder="代理商"></th>
+                <th><input class="input-sm form-control" type="search" st-search="username" placeholder="用户名"></th>
+                <th><input class="input-sm form-control" type="search" st-search="realName" placeholder="真实姓名"></th>
+                <th><input class="input-sm form-control" type="search" st-search="weiXin" placeholder="微信号"></th>
+                <th><input class="input-sm form-control" type="search" st-search="company" placeholder="合同买受人"></th>
+                <th>
+                    <!--<input class="input-sm form-control" type="number" st-search="score" placeholder="当前积分">-->
+                    <st-number-range predicate="score" lower="scoreQuery.lower" higher="scoreQuery.higher"></st-number-range>
+                </th>
+                <th>
+                    <!--<input class="input-sm form-control" type="number" st-search="exchangedScore" placeholder="已兑积分">-->
+                    <st-number-range predicate="exchangedScore" lower="exchangedScoreQuery.lower" higher="exchangedScoreQuery.higher"></st-number-range>
+                </th>
+                <th>
+                    <!--<input class="input-sm form-control" type="number" st-search="exchangingScore" placeholder="正在兑换">-->
+                    <st-number-range predicate="exchangingScore" lower="exchangingScoreQuery.lower" higher="exchangingScoreQuery.higher"></st-number-range>
+                </th>
+                <th>
+                    <select class="input-sm form-control" type="search" st-search="status" placeholder="状态">
+                        <option value="">所有</option>
+                        <option>兑换中</option>
+                        <option>正常</option>
+                    </select>
+                </th>
+                <th></th>
+            </tr>
+            <tr>
+                <th>序号</th>
+                <th st-sort="agentName">代理商</th>
+                <th st-sort="username">用户名</th>
+                <th st-sort="realName">真实姓名</th>
+                <th st-sort="weiXin">微信号</th>
+                <th st-sort="company">合同买受人</th>
+                <th st-sort="score">当前积分</th>
+                <th st-sort="exchangedScore">已兑积分</th>
+                <th st-sort="exchangingScore">正在兑换</th>
+                <th>状态</th>
+                <th>操作</th>
+            </tr>
+            </thead>
 
-        <tbody ng-show="isNonEmptyGrid" class="">
-        <tr ng-repeat="r in dispItems">
-            <td>{{$index+1}}</td>
-            <td>{{r.agentName}}</td>
-            <td>{{r.username}}</td>
-            <td>{{r.realName}}</td>
-            <td>{{r.weiXin}}</td>
-            <td>{{r.company}}</td>
-            <td>{{r.score}}</td>
-            <td>{{r.exchangedScore}}</td>
-            <td>{{r.exchangingScore}}</td>
-            <td>{{r.status}}</td>
-            <td>
-                <button class="btn btn-primary" ng-click="detail(r)">详情</button>
+            <tbody ng-show="isNonEmptyGrid" class="">
+            <tr ng-repeat="r in dispItems">
+                <td>{{$index+1}}</td>
+                <td>{{r.agentName}}</td>
+                <td>{{r.username}}</td>
+                <td>{{r.realName}}</td>
+                <td>{{r.weiXin}}</td>
+                <td>{{r.company}}</td>
+                <td>{{r.score}}</td>
+                <td>{{r.exchangedScore}}</td>
+                <td>{{r.exchangingScore}}</td>
+                <td>{{r.status}}</td>
+                <td>
+                    <button class="btn btn-primary" ng-click="detail(r)">详情</button>
+                </td>
+            </tr>
+            </tbody>
+
+
+            <tbody ng-show="items!==undefined&&items.length==0">
+            <tr>
+                <td colspan="20" class="text-center text-info">无数据</td>
+            </tr>
+            </tbody>
+
+            <tbody ng-show="isLoading">
+            <tr>
+                <td colspan="20" class="text-center text-info">正在拼命为您加载数据……</td>
+            </tr>
+            </tbody>
+
+            <tbody ng-show="errMsg">
+            <tr>
+                <td colspan="20" class="text-center text-warning">{{errMsg}}</td>
+            </tr>
+            </tbody>
+
+            <tfoot>
+            <td class="text-center" st-pagination=""  colspan="20" >
             </td>
-        </tr>
-        </tbody>
+            </tfoot>
+        </table>
 
+        <script type="text/ng-template" id="fs-score-view-detail.html">
+            <div>
+                <div class="modal-header">
+                    <!--<i class="glyphicon glyphicon-remove top-right pull-right close" ng-click="closeMsgbox()"
+                       ng-hide="msgCfg.noCloseBtn"></i>-->
+                    <span class="modal-title h3">积分变动</span>
+                </div>
+                <div class="modal-body">
+                    <table class="table table-bordered">
+                        <thead>
+                        <tr>
+                            <th >时间</th>
+                            <th >变动</th>
+                            <th >状态</th>
+                            <th >操作人</th>
+                            <th >流水号</th>
+                            <th >描述</th>
+                        </tr>
+                        </thead>
+                        <tbody ng-show="r.changes&&r.changes.length">
+                        <tr ng-repeat="t in r.changes track by $index">
+                            <td>{{t.time}}</td>
+                            <td>{{t.change}}</td>
+                            <td>{{t.status}}</td>
+                            <td>{{t.hander}}</td>
+                            <td>{{t.serial}}</td>
+                            <td>{{t.description}}</td>
+                        </tr>
+                        </tbody>
+                        <tbody ng-show="!(r.changes&&r.changes.length)">
+                        <tr>
+                            <td colspan="100" class="text-center text-info">无数据</td>
+                        </tr>
+                        </tbody>
+                        <tbody ng-show="isLoading">
+                        <tr>
+                            <td colspan="100" class="text-center text-info">正在拼命为您加载数据……</td>
+                        </tr>
+                        </tbody>
+                        <tbody ng-show="errMsg">
+                        <tr>
+                            <td colspan="100" class="text-center text-warning">{{errMsg}}</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
 
-        <tbody ng-show="items!==undefined&&items.length==0">
-        <tr>
-            <td colspan="20" class="text-center text-info">无数据</td>
-        </tr>
-        </tbody>
-
-        <tbody ng-show="isLoading">
-        <tr>
-            <td colspan="20" class="text-center text-info">正在拼命为您加载数据……</td>
-        </tr>
-        </tbody>
-
-        <tbody ng-show="errMsg">
-        <tr>
-            <td colspan="20" class="text-center text-warning">{{errMsg}}</td>
-        </tr>
-        </tbody>
-
-        <tfoot>
-        <td class="text-center" st-pagination="" st-items-by-page="10" colspan="20" st-displayed-pages="20">
-        </td>
-        </tfoot>
-    </table>
-
-    <script type="text/ng-template" id="fs-score-view-detail.html">
-        <div>
-            <div class="modal-header">
-                <!--<i class="glyphicon glyphicon-remove top-right pull-right close" ng-click="closeMsgbox()"
-                   ng-hide="msgCfg.noCloseBtn"></i>-->
-                <span class="modal-title h3">积分变动</span>
             </div>
-            <div class="modal-body">
-                <table class="table table-bordered">
-                    <thead>
-                    <tr>
-                        <th>时间</th>
-                        <th>变动</th>
-                        <th>状态</th>
-                        <th>操作人</th>
-                        <th>流水号</th>
-                        <th>描述</th>
-                    </tr>
-                    </thead>
-                    <tbody ng-show="r.changes&&r.changes.length">
-                    <tr ng-repeat="t in r.changes track by $index">
-                        <td>{{t.time}}</td>
-                        <td>{{t.change}}</td>
-                        <td>{{t.status}}</td>
-                        <td>{{t.hander}}</td>
-                        <td>{{t.serial}}</td>
-                        <td>{{t.description}}</td>
-                    </tr>
-                    </tbody>
-                    <tbody ng-show="!(r.changes&&r.changes.length)">
-                    <tr>
-                        <td colspan="100" class="text-center text-info">无数据</td>
-                    </tr>
-                    </tbody>
-                    <tbody ng-show="isLoading">
-                    <tr>
-                        <td colspan="100" class="text-center text-info">正在拼命为您加载数据……</td>
-                    </tr>
-                    </tbody>
-                    <tbody ng-show="errMsg">
-                    <tr>
-                        <td colspan="100" class="text-center text-warning">{{errMsg}}</td>
-                    </tr>
-                    </tbody>
-                </table>
-            </div>
+        </script>
 
-        </div>
-    </script>
+    </div>
 
 </div>

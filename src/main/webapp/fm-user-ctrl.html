@@ -23,17 +23,15 @@
                         </th>
                         <th><input st-search="weixin" placeholder="微信号" type="search" class="input-sm form-control">
                         </th>
-                        <th><input st-search="company" placeholder="位名称" type="search"
-                                   class="input-sm form-control">
+                        <th><input st-search="company" placeholder="合同买受人" type="search" class="input-sm form-control">
                         </th>
-                        <th><input st-search="companyid" placeholder="证件号/单位代码" type="search"
+                        <th><input st-search="companyid" placeholder="身份证/社会信用代码" type="search"
                                    class="input-sm form-control">
                         </th>
                         <th>
                             <select st-search="registerWay" class="input-sm form-control">
                                 <option value="">所有</option>
-                                <option>个人</option>
-                                <option>公司</option>
+                                <option ng-repeat="p in items.registerWays">{{p}}</option>
                             </select>
                         </th>
                         <th><input st-search="agent" placeholder="所属代理商" type="search" class="input-sm form-control">
@@ -45,7 +43,13 @@
                                 <option value="-3">锁定</option>
                             </select>
                         </th>
-                        <th></th>
+                        <th>
+                            <select st-search="ctlflag" class="input-sm form-control">
+                                <option value="">所有</option>
+                                <option value="0">锁定</option>
+                                <option value="-3">解锁</option>
+                            </select>
+                        </th>
                     </tr>
                     <tr>
                         <th>序号</th>
@@ -54,8 +58,8 @@
                         <th st-sort="phone">电话</th>
                         <th st-sort="email">邮箱</th>
                         <th st-sort="weixin">微信号</th>
-                        <th st-sort="company" title="个人信息或所属单位名称"><!--个人信息/单位-->名称</th>
-                        <th st-sort="companyid">证件号/单位代码</th>
+                        <th st-sort="company"><!--个人信息/单位名称-->合同买受人</th>
+                        <th st-sort="companyid">身份证/社会信用代码</th>
                         <th st-sort="registerWay">商户类型</th>
                         <th st-sort="agent">所属代理商</th>
                         <!--<th title="用以验证注册用户有效性的证据">注册凭证（合同号）</th>-->
@@ -108,7 +112,7 @@
                     </tbody>
 
                     <tfoot>
-                    <td class="text-center" st-pagination="" st-items-by-page="10" colspan="20" st-displayed-pages="20">
+                    <td class="text-center" st-pagination="" colspan="20">
                     </td>
                     </tfoot>
                 </table>

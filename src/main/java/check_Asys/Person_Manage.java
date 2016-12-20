@@ -465,6 +465,7 @@ public class Person_Manage {
 					logger.info("用户被锁定");
 					jsonObject.element("flag", -4);
 					//return -1;
+					jsonObject.element("role", f_as.getUsertype());
 					return jsonObject;
 				}
 				else{
@@ -486,6 +487,7 @@ public class Person_Manage {
 							f_as.setLogLock(true);
 							aS_Dao.update(f_as);
 							jsonObject.element("flag", -4);
+							jsonObject.element("role", f_as.getUsertype());
 							//return -1;
 							return jsonObject;
 						}
@@ -496,6 +498,7 @@ public class Person_Manage {
 						
 						jsonObject.element("flag", -2);
 						//return -1;
+						jsonObject.element("role", f_as.getUsertype());
 						return jsonObject;
 					}						
 				}

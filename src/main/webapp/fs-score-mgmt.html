@@ -1,168 +1,191 @@
 <div>
-    <table st-table="dispItems" st-pipe="refreshGrid" class="table table-bordered table-striped">
-        <thead>
-        <tr>
-            <th></th>
-            <th><input class="input-sm form-control" type="search" st-search="agentName" placeholder="代理商"></th>
-            <th><input class="input-sm form-control" type="search" st-search="username" placeholder="用户名"></th>
-            <th><input class="input-sm form-control" type="search" st-search="realName" placeholder="真实姓名"></th>
-            <th><input class="input-sm form-control" type="search" st-search="weiXin" placeholder="微信号"></th>
-            <th><input class="input-sm form-control" type="search" st-search="company" placeholder="客户名"></th>
-            <th><input class="input-sm form-control" type="number" st-search="exchangeScore" placeholder="兑换积分"></th>
-            <th>
-                <!--兑换类型-->
-                <select class="input-sm form-control" st-search="exchangeType">
-                    <option value="">所有</option>
-                    <option>红包</option>
-                    <option>礼品</option>
-                </select>
-            </th>
-            <th><input class="input-sm form-control" type="search" st-search="exchangeCategory" placeholder="礼品类型"></th>
-            <th>
-                <!--申请时间-->
-                <input class="input-sm form-control" type="search" st-search="applicaTime" placeholder="申请时间">
-                <!--<st-date-range predicate="applicaTime" before="query.before" after="query.after"></st-date-range>-->
-            </th>
-            <th>
-                <!--完成时间-->
-                <input class="input-sm form-control" type="search" st-search="finishTime" placeholder="完成时间">
-                <!--<st-date-range predicate="finishTime" before="query.before" after="query.after"></st-date-range>-->
-            </th>
-            <th>
-                <!--状态-->
-                <select class="input-sm form-control" st-search="status">
-                    <option value="">所有</option>
-                    <option>兑换中</option>
-                    <option>已兑换</option>
-                    <option>未领取</option>
-                </select>
-            </th>
-            <th><!--说明--></th>
-            <th><!--操作--></th>
-        </tr>
-        <tr>
-            <th>序号</th>
-            <th>代理商</th>
-            <th>用户名</th>
-            <th>真实姓名</th>
-            <th>微信号</th>
-            <th>客户名</th>
-            <th>兑换积分</th>
-            <th>兑换类型</th>
-            <th>礼品类型</th>
-            <th>申请时间</th>
-            <th>完成时间</th>
-            <th>状态</th>
-            <th>说明</th>
-            <th>操作</th>
-        </tr>
-        </thead>
+    <div style="margin-bottom: 10px" ng-hide="loggedInUser.role!='bm'">
+        <a ng-href="{{scoreCfg.exportTable.url}}" target="_blank" ladda="scoreCfg.exportTable.progress"
+           ng-click="exportTable($event)" class="btn btn-primary">导出</a>
+        <button ladda="scoreCfg.shipUpload.progress" ngf-select="importShipInfo($file, $invalidFiles)"
+                accept=".xls,.xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel"
+                ngs-max-size="10MB" class="btn btn-primary">导入物流单号
+        </button>
+        <button ladda="scoreCfg.giftCatUpload.progress" ngf-select="importGiftCat($file, $invalidFiles)"
+                accept=".xls,.xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel"
+                ngs-max-size="10MB" class="btn btn-primary">导入礼品类型
+        </button>
+        <button ladda="scoreCfg.exportGiftCat.progress" ng-click="exportGiftCat()" class="btn btn-primary">导出礼品类型
+        </button>
+    </div>
+    <div>
+        <table st-table="dispItems" st-pipe="refreshGrid" class="table table-bordered table-striped">
+            <thead>
+            <tr>
+                <th></th>
+                <th><input class="input-sm form-control" type="search" st-search="agentName" placeholder="代理商"></th>
+                <th><input class="input-sm form-control" type="search" st-search="username" placeholder="用户名"></th>
+                <th><input class="input-sm form-control" type="search" st-search="realName" placeholder="真实姓名"></th>
+                <th><input class="input-sm form-control" type="search" st-search="weiXin" placeholder="微信号"></th>
+                <th><input class="input-sm form-control" type="search" st-search="company" placeholder="合同买受人"></th>
+                <th><input class="input-sm form-control" type="number" st-search="exchangeScore" placeholder="兑换积分">
+                </th>
+                <th>
+                    <!--兑换类型-->
+                    <select class="input-sm form-control" st-search="exchangeType">
+                        <option value="">所有</option>
+                        <option>红包</option>
+                        <option>礼品</option>
+                    </select>
+                </th>
+                <th><input class="input-sm form-control" type="search" st-search="exchangeCategory" placeholder="礼品类型">
+                </th>
+                <th>
+                    <!--申请时间-->
+                    <!--<input class="input-sm form-control" type="search" st-search="applicaTime" placeholder="申请时间">-->
+                    <st-date-range predicate="applicaTime" before="applicaTimeQuery.before"
+                                   after="applicaTimeQuery.after"></st-date-range>
+                </th>
+                <th>
+                    <!--完成时间-->
+                    <!--<input class="input-sm form-control" type="search" st-search="finishTime" placeholder="完成时间">-->
+                    <st-date-range predicate="finishTime" before="finishTimeQuery.before"
+                                   after="finishTimeQuery.after"></st-date-range>
+                </th>
+                <th>
+                    <!--状态-->
+                    <select class="input-sm form-control" st-search="status">
+                        <option value="">所有</option>
+                        <option>兑换中</option>
+                        <option>已兑换</option>
+                        <option>未领取</option>
+                    </select>
+                </th>
+                <th><!--说明--></th>
+                <th><!--操作--></th>
+            </tr>
+            <tr>
+                <th>序号</th>
+                <th st-sort="agentName">代理商</th>
+                <th st-sort="username" st-descending-first="true">用户名</th>
+                <th st-sort="realName">真实姓名</th>
+                <th st-sort="weiXin">微信号</th>
+                <th st-sort="company">合同买受人</th>
+                <th st-sort="exchangeScore">兑换积分</th>
+                <th st-sort="exchangeType">兑换类型</th>
+                <th st-sort="exchangeCategory">礼品类型</th>
+                <th st-sort="applicaTime">申请时间</th>
+                <th st-sort="finishTime">完成时间</th>
+                <th st-sort="status">状态</th>
+                <th st-sort="description">说明</th>
+                <th>操作</th>
+            </tr>
+            </thead>
 
-        <tbody ng-show="isNonEmptyGrid" class="">
-        <tr ng-repeat="r in dispItems">
-            <td>{{$index+1}}</td>
-            <td>{{r.agentName}}</td>
-            <td>{{r.username}}</td>
-            <td>{{r.realName}}</td>
-            <td>{{r.weiXin}}</td>
-            <td>{{r.company}}</td>
-            <td>{{r.exchangeScore}}</td>
-            <td>{{r.exchangeType}}</td>
-            <td>{{r.exchangeCategory}}</td>
-            <td>{{r.applicaTime}}</td>
-            <td>{{r.finishTime}}</td>
-            <td>{{r.status}}</td>
-            <td>{{r.description}}</td>
-            <td>
-                <!--<button class="btn btn-primary" ng-click="detail(r)">详情</button>-->
-                <button class="btn btn-primary" ng-click="confirm(r)"
-                        ng-hide="nonSuperAdmin||r.exchangeType!='礼品'||r.status!='未兑换'">确认
-                </button>
+            <tbody ng-show="isNonEmptyGrid" class="">
+            <tr ng-repeat="r in dispItems">
+                <td>{{$index+1}}</td>
+                <td>{{r.agentName}}</td>
+                <td>{{r.username}}</td>
+                <td>{{r.realName}}</td>
+                <td>{{r.weiXin}}</td>
+                <td>{{r.company}}</td>
+                <td>{{r.exchangeScore}}</td>
+                <td>{{r.exchangeType}}</td>
+                <td>{{r.exchangeCategory}}</td>
+                <td>{{r.applicaTime}}</td>
+                <td>{{r.finishTime}}</td>
+                <td>{{r.status}}</td>
+                <td>{{r.description}}</td>
+                <td>
+                    <button class="btn btn-primary" ng-click="detail(r)"
+                            ng-show="r.exchangeType=='礼品'&&(r.status=='已兑换'||r.status=='未领取')"
+                            ladda="detailProgress[r.randKey]">详情
+                    </button>
+                    <button class="btn btn-primary" ng-click="confirm(r)"
+                            ng-hide="loggedInUser.role!='bm'||r.exchangeType!='礼品'||r.status!='未兑换'">确认
+                    </button>
+                </td>
+            </tr>
+            </tbody>
+
+            <tbody ng-show="items!==undefined&&items.length==0">
+            <tr>
+                <td colspan="20" class="text-center text-info">无数据</td>
+            </tr>
+            </tbody>
+
+            <tbody ng-show="isLoading">
+            <tr>
+                <td colspan="20" class="text-center text-info">正在拼命为您加载数据……</td>
+            </tr>
+            </tbody>
+
+            <tbody ng-show="errMsg">
+            <tr>
+                <td colspan="20" class="text-center text-warning">{{errMsg}}</td>
+            </tr>
+            </tbody>
+
+            <tfoot>
+            <td class="text-center" st-pagination="" colspan="20">
             </td>
-        </tr>
-        </tbody>
+            </tfoot>
+        </table>
 
-        <tbody ng-show="items!==undefined&&items.length==0">
-        <tr>
-            <td colspan="20" class="text-center text-info">无数据</td>
-        </tr>
-        </tbody>
+        <style>
+            .item {
+                margin-top: 20px;
+            }
 
-        <tbody ng-show="isLoading">
-        <tr>
-            <td colspan="20" class="text-center text-info">正在拼命为您加载数据……</td>
-        </tr>
-        </tbody>
+            .item .item-key {
+                display: inline-block;
+                vertical-align: middle;
+                /*text-align: right;*/
+            }
 
-        <tbody ng-show="errMsg">
-        <tr>
-            <td colspan="20" class="text-center text-warning">{{errMsg}}</td>
-        </tr>
-        </tbody>
+            .item .item-value {
+                display: inline-block;
+                vertical-align: middle;
+                margin-left: 20px;
+                /*font-weight: bold;*/
+            }
+        </style>
+        <script type="text/ng-template" id="fs-score-mgmt-money.html"></script>
 
-        <tfoot>
-        <td class="text-center" st-pagination="" st-items-by-page="10" colspan="20" st-displayed-pages="20">
-        </td>
-        </tfoot>
-    </table>
+        <script type="text/ng-template" id="fs-score-mgmt-gift.html">
+            <div>
+                <div class="modal-header">
+                    <div class="text-center h4">物流详情</div>
+                </div>
+                <div class="modal-body">
 
-    <style>
-        .item {
-            margin-top: 20px;
-        }
-
-        .item .item-key {
-            display: inline-block;
-            vertical-align: middle;
-            /*text-align: right;*/
-        }
-
-        .item .item-value {
-            display: inline-block;
-            vertical-align: middle;
-            margin-left: 20px;
-            /*font-weight: bold;*/
-        }
-    </style>
-    <script type="text/ng-template" id="fs-score-mgmt-money.html">
-
-    </script>
-
-    <script type="text/ng-template" id="fs-score-mgmt-gift.html">
-        <div>
-            <!--<div class="modal-header"></div>-->
-            <div class="modal-body">
-
-                <div class="">
-                    <div class="row col-md-offset-3 item">
-                        <div class="col-md-3 item-key">联系人</div>
-                        <div class="col-md-offset-3 text-primary item-value">
-                            {{}}
+                    <div class="">
+                        <div class="row col-md-offset-3 item">
+                            <div class="col-md-3 item-key">联系人</div>
+                            <div class="col-md-offset-3 text-primary item-value">
+                                {{r.detail.user}}
+                            </div>
                         </div>
+                        <div class="row col-md-offset-3 item">
+                            <div class="col-md-3">联系电话</div>
+                            <div class="col-md-offset-3 text-primary item-value">{{r.detail.phone}}</div>
+                        </div>
+                        <div class="row col-md-offset-3 item">
+                            <div class="col-md-3 item-key">联系地址</div>
+                            <div class="col-md-offset-3 text-primary item-value">{{r.detail.address}}</div>
+                        </div>
+                        <div class="row col-md-offset-3 item">
+                            <div class="col-md-3 item-key">物流公司</div>
+                            <div class="col-md-offset-3 text-primary item-value">{{r.detail.logisticCompany}}</div>
+                        </div>
+                        <div class="row col-md-offset-3 item">
+                            <div class="col-md-3 item-key">物流单号</div>
+                            <div class="col-md-offset-3 text-primary item-value">{{r.detail.logisticNumber}}</div>
+                        </div>
+                        <div class="row col-md-offset-3 item">
+                            <div class="col-md-3 item-key">确认人</div>
+                            <div class="col-md-offset-3 text-primary item-value">{{r.hander}}</div>
+                        </div>
+                        <div class="row col-md-offset-3 item"></div>
                     </div>
-                    <div class="row col-md-offset-3 item">
-                        <div class="col-md-3">联系电话</div>
-                        <div class="col-md-offset-3 text-primary item-value">{{}}</div>
-                    </div>
-                    <div class="row col-md-offset-3 item">
-                        <div class="col-md-3 item-key">联系地址</div>
-                        <div class="col-md-offset-3 text-primary item-value">{{}}</div>
-                    </div>
-                    <div class="row col-md-offset-3 item">
-                        <div class="col-md-3 item-key">物流公司</div>
-                        <div class="col-md-offset-3 text-primary item-value">{{}}</div>
-                    </div>
-                    <div class="row col-md-offset-3 item">
-                        <div class="col-md-3 item-key">物流单号</div>
-                        <div class="col-md-offset-3 text-primary item-value">{{}}</div>
-                    </div>
-                    <div class="row col-md-offset-3 item">
-                        <div class="col-md-3 item-key">确认人</div>
-                        <div class="col-md-offset-3 text-primary item-value">{{loggedInUser.email}}</div>
-                    </div>
-                    <div class="row col-md-offset-3 item"></div>
                 </div>
             </div>
-        </div>
-    </script>
+        </script>
+    </div>
 </div>

@@ -650,10 +650,11 @@ public class AutoCheckAuccount {
 					/*写入数据库*/
 				}
 				
-				//TransferBinput_BackupToWarea(owner);
+				//将备份区的记录转于到工作区
+				TransferBinput_BackupToWarea(owner);
 				//将本月的记录转于到工作区，将历史记录转移到历史区
-				TransferBinput_BackupToWarea_AND(owner,caid);
-				TransferBinput_BackupToHisarea(owner);
+				//TransferBinput_BackupToWarea_AND(owner,caid);
+				//TransferBinput_BackupToHisarea(owner);
 				
 				//将付款缓冲区的记录转于到付款区
 				TransferPrecord_CAreaToWArea(owner,caid);
@@ -1221,13 +1222,23 @@ public class AutoCheckAuccount {
 			return 1;
 		}
 		
+		if (fHLast.getCaid().equals(curmonthcaid) == false) {//从历史对账中再次跳转到历史对账
+			logger.error("从历史对账中跳转到历史对账");
+			TransferBinput_WareaToHistory(owner);//转移出纳表到历史区
+		}
+		else{
+			logger.error("从本月对账中跳转到历史对账");
+			TransferBinput_WareaToBackup(owner);//转移出纳工作表到备份区
+		}
+		
 	/*	cBackup_Dao.DeleteTbByElement("owner", owner);
 		TransferCus_WareaToBackup(owner);//将客户信息转移到备份区*/
 		
 	//	TransferOri_WareaToBackup(owner);//转移货款工作表到备份区
 		tDao.DeleteOoriderByElement("owner", owner);//删除货款工作区记录
 		
-		TransferBinput_WareaToBackup(owner);//转移出纳工作表到备份区
+	//	TransferBinput_WareaToBackup(owner);//转移出纳工作表到备份区
+	//	TransferBinput_WareaToHistory(owner);//转移出纳表到历史区
 		
 		//读服务器目录中的货款和出纳excel，重新载入信息
 		File fileA = new File(savedirA + "/" + filenameA);
