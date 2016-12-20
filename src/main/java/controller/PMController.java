@@ -88,8 +88,8 @@ public class PMController {
 	 * @param request
 	 * @param response
 	 */
-	@RequestMapping(value="/modifyClientMes")
-	public void ModifyClientMes(HttpServletRequest request,HttpServletResponse response){
+	@RequestMapping(value="/modifyAssistanceMes")
+	public void ModifyAssistanceMes(HttpServletRequest request,HttpServletResponse response){
 		logger.info("***Get modifyClientMes request***");
 		
 		JSONObject re_jsonobject = new JSONObject();
@@ -104,7 +104,7 @@ public class PMController {
 			String request_s_de = AES.aesDecrypt(request_s, AES.key);
 			logger.info("receive" + request_s_de);
 			JSONObject jstr = JSONObject.fromObject(request_s_de);
-			workId = jstr.getString("workId");//获取登录id
+			workId = jstr.getString("username");//获取登录id
 			name = jstr.getString("name");//获取登录密码
 			phone = jstr.getString("phone");
 			email = jstr.getString("email");
