@@ -54,6 +54,7 @@ app.factory('HttpReqService', ['$http', '$q', function (http, Q) {
                 // console.debug('Decrypted:', resPkg.data);
                 resPkg.data = resPkg === undefined ? undefined : JSON.parse(resPkg.data);
                 var resbody = resPkg.data;
+                console.debug('req recvd(parsed as json) Decrypted:', angular.copy(resPkg.data));
                 if (isOkResBody(resbody)) {
                     (function preExtractData(resbody) {
                         if ($.isArray(resbody.data) && !resbody.items) {
@@ -62,22 +63,24 @@ app.factory('HttpReqService', ['$http', '$q', function (http, Q) {
                         }
                     })(resbody);
 
-                    okfnc = okfnc || function (resbody) {
-                            return resbody.data;
-                        };
-
-                    var ret = okfnc && okfnc(resbody);
-                    if (!ret) {
-                        console.warn('no return value???');
-                        // ret = resbody.items ? resbody : resbody.data;
+                    var ret;
+                    if (okfnc) {
+                        ret = okfnc(resbody);
+                        if (!ret) {
+                            console.debug('okfnc defined but no return value!!!');
+                        }
+                    } else {
+                        /*okfnc = okfnc || function (resbody) {
+                         return resbody.data;
+                         };*/
+                        ret = resbody.data;
                     }
-
                     // extract data by provided function, or return resbody.data if function not provided or returns nothing
                     deferred.resolve(ret);
                 } else {
                     console.debug('negative resbody:', resbody);
                     errfnc = errfnc || function (resbody) {
-                            return {msg: resbody.errmsg || '网络请求错误，无详细错误信息'};
+                            return {msg: resbody.errmsg || '网络请求错误'};
                         };
                     deferred.reject(errfnc(resbody));
                 }
@@ -88,7 +91,7 @@ app.factory('HttpReqService', ['$http', '$q', function (http, Q) {
             });
         } catch (expt) {
             console.error(expt);
-            deferred.reject({msg: '网络或系统错误'});
+            deferred.reject({msg: '未知错误'});
         }
         console.debug('req result:', deferred.promise);
         return deferred.promise;
@@ -243,7 +246,7 @@ app.factory('AccountService', ['$rootScope', '$cookies', '$q', 'HttpReqService',
 // 注销（登出）
     svc.signOut = function () {
         if (rootsgop.loggedInUser) {
-            console.debug('remote request to sign out');
+            // console.debug('remote request to sign out');
             // remove logged in user object
             delete rootsgop.loggedInUser;
             // process cookie
@@ -365,9 +368,11 @@ app.factory('AccountService', ['$rootScope', '$cookies', '$q', 'HttpReqService',
         return Req.req(ReqUrl.notifiers, $.extend({
             watch_type: 'reged_cp'
         }, reqParams), function (resbody) {
-            resbody.data.forEach(function (ele) {
-                ele.ctlflag = ele.flag;
+            var items = resbody.data;
+            items.forEach(function (ele) {
+                ele.ctlflag = ele.ctlflag || ele.flag;
             });
+            items.registerWays = appConf.userRegisterWays;
             return resbody;
         });
     };
@@ -389,7 +394,8 @@ app.factory('AccountService', ['$rootScope', '$cookies', '$q', 'HttpReqService',
         return Req.req(ReqUrl.fadmins, $.extend({
             watch_type: 'reged_am'
         }, reqParams), function (resbody) {
-            resbody.data.forEach(function (ele) {
+            var items = resbody.data;
+            items.forEach(function (ele) {
                 ele.ctlflag = ele.flag;
             });
             return resbody;
@@ -502,11 +508,12 @@ app.factory('AccountService', ['$rootScope', '$cookies', '$q', 'HttpReqService',
 app.factory('FncRmindService', ['$q', 'HttpReqService', function (Q, Req) {
     var svc = {};
 
-    function notifTransFnc(resbody) {
+/*    function notifTransFnc(resbody) {
         var resdata = resbody.data;
         var payWaysInItems = [];
         for (var k in resdata) {
             var item = resdata[k];
+            if (!item) continue;    // 可能有null……
             item.checkResult = item.checkResult || 'V'; // 设置V标志，为“无”，表示没有设置状态
             item.result = item.checkResult;
             item.payTime = item.payTime || item.uploadTime;
@@ -519,6 +526,14 @@ app.factory('FncRmindService', ['$q', 'HttpReqService', function (Q, Req) {
         resdata.payWaysInItems = payWaysInItems;
 
         return $.extend({}, resbody, {items: resdata});
+    }*/
+
+    function notifTransFnc2(resbody) {
+        for (var idx = 0; idx < resbody.data.length; idx++) {
+            resbody.data[idx].renameProperty("id", "idObj");
+            $.extend(resbody.data[idx], resbody.data[idx].idObj);
+        }
+        return resbody;
     }
 
     svc.fncReminds = function (cfg) {
@@ -528,7 +543,7 @@ app.factory('FncRmindService', ['$q', 'HttpReqService', function (Q, Req) {
         };
         $.extend(reqBody, cfg);
 
-        return Req.req(ReqUrl.fwFncReminds, reqBody, notifTransFnc);
+        return Req.req(ReqUrl.fwFncReminds, reqBody, notifTransFnc2);
     };
 
     function opPaymentNotification(approveCfg, type, okfnc) {
@@ -580,7 +595,7 @@ app.factory('FncRmindService', ['$q', 'HttpReqService', function (Q, Req) {
         return Req.req(ReqUrl.notifView, $.extend({
             watch_type: "T",
             table_name: "pay_cache"
-        }, reqParams), notifTransFnc);
+        }, reqParams), notifTransFnc2);
     };
 
     return svc;
@@ -597,26 +612,35 @@ app.factory('ChkRsltSvc', ['HttpReqService', '$rootScope', function (Req, rootsg
     svc.caid = svc.caid || sessionStorage.getItem('caid');
     rootsgop.caid = svc.caid;
 
+//*******//
+//     2016-12-11
+
+    if (!rootsgop.lastUpload) {
+        // 浏览器刷新？？
+        var str = sessionStorage.getItem(lastUploadInfoKey);
+        rootsgop.lastUpload = {};
+        $.extend(rootsgop.lastUpload, str ? JSON.parse(str) : {});
+    }
+    function setLastUploadInfo(lastUploadInfo) {
+        rootsgop.lastUpload = rootsgop.lastUpload || {};//保证.lastUpload字段非undefined，$.extend不会在rootsgop增加字段
+        $.extend(rootsgop.lastUpload, lastUploadInfo);
+        sessionStorage.setItem(lastUploadInfoKey, JSON.stringify(rootsgop.lastUpload));
+    }
+
+    //*******//
 
 // 对账操作环境准备
     svc.initCheckingEnv = function () {
         return Req.req(ReqUrl.prepareChkEnv, {}, function (resbody) {
             svc.caid = resbody.caid || resbody.data && resbody.data.caid;
-            var obj = {
-                caid: svc.caid
-                , lastUpload: {
-                    time: resbody.lastUploadTime || resbody.data && resbody.data.lastUploadTime
-                    , result: resbody.lastUploadResult || resbody.data && resbody.data.lastUploadResult
-                }
+            var lastUpload = {
+                time: resbody.lastUploadTime || resbody.data && resbody.data.lastUploadTime
+                , result: resbody.lastUploadResult || resbody.data && resbody.data.lastUploadResult
             };
-            //*******//
-            rootsgop.lastUpload = rootsgop.lastUpload || {};//保证.lastUpload字段非undefined，否则extend无效
-            $.extend(rootsgop.lastUpload, obj);
-            sessionStorage.setItem(lastUploadInfoKey, JSON.stringify(obj));
-            //*******//
+            setLastUploadInfo(lastUpload);
             sessionStorage.setItem('caid', svc.caid);
             rootsgop.caid = svc.caid;
-            return obj;
+            return {caid: svc.caid};
         });
     };
 
@@ -632,7 +656,16 @@ app.factory('ChkRsltSvc', ['HttpReqService', '$rootScope', function (Req, rootsg
         var thisDate = new Date();
         var year = thisDate.getFullYear();
         var month = thisDate.getMonth() + 1;
-        return Req.req(ReqUrl.reCheck, {caid: svc.caid, year: year, month: month});
+        return Req.req(ReqUrl.reCheck, {caid: svc.caid, year: year, month: month}, function (resbody) {
+            // 2016-12-11
+            var lastUpload = {
+                time: resbody.lastUploadTime,
+                result: resbody.lastUploadResult
+            };
+            setLastUploadInfo(lastUpload);
+
+            return resbody.data;
+        });
     };
 
     // 历史对账操作
@@ -642,6 +675,14 @@ app.factory('ChkRsltSvc', ['HttpReqService', '$rootScope', function (Req, rootsg
             svc.caid = caid;
             sessionStorage.setItem('caid', svc.caid);
             rootsgop.caid = svc.caid;
+
+            // 2016-12-11
+            var lastUpload = {
+                time: resbody.lastUploadTime,
+                result: resbody.lastUploadResult
+            };
+            setLastUploadInfo(lastUpload);
+
             return caid;
         });
     };
@@ -808,14 +849,39 @@ app.factory('ScoreService', ['HttpReqService', function (Req) {
     svc.scoreDetail = function (reqParams) {
         return Req.req(ReqUrl.scoreDetail, reqParams);
     };
+    svc.scoreTableUrl = function () {
+        return Req.req(ReqUrl.exportScoreTbl, {}, function (resbody) {
+            return resbody.url;
+        });
+    };
 
     // 超级管理员 积分管理
     svc.scoreMgmtAll = function (reqParams) {
         return Req.req(ReqUrl.scoreMgmtAll, reqParams, scoreInfoExtractor);
     };
+    // 超管 确认礼品
     svc.approveScoreExchange = function (id) {
-        return Req.req(ReqUrl.approveScoreExchg, {randKey: id});
+        return Req.req(ReqUrl.approveScoreExchg, {randKey: id}, function (resbody) {
+            return resbody.data || '未领取';
+        });
     };
+    // 超管 导出积分兑换报表
+    svc.scoreExchangeTableUrl = function () {
+        return Req.req(ReqUrl.exportScoreExchgTbl, {}, function (resbody) {
+            return resbody.url;
+        });
+    };
+    // 超管 导出礼品类型
+    svc.giftCategoryUrl = function () {
+        return Req.req(ReqUrl.exportGiftCat, {}, function (resbody) {
+            return resbody.url;
+        });
+    };
+    // 超管 查看物流详情
+    svc.scoreExchangeDetail = function (id) {
+        return Req.req(ReqUrl.shipDetail, {randkey: id});
+    };
+
     // 财务员 积分管理
     svc.scoreMgmtInAgent = function (reqParams) {
         return Req.req(ReqUrl.scoreMgmtInAgent, reqParams, scoreInfoExtractor);

@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
 "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
-<!-- Generated 2016-12-1 21:09:21 by Hibernate Tools 5.1.0.Beta1 -->
+<!-- Generated 2016-12-17 23:35:50 by Hibernate Tools 5.1.0.Beta1 -->
 <hibernate-mapping>
     <class name="entity.CusSecondstore" table="cus_secondstore" catalog="check_a_db" optimistic-lock="version">
         <id name="client" type="string">

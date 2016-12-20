@@ -2,6 +2,7 @@ package check_Asys;
 
 import java.io.File;
 import java.io.IOException;
+import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -17,6 +18,7 @@ import org.apache.logging.log4j.Logger;
 import org.apache.xmlbeans.impl.xb.xsdschema.Public;
 import org.hibernate.SessionFactory;
 import org.springframework.web.multipart.MultipartFile;
+import org.w3c.dom.css.ElementCSSInlineStyle;
 
 import com.sun.org.apache.bcel.internal.generic.GOTO;
 import com.sun.org.apache.regexp.internal.recompile;
@@ -24,9 +26,11 @@ import com.sun.org.apache.xml.internal.resolver.helpers.PublicId;
 
 import check_Asys.CheckAcManage.Watch_Object;
 import dao.Agent_Dao;
+import dao.AllPayRecord_Dao;
 import dao.Assistance_Dao;
 import dao.BInput_Backup_Dao;
 import dao.BankInput_Dao;
+import dao.BankInput_His_Dao;
 import dao.CaresultHistory_Dao;
 import dao.ConnectPerson_Dao;
 import dao.CusSdStore_Backup_Dao;
@@ -35,17 +39,21 @@ import dao.Ori_BackUp_Dao;
 import dao.PayRecordCache_Dao;
 import dao.PayRecordHistory_Dao;
 import dao.PayRecord_Dao;
+import dao.ScoreIncreaseRecord_Dao;
 import dao.SendStore_Dao;
 import dao.Total_Account_Dao;
 import en_de_code.ED_Code;
 import entity.Agent;
+import entity.AllPayrecord;
 import entity.BankInput;
+import entity.CaresultHistory;
 import entity.ConnectPerson;
 import entity.CusSecondstore;
 import entity.OpLog;
 import entity.OriOrder;
 import entity.PayRecord;
 import entity.PayRecordHistory;
+import entity.ScoreIncreaseRecord;
 import file_op.AnyFile_Op;
 import file_op.Excel_RW;
 import file_op.AnyFile_Op.AnyFileElement;
@@ -81,6 +89,7 @@ public class CheckAcManage {
 	public static final String ENTRER_CaModel = "enter_camodel";//进入对账模式
 	public static final String CANCEL_CaAgain = "cancel_calagin";//取消并重新对账
 	public static final String FREEBACK = "freeback";//返回积分
+	public static final String HISCA = "historyca";
 	
 	public static final String SaveDirName_Orider = "OrderForms";
 	public static final String SaveDirName_BankInput = "BankinputForms";
@@ -91,7 +100,11 @@ public class CheckAcManage {
 	public CheckAcManage(SessionFactory wFactory) {
 		// TODO Auto-generated constructor stub
 		  dao_List = new Dao_List(wFactory);
-		  auccount = new AutoCheckAuccount(dao_List.bDao,dao_List.pDao,dao_List.tDao,dao_List.sDao,dao_List.pHDao,dao_List.cDao,dao_List.pCDao,dao_List.cPerson_Dao,dao_List.oUp_Dao,dao_List.bInput_Backup_Dao,dao_List.agent_Dao,dao_List.cBackup_Dao);
+		  auccount = new AutoCheckAuccount(dao_List.bDao,dao_List.pDao,dao_List.tDao,dao_List.sDao
+				  ,dao_List.pHDao,dao_List.cDao,dao_List.pCDao
+				  ,dao_List.cPerson_Dao,dao_List.oUp_Dao
+				  ,dao_List.bInput_Backup_Dao,dao_List.agent_Dao
+				  ,dao_List.cBackup_Dao,dao_List.bHis_Dao);
 		  cARseult = new CheckARseult(dao_List);
 		  formProduce = new FormProduce(wFactory, dao_List,cARseult);
 	}
@@ -132,11 +145,12 @@ public class CheckAcManage {
 		}
 		else if (operation.equals(ENTRER_CaModel)) {
 			//Enter_CaModel(owner.work_id);
-			String who = (String) object;
-			String caid = auccount.Enter_CaModel(owner.work_id);
-			
+			Import_Object import_Object = (Import_Object) object;
+			String who = owner.who;
+			String caid = auccount.Enter_CaModel(owner.work_id,import_Object.savepath,import_Object.filename);
+			JSONObject jsonObject = new JSONObject();
 			/*查找上次上传的时间和上传的结果*/
-			List<OpLog> fLogs = dao_List.opLog_Dao.FindBySpeElement_S_ByOwner("content", OpLog_Service.IMPORT, who);
+		/*	List<OpLog> fLogs = dao_List.opLog_Dao.FindBySpeElement_S_ByOwner("content", OpLog_Service.IMPORT, who);
 			
 			JSONObject jsonObject = new JSONObject();
 			if (fLogs.size() == 0) {
@@ -149,7 +163,11 @@ public class CheckAcManage {
 				String time = fLogs.get(fLogs.size() - 1).getTime();
 				String result = fLogs.get(fLogs.size() - 1).getResult();
 				String curym = new SimpleDateFormat("yyyy/MM").format(new Date());
-				if (time.contains(curym)) {
+				
+				String yearanmonth = caid.substring(0, 7);
+				String newym = yearanmonth.replace('-', '/');
+				//if (time.contains(curym)) {
+				if (time.contains(newym)) {
 					jsonObject.element("caid", caid);
 					jsonObject.element("flag", 0);
 					jsonObject.element("lastUploadResult", result);
@@ -161,17 +179,29 @@ public class CheckAcManage {
 					jsonObject.element("lastUploadResult", "本月没有上传记录");
 					jsonObject.element("lastUploadTime", "1997/00/00/_00:00:00");
 				}
-			}	
-			/*查找上次上传的时间和上传的结果*/
-			
+			}	*/
+			jsonObject = FindLastUploadTime(who,caid);
+			jsonObject.element("caid", caid);
+			jsonObject.element("flag", 0);
+			/*查找上次上传的时间和上传的结果*/	
 			re_object = jsonObject;
 		}
 		else if (operation.equals(CANCEL_CaAgain)) {
 			String caid = (String)object;
 			CancelAndCaAgain(owner.work_id,caid);
+			
+			JSONObject jsonObject = new JSONObject();
+			jsonObject = FindLastUploadTime(owner.who, caid);
+			re_object = jsonObject;
 		}
 		else if (operation.equals(FREEBACK)) {
-			FreeBackToCustom(owner.work_id);
+			FreeBackToCustom(owner.work_id,owner.who);
+		}
+		else if (operation.equals(HISCA)) {
+			String caid = (String)object;
+			JSONObject jsonObject = new JSONObject();
+			jsonObject = FindLastUploadTime(owner.who, caid);
+			re_object = jsonObject;
 		}
 		else{
 			System.out.println("unknow operation");
@@ -180,19 +210,75 @@ public class CheckAcManage {
 		return re_object;
 	}
 	
+	public JSONObject FindLastUploadTime(String who,String caid){
+		/*查找上次上传的时间和上传的结果*/
+		List<OpLog> fLogs = dao_List.opLog_Dao.FindBySpeElement_S_ByOwner("content", OpLog_Service.IMPORT, who);
+		
+		JSONObject jsonObject = new JSONObject();
+		if (fLogs.size() == 0) {
+			jsonObject.element("lastUploadResult", "没有上传记录");
+			jsonObject.element("lastUploadTime", "1997/00/00/_00:00:00");
+		}
+		else {
+			String time = fLogs.get(fLogs.size() - 1).getTime();
+			String result = fLogs.get(fLogs.size() - 1).getResult();
+			String curym = new SimpleDateFormat("yyyy/MM").format(new Date());
+			
+			String yearanmonth = caid.substring(0, 7);
+			String newym = yearanmonth.replace('-', '/');
+			//if (time.contains(curym)) {
+			if (time.contains(newym)) {
+				jsonObject.element("lastUploadResult", result);
+				jsonObject.element("lastUploadTime", time.replace('/', '-'));
+			}
+			else {
+				jsonObject.element("lastUploadResult", "本月没有上传记录");
+				jsonObject.element("lastUploadTime", "1997/00/00/_00:00:00");
+			}
+		}	
+		/*查找上次上传的时间和上传的结果*/
+		
+		return jsonObject;
+	}
+	
 	/*统一返利客户*/
-	public void FreeBackToCustom(String owner){
+	public void FreeBackToCustom(String owner,String hander){
 		List<PayRecord> pList = dao_List.pDao.GetPrecordTbByElement("owner", owner);
 		
 		for (int i = 0; i < pList.size(); i++) {
 			PayRecord pRecord = pList.get(i);
-			auccount.isFreeBack(pRecord,owner);
+			boolean freeback = auccount.isFreeBack(pRecord,owner);
+			if (freeback) {
+				/*插入积分*/
+				ScoreIncreaseRecord in_sr = new ScoreIncreaseRecord();
+				in_sr.setHander(hander);
+				
+				String connectp = pRecord.getConnPerson();
+				in_sr.setUsername(connectp);
+				
+				Date date = new Date();
+				Timestamp time = new Timestamp(date.getTime());
+				in_sr.setTime(time);
+				in_sr.setDescription("匹配通过，获得积分");
+				
+				Integer status = 2;
+				in_sr.setStatus(status.byteValue());
+				int source = ChangeMoneyTosource(pRecord.getPayMoney(),0.001);
+				in_sr.setIncreaseScore(source);
+				dao_List.sRc_Dao.add(in_sr);
+				/*插入积分*/
+			}
 		}
+	}
+	
+	/**/
+	public int ChangeMoneyTosource(Double pay_money,Double coefficient){
+		return (int) (pay_money * coefficient);
 	}
 	
 	/*进入对账模式*/
 	public void Enter_CaModel(String owner){
-		auccount.Enter_CaModel(owner);
+		//auccount.Enter_CaModel(owner);
 	}
 	
 	/**
@@ -216,7 +302,7 @@ public class CheckAcManage {
 		else {//历史对账
 			if (import_type == 'A') {
 				dao_List.tDao.DeleteOoriderByElement("owner", owner);
-				dao_List.sDao.DeleteTbByElement("owner", owner);
+				dao_List.sDao.DeleteTbByElement("owner", owner);//清除现有的客户表中的信息
 			}
 			else if (import_type == 'B') {
 				dao_List.bDao.DeleteBinputTbByElement("owner", owner);
@@ -310,7 +396,7 @@ public class CheckAcManage {
 			for (OriOrder order:orders) {
 				
 				/*填补对账联系人信息*/
-				List<ConnectPerson> fPersons = dao_List.cPerson_Dao.FindBySpeElement("companyid", order.getCuscompanyid(), owner);
+				List<ConnectPerson> fPersons = dao_List.cPerson_Dao.FindBySpeElement("companyid", order.getId().getCuscompanyid(), owner);
 				if (fPersons.isEmpty() !=  true) {
 					order.setCustomname(fPersons.get(0).getRealName());
 					order.setCustomphone(fPersons.get(0).getPhone());
@@ -327,7 +413,15 @@ public class CheckAcManage {
 				
 				order.setConnectBank(null);
 				dao_List.tDao.add(order);
-				auccount.ConnectAccountWithCustom(order);  //添加或者刷新客户合同信息
+				
+				/*货款记录的客户类型为公司主体时，才会被录入客户表中*/
+				String clientname = order.getClient();
+				int len = clientname.length();
+				if ((clientname.contains("公司") || clientname.contains("有限公司")) && (len > 3)) {
+					logger.info(clientname + "符合公司类型，将被录入客户表");
+					auccount.ConnectAccountWithCustom(order);  //添加或者刷新客户合同信息
+				}
+				/*货款记录的客户类型为公司主体时，才会被录入客户表中*/
 			}
 			/*写入数据库*/
 			re_js.element("flag", 0);
@@ -350,17 +444,47 @@ public class CheckAcManage {
 			/*解析excel文件*/
 			
 			/*写入数据库*/
-			int offsetid = dao_List.bDao.GetMaxID();
+		//	int offsetid = dao_List.bDao.GetMaxID();
+			int offsetid = GetMaxId_InBinputCWH();
 			for (int i = 0; i < bankInputs.size(); i++) {
 				BankInput bankInput = bankInputs.get(i);
 				offsetid = offsetid + 1;
 				bankInput.setId(offsetid);
+				bankInput.setCaid(caid);
 				dao_List.bDao.add(bankInput);
 				auccount.ConnectBankinputWithCustom(bankInput);//获取客户的合同信息
 			}
 			/*写入数据库*/
 			re_js.element("flag", 0);
 			re_js.element("errmsg", "导入出纳表成功");
+			return re_js;
+		}
+		else if (import_type == 'I') {//增量式上传出纳记录
+			logger.info("import bank incre");
+			/*解析excel文件*/
+			Excel_RW excel_RW = new Excel_RW();//解析excel内容
+			ArrayList<Excel_Row> totalA_table = null;
+			try {
+				totalA_table = excel_RW.ReadExcel_Table(rfile.getInputStream());
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			ArrayList<BankInput> bankInputs = excel_RW.Table_To_Ob_BankIn(totalA_table,owner);
+			/*解析excel文件*/
+			
+			int offsetid = GetMaxId_InBinputCWH();
+			for (int i = 0; i < bankInputs.size(); i++) {
+				BankInput bankInput = bankInputs.get(i);
+				offsetid = offsetid + 1;
+				bankInput.setId(offsetid);
+				bankInput.setCaid(caid);
+				dao_List.bDao.add(bankInput);
+				auccount.ConnectBankinputWithCustom(bankInput);//获取客户的合同信息
+			}
+			/*写入数据库*/
+			re_js.element("flag", 0);
+			re_js.element("errmsg", "增量式上传出纳表成功");
 			return re_js;
 		}
 		else {
@@ -371,14 +495,42 @@ public class CheckAcManage {
 		}
 	}
 	
+	/**
+	 * GetMaxId_InPayCWH：获取付款记录三个区中的最大id记录的信息
+	 * @return
+	 */
+	public int GetMaxId_InBinputCWH(){
+		int maxid_c = -1;
+		int maxid_w = -1;
+		int maxid_h = -1;
+		int maxid = -1;
+		
+		maxid_c = dao_List.bInput_Backup_Dao.GetMaxID();
+		maxid_w = dao_List.bDao.GetMaxID();
+		maxid_h = dao_List.bHis_Dao.GetMaxID();
+		
+		if (maxid_w > maxid_c) {
+			maxid = maxid_w;
+		}
+		else {
+			maxid = maxid_c;
+		}
+		if (maxid_h > maxid) {
+			maxid = maxid_h;
+		}
+		return maxid;
+	}
+	
 	/*导出对账结果*/
 	public void Export_CheckA_Result(Export_CAResObject eResObject,Owner owner){
 		//formProduce.CreateForm(eResObject.exportlist,owner.work_id, owner.user_type, eResObject.dir,eResObject.filename);
 	}
 	
 	/*查看功能*/
-	public List Watch(Watch_Object location,Owner owner,int offset,int pagesize){
+	public JSONObject Watch(Watch_Object location,Owner owner,int offset,int pagesize){
+		JSONObject re_json = new JSONObject();
 		java.util.List list = null;
+		int num = 0;
 		switch (location.watch_type) {
 		case 'T'://查看整张表
 			if (location.table_name.equals(CheckAcManage.RES_PAYR)) {//查看付款记录
@@ -386,8 +538,9 @@ public class CheckAcManage {
 				/*根据不同的用户类型获取不同的订单数据*/
 					if (owner.user_type.equals("bu")) {//对账人员
 						//list = dao_List.pDao.FindBySpeElement_S("owner", owner.work_id);
+						logger.info(offset);
 						list = dao_List.pDao.FindBySpeElement_S_Page("owner", owner.work_id, offset, pagesize);
-						
+						num = dao_List.pDao.GetPayTb_Num_ByElement("owner", owner.work_id);
 					}
 					else if(owner.user_type.equals("bm")){//总监
 						
@@ -421,13 +574,39 @@ public class CheckAcManage {
 			}
 			else if (location.table_name.equals(CheckAcManage.RES_CAHISTORY)) {
 				logger.info("查看对账记录历史");
-				list = dao_List.cDao.FindBySpeElement("cayear", location.cayear, owner.work_id);
+				list = dao_List.cDao.FindBySpeElement_ByPage("cayear", location.cayear, owner.work_id,offset,pagesize);
 				logger.info(list.size() + location.cayear + owner.work_id);
+				
+				JSONArray orders = new JSONArray();//json类中的数组
+				
+				for(int i = 0;i<list.size();i++){
+					CaresultHistory cahistory = (CaresultHistory) list.get(i);
+					if (cahistory != null) {
+						//System.out.println(object.getPayer());
+						String months = cahistory.getCamonth();
+						int month = Integer.parseInt(months);
+						if (month < 10) {
+							months = String.valueOf(month);
+						}
+						JSONObject caresult = new JSONObject();
+						caresult.element("month", months);
+						caresult.element("url", cahistory.getUrl());
+						orders.add(i,caresult);
+					}
+					else{
+						logger.error("not find the record");
+					}
+				}
+				re_json.element("data", orders);//将数组添加到对象中
+				return re_json;
 			}
 			else if(location.table_name.equals(CheckAcManage.RES_PAYCACHE)){
 				logger.info("查看预付款记录历史" + "owner=" + owner.work_id);
-				list = dao_List.pCDao.GetPayRecordsTb(owner.work_id);
-				logger.info(list.size());
+			//	list = dao_List.pCDao.GetPayRecordsTb(owner.work_id);
+				logger.info(offset + ":" + pagesize);
+				list = dao_List.allPayRecord_Dao.FindBySpeElement_S_Page("owner", owner.work_id, offset, pagesize);
+				num = dao_List.allPayRecord_Dao.GetPayTb_Num_ByElement("owner", owner.work_id);
+				logger.info(num);
 			}
 			else {
 				logger.error("未知查看类型");
@@ -440,7 +619,15 @@ public class CheckAcManage {
 			break;
 		}
 		
-		return list;
+		re_json.element("data", list);
+		if (num % 10 > 0) {//计算总页数
+			re_json.element("totalpage", num/10 + 1);
+		}
+		else {
+			re_json.element("totalpage", num/10);
+		}
+		return re_json;
+		//return list;
 	}
 
 	/*寻找匹配及确定唯一匹配功能*/
@@ -462,6 +649,15 @@ public class CheckAcManage {
 			
 			resultMapp = new ArrayList<BankInput>();
 			resultMapp.add(0, bInput);	
+			
+			ConnectPerson fPerson = dao_List.cPerson_Dao.findById(ConnectPerson.class, pRecord.getConnPerson());
+			if (fPerson != null) {
+				bInput.setCuscompanyid(fPerson.getCompanyid());
+				dao_List.bDao.update(bInput);
+			}
+			else {
+				logger_error.error("找不到对账联系人[" + pRecord.getConnPerson() + "]");
+			}
 		}
 		else if (map_Object.map_opString.equals("cancel_map")) {
 			auccount.CancelConnectBkAndPay(map_Object.pay_id, map_Object.bank_id);
@@ -508,7 +704,7 @@ public class CheckAcManage {
 					logger.info("使用合同号去关联出纳" + bInput.getPayer());
 					jmesg = auccount.ConnectBankWithAccount(bInput,owner);
 					if ((int)jmesg.get("flag") == -1) {
-						logger.info("使用合同号去关联出纳" + bInput.getPayer() + "失败");
+						logger.info("使用客户id及货款性质去关联出纳" + bInput.getPayer() + "失败");
 					}
 				}
 				
@@ -526,8 +722,9 @@ public class CheckAcManage {
 							}
 							else {
 								if (fcustom.getContractNum() <= 1) {
-									logger.info(fcustom.getClient() + "只有一个合同号,直接关联到合同号");
-									auccount.ConnectBankWithAccount_Only(bInput);//如果客户只有一个合同或者只有一个合同欠款，用该合同号去关联
+									logger.info(fcustom.getClient() + "只有一个货款性质,直接关联到货款表");
+									String paymentNature = JSONArray.fromObject(fcustom.getContractMes()).getString(0);
+									auccount.ConnectBankWithAccount_Only(bInput,paymentNature);//如果客户只有一个合同或者只有一个合同欠款，用该合同号去关联
 								}
 								else {//否则出纳记录关联到客户名下
 									logger.info("关联" + bInput.getId() + ":" + bInput.getPayer() + "出纳记录到客户名下");
@@ -554,7 +751,6 @@ public class CheckAcManage {
 			return jmesg;
 		}
 	}
-
 	
 	/*对账后查看对账结果*/
 	public Object Watch_CheckAResult(Watch_CAResObject wCaResObject,String owner){
@@ -700,6 +896,9 @@ public class CheckAcManage {
 		public BInput_Backup_Dao bInput_Backup_Dao;
 		public CusSdStore_Backup_Dao cBackup_Dao;
 		public OpLog_Dao opLog_Dao;
+		public ScoreIncreaseRecord_Dao sRc_Dao;
+		public AllPayRecord_Dao allPayRecord_Dao;
+		public BankInput_His_Dao bHis_Dao;
 		
 		public Dao_List(SessionFactory wFactory){
 			  tDao = new Total_Account_Dao(wFactory); 
@@ -716,6 +915,9 @@ public class CheckAcManage {
 			  bInput_Backup_Dao = new BInput_Backup_Dao(wFactory);
 			  cBackup_Dao = new CusSdStore_Backup_Dao(wFactory);
 			  opLog_Dao = new OpLog_Dao(wFactory);
+			  sRc_Dao = new ScoreIncreaseRecord_Dao(wFactory);
+			  allPayRecord_Dao = new AllPayRecord_Dao(wFactory);
+			  bHis_Dao = new BankInput_His_Dao(wFactory);
 		}
 	}
 	
@@ -741,8 +943,9 @@ public class CheckAcManage {
 	}
 	
 	public class Owner{
-		public String work_id;
+		public String work_id;//代理商id
 		public String user_type;
+		public String who;//用户名
 		public Owner() {
 	}
 		// TODO Auto-generated constructor stub

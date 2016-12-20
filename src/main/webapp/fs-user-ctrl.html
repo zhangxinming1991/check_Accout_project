@@ -2,17 +2,17 @@
     <!--<div><p class="text-center h2">用户控制</p></div>-->
     <uib-tabset>
 
-        <uib-tab>
+        <uib-tab select="selectTab(1)">
             <uib-tab-heading>
                 <span class=""></span>代理商财务员管理
             </uib-tab-heading>
-            <div ng-controller="fscwCtrl">
+            <div ng-controller="fscwCtrl" ng-if="selectedTab==1">
                 <table st-table="dispItems"  st-pipe="refreshGrid"  class="table table-bordered table-striped">
                     <!--<caption class="caption h4 text-center" title="">代理商财务管理</caption>-->
                     <thead>
                     <tr>
                         <th></th>
-                        <th><input st-search="wordId" placeholder="用户名" type="search"
+                        <th><input st-search="workId" placeholder="用户名" type="search"
                                    class="input-sm form-control">
                         </th>
                         <th><input st-search="name" placeholder="真实姓名" type="search"
@@ -22,9 +22,9 @@
                         </th>
                         <th><input st-search="email" placeholder="邮箱" type="search" class="input-sm form-control">
                         </th>
-                        <th><input st-search="companyid" placeholder="单位代码" type="search"
+                        <!--<th><input st-search="companyid" placeholder="单位代码" type="search"
                                    class="input-sm form-control">
-                        </th>
+                        </th>-->
                         <th><input st-search="agentid" placeholder="代理商" type="search" class="input-sm form-control">
                         </th>
                         <th>
@@ -34,7 +34,12 @@
                                 <option value="-3">锁定</option>
                             </select>
                         </th>
-                        <th></th>
+                        <th>
+                            <select st-search="ctlflag" class="input-sm form-control">
+                                <option value="">所有</option>
+                                <option value="0">锁定</option>
+                                <option value="-3">解锁</option>
+                            </select></th>
                     </tr>
                     <tr>
                         <th>序号</th>
@@ -42,7 +47,7 @@
                         <th st-sort="name">真实姓名</th>
                         <th st-sort="phone">电话</th>
                         <th st-sort="email">邮箱</th>
-                        <th st-sort="companyid">单位代码</th>
+                        <!--<th st-sort="companyid">单位代码</th>-->
                         <th st-sort="agentid">代理商</th>
                         <th st-sort="ctlflag">控制状态</th>
                         <th>操作</th>
@@ -56,7 +61,7 @@
                         <td>{{t.name}}</td>
                         <td>{{t.phone}}</td>
                         <td>{{t.email}}</td>
-                        <td>{{t.companyid}}</td>
+                        <!--<td>{{t.companyid}}</td>-->
                         <td>{{t.agentid}}</td>
                         <td>{{t.ctlflag | ctrlStatusFilter}}</td>
                         <td>
@@ -85,24 +90,24 @@
                     </tbody>
 
                     <tfoot>
-                        <td class="text-center" st-pagination="" st-items-by-page="10" colspan="20" st-displayed-pages="20">
+                        <td class="text-center" st-pagination="" colspan="20" >
                         </td>
                     </tfoot>
                 </table>
             </div>
         </uib-tab>
 
-        <uib-tab>
+        <uib-tab select="selectTab(2)">
             <uib-tab-heading>
                 <span class=""></span>代理商管理员管理
             </uib-tab-heading>
-            <div ng-controller="fscmCtrl">
+            <div ng-controller="fscmCtrl" ng-if="selectedTab==2">
                 <table st-table="dispItems"  st-pipe="refreshGrid"  class="table table-bordered table-striped">
                     <!--<caption class="caption h4 text-center" title="">代理商财务管理</caption>-->
                     <thead>
                     <tr>
                         <th></th>
-                        <th><input st-search="wordId" placeholder="用户名" type="search"
+                        <th><input st-search="workId" placeholder="用户名" type="search"
                                    class="input-sm form-control">
                         </th>
                         <th><input st-search="name" placeholder="真实姓名" type="search"
@@ -112,9 +117,9 @@
                         </th>
                         <th><input st-search="email" placeholder="邮箱" type="search" class="input-sm form-control">
                         </th>
-                        <th><input st-search="companyid" placeholder="单位代码" type="search"
+                        <!--<th><input st-search="companyid" placeholder="单位代码" type="search"
                                    class="input-sm form-control">
-                        </th>
+                        </th>-->
                         <th><input st-search="agentid" placeholder="代理商" type="search" class="input-sm form-control">
                         </th>
                         <th>
@@ -124,7 +129,13 @@
                                 <option value="-3">锁定</option>
                             </select>
                         </th>
-                        <th></th>
+                        <th>
+                            <select st-search="ctlflag" class="input-sm form-control">
+                                <option value="">所有</option>
+                                <option value="0">锁定</option>
+                                <option value="-3">解锁</option>
+                            </select>
+                        </th>
                     </tr>
                     <tr>
                         <th>序号</th>
@@ -132,7 +143,7 @@
                         <th st-sort="name">真实姓名</th>
                         <th st-sort="phone">电话</th>
                         <th st-sort="email">邮箱</th>
-                        <th st-sort="companyid">单位代码</th>
+                        <!--<th st-sort="companyid">单位代码</th>-->
                         <th st-sort="agentid">代理商</th>
                         <th st-sort="ctlflag">控制状态</th>
                         <th>操作</th>
@@ -146,7 +157,7 @@
                         <td>{{t.name}}</td>
                         <td>{{t.phone}}</td>
                         <td>{{t.email}}</td>
-                        <td>{{t.companyid}}</td>
+                        <!--<td>{{t.companyid}}</td>-->
                         <td>{{t.agentid}}</td>
                         <td>{{t.ctlflag | ctrlStatusFilter}}</td>
                         <td>
@@ -175,7 +186,7 @@
                     </tbody>
 
                     <tfoot>
-                    <td class="text-center" st-pagination="" st-items-by-page="10" colspan="20" st-displayed-pages="20">
+                    <td class="text-center" st-pagination=""  colspan="20" >
                     </td>
                     </tfoot>
                 </table>

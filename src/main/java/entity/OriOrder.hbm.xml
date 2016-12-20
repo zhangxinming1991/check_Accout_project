@@ -1,23 +1,36 @@
 <?xml version="1.0"?>
 <!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
 "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
-<!-- Generated 2016-12-1 21:09:21 by Hibernate Tools 5.1.0.Beta1 -->
+<!-- Generated 2016-12-17 23:35:50 by Hibernate Tools 5.1.0.Beta1 -->
 <hibernate-mapping>
     <class name="entity.OriOrder" table="ori_order" catalog="check_a_db" optimistic-lock="version">
-        <id name="orderNum" type="string">
-            <column name="order_num" length="30" />
-            <generator class="assigned" />
-        </id>
+        <composite-id name="id" class="entity.OriOrderId">
+            <key-property name="cuscompanyid" type="string">
+                <column name="cuscompanyid" length="30" />
+            </key-property>
+            <key-property name="paymentNature" type="string">
+                <column name="paymentNature" length="20" />
+            </key-property>
+        </composite-id>
+        <property name="orderNum" type="string">
+            <column name="order_num" length="30" not-null="true">
+                <comment>&#186;&#207;&#205;&#172;&#186;&#197;</comment>
+            </column>
+        </property>
         <property name="input" type="java.lang.Double">
             <column name="input" precision="22" scale="0">
                 <comment>&#177;&#190;&#212;&#194;&#202;&#213;&#200;&#235;</comment>
             </column>
         </property>
         <property name="debt" type="java.lang.Double">
-            <column name="debt" precision="22" scale="0" />
+            <column name="debt" precision="22" scale="0">
+                <comment>&#212;&#218;&#205;&#226;&#189;&#240;&#182;&#238;</comment>
+            </column>
         </property>
         <property name="total" type="java.lang.Double">
-            <column name="total" precision="22" scale="0" />
+            <column name="total" precision="22" scale="0">
+                <comment>&#186;&#207;&#205;&#172;&#215;&#220;&#182;&#238;</comment>
+            </column>
         </property>
         <property name="state" type="string">
             <column name="state" length="15" />
@@ -28,13 +41,19 @@
             </column>
         </property>
         <property name="remark" type="string">
-            <column name="remark" length="100" />
+            <column name="remark" length="100">
+                <comment>&#177;&#184;&#215;&#162;</comment>
+            </column>
         </property>
         <property name="client" type="string">
-            <column name="client" length="60" />
+            <column name="client" length="60">
+                <comment>&#191;&#205;&#187;&#167;&#195;&#251;&#179;&#198;</comment>
+            </column>
         </property>
         <property name="owner" type="string">
-            <column name="owner" length="20" />
+            <column name="owner" length="20">
+                <comment>&#203;&#249;&#202;&#244;&#180;&#250;&#192;&#237;&#201;&#204;</comment>
+            </column>
         </property>
         <property name="connectBank" type="string">
             <column name="connect_bank" length="100">
@@ -44,11 +63,6 @@
         <property name="customid" type="string">
             <column name="customid" length="30">
                 <comment>&#182;&#212;&#213;&#203;&#193;&#170;&#207;&#181;&#200;&#203;id</comment>
-            </column>
-        </property>
-        <property name="cuscompanyid" type="string">
-            <column name="cuscompanyid" length="30">
-                <comment>&#191;&#205;&#187;&#167;id</comment>
             </column>
         </property>
         <property name="productTime" type="string">
@@ -62,26 +76,43 @@
             </column>
         </property>
         <property name="customname" type="string">
-            <column name="customname" length="100" />
+            <column name="customname" length="100">
+                <comment>&#182;&#212;&#213;&#203;&#193;&#170;&#207;&#181;&#200;&#203;&#208;&#213;&#195;&#251;</comment>
+            </column>
         </property>
         <property name="customphone" type="string">
-            <column name="customphone" length="11" />
+            <column name="customphone" length="11">
+                <comment>&#182;&#212;&#213;&#203;&#193;&#170;&#207;&#181;&#200;&#203;&#181;&#231;&#187;&#176;</comment>
+            </column>
         </property>
         <property name="customweixin" type="string">
-            <column name="customweixin" length="20" />
+            <column name="customweixin" length="20">
+                <comment>&#182;&#212;&#213;&#203;&#193;&#170;&#207;&#181;&#200;&#203;&#206;&#162;&#208;&#197;</comment>
+            </column>
         </property>
         <property name="asname" type="string">
-            <column name="asname" length="20" />
+            <column name="asname" length="20">
+                <comment>&#180;&#250;&#192;&#237;&#201;&#204;&#178;&#198;&#206;&#241;&#208;&#213;&#195;&#251;</comment>
+            </column>
         </property>
         <property name="asphone" type="string">
-            <column name="asphone" length="11" />
+            <column name="asphone" length="11">
+                <comment>&#180;&#250;&#192;&#237;&#201;&#204;&#178;&#198;&#206;&#241;&#181;&#231;&#187;&#176;</comment>
+            </column>
         </property>
         <property name="asemail" type="string">
-            <column name="asemail" length="20" />
+            <column name="asemail" length="20">
+                <comment>&#180;&#250;&#192;&#237;&#201;&#204;&#211;&#202;&#207;&#228;</comment>
+            </column>
         </property>
         <property name="province" type="string">
             <column name="province" length="20">
                 <comment>&#202;&#161;&#183;&#221;</comment>
+            </column>
+        </property>
+        <property name="num" type="int">
+            <column name="num" not-null="true">
+                <comment>&#208;&#242;&#186;&#197;</comment>
             </column>
         </property>
     </class>

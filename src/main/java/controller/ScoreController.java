@@ -92,8 +92,7 @@ public class ScoreController {
 				logger_error.error("当前拥有积分少于所申请积分");
 				Common_return_en(response,re_jsonobject);
 			}
-			ScoreExchangeRecord scoreExchangeRecord = new ScoreExchangeRecord(username,
-					exchangeScore, exchangeType, status, applicaTime, randKey, description);
+			ScoreExchangeRecord scoreExchangeRecord = new ScoreExchangeRecord(username,exchangeScore, exchangeType, status, applicaTime, randKey, description);
 			scoreManage.insertExchangeRecord(scoreExchangeRecord);
 			re_jsonobject.element("flag", 0);
 			re_jsonobject.element("errmsg", "兑换申请提交成功");
@@ -207,6 +206,7 @@ public class ScoreController {
 		Common_return_en(response, re_jsonobject);
 			
 	}
+	
 	/**
 	 * 下载用户积分信息报表
 	 * @address: /check_Accout/ScoreController/download_scoreinfo

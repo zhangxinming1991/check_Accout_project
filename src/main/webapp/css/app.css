@@ -18,7 +18,7 @@
     vertical-align: middle;
 }
 
-table > thead > tr > th {
+table > thead > tr > th, table >tbody> tr > td {
     white-space: nowrap;
 }
 
@@ -33,13 +33,13 @@ table > thead > tr > th {
     /*padding-left: 1em;*/
     font-family: FontAwesome;
     content: '\f0dc';
-    padding-right:1px;
+    padding-right: 1px;
 }
 
 .st-sort-ascent:before {
     font-family: FontAwesome;
     content: '\f0de';
-    padding-right:1px;
+    padding-right: 1px;
     /*background:url(data:image/gif;base64,R0lGODlhCwALAJEAAAAAAP///xUVFf///yH5BAEAAAMALAAAAAALAAsAAAIRnC2nKLnT4or00Puy3rx7VQAAOw==) no-repeat center right;*/
     /*content: '\25B2';*/
 }
@@ -49,7 +49,7 @@ table > thead > tr > th {
     /*content: '\25BC';*/
     font-family: FontAwesome;
     content: '\f0dd';
-    padding-right:1px;
+    padding-right: 1px;
 }
 
 .nav-sidebar > li {

@@ -2,11 +2,11 @@
     <!--<div><p class="text-center h2">用户注册审阅</p></div>-->
     <uib-tabset>
 
-        <uib-tab>
+        <uib-tab select="selectTab(1)">
             <uib-tab-heading>
                 <span class=""></span>代理商财务审阅
             </uib-tab-heading>
-            <div ng-controller="fsawCtrl">
+            <div ng-controller="fsawCtrl" ng-if="selectedTab==1">
                 <table st-table="dispItems" st-pipe="refreshGrid" class="table table-bordered table-striped">
                     <!--<caption class="caption h4 text-center" title="">代理商财务审阅</caption>-->
                     <thead>
@@ -76,18 +76,18 @@
                     </tbody>
 
                     <tfoot>
-                        <td class="text-center" st-pagination="" st-items-by-page="10" colspan="20" st-displayed-pages="20">
+                        <td class="text-center" st-pagination="" colspan="20">
                         </td>
                     </tfoot>
                 </table>
             </div>
         </uib-tab>
 
-        <uib-tab>
+        <uib-tab select="selectTab(2)">
             <uib-tab-heading>
-                <span class=""></span>代理商管理审阅
+                <span class=""></span>代理商管理员审阅
             </uib-tab-heading>
-            <div ng-controller="fsamCtrl">
+            <div ng-controller="fsamCtrl" ng-if="selectedTab==2">
                 <table st-table="dispItems" st-pipe="refreshGrid" class="table table-bordered table-striped">
                     <!--<caption class="caption h4 text-center" title="">代理商财务审阅</caption>-->
                     <thead>
@@ -157,7 +157,7 @@
                     </tbody>
 
                     <tfoot>
-                    <td class="text-center" st-pagination="" st-items-by-page="10" colspan="20" st-displayed-pages="20">
+                    <td class="text-center" st-pagination="" colspan="20">
                     </td>
                     </tfoot>
                 </table>

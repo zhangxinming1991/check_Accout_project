@@ -215,6 +215,54 @@ public class Total_Account_Dao {
 		}
 	}
 	
+	/*根据指定字段进行查找，字段类型为字符串类型*/
+	public java.util.List<OriOrder> FindBySpeElement_S_AND(String filed,String value,String filed2,String value2){
+		String fdclient_hql = "select order from OriOrder order where " +  filed + " = :value" + " and " + filed2 + " = :value2";
+		try {
+			
+			session = sessionFactory.openSession();
+			java.util.List<OriOrder> orders = session.createQuery(fdclient_hql)
+					.setParameter("value", value)
+					.setParameter("value2", value2)
+					.list();
+			session.close();
+	
+			for (int i = 0; i < orders.size(); i++) {
+				System.out.println(orders.get(i).getOrderNum());
+			}
+			return orders;
+		
+		} catch (RuntimeException e) {
+			// TODO: handle exception
+			System.out.println("find client failed");
+			return null;
+		}
+	}
+	
+	/*根据指定字段进行查找，字段类型为字符串类型*/
+	public java.util.List<OriOrder> FindBySpeElement_S_Page(String filed,String value,int offset,int pagesize){
+		String fdclient_hql = "select order from OriOrder order where " +  filed + " = :value";
+		try {
+			
+			session = sessionFactory.openSession();
+			java.util.List<OriOrder> orders = session.createQuery(fdclient_hql).setParameter("value", value)
+					.setFirstResult(offset)
+					.setMaxResults(pagesize)
+					.list();
+			session.close();
+	
+			for (int i = 0; i < orders.size(); i++) {
+				System.out.println(orders.get(i).getOrderNum());
+			}
+			return orders;
+		
+		} catch (RuntimeException e) {
+			// TODO: handle exception
+			System.out.println("find client failed");
+			return null;
+		}
+	}
+	
 	/*根据指定字段进行查找，字段类型为double类型*/
 	public java.util.List<OriOrder> FindBySpeElement_N(String filed,Double value){
 		String fdclient_hql = "select order from OriOrder order where " +  filed + " = :value";

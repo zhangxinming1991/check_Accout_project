@@ -2,41 +2,47 @@
 <!DOCTYPE hibernate-reverse-engineering PUBLIC "-//Hibernate/Hibernate Reverse Engineering DTD 3.0//EN" "http://hibernate.sourceforge.net/hibernate-reverse-engineering-3.0.dtd" >
 
 <hibernate-reverse-engineering>
-	<table-filter match-name="bank_input" match-catalog="check_a_db"></table-filter>
-	<table-filter match-name="connect_person"
-		match-catalog="check_a_db">
-	</table-filter>
-	<table-filter match-name="cus_secondstore"
-		match-catalog="check_a_db">
-	</table-filter>
-	<table-filter match-name="ori_order" match-catalog="check_a_db"></table-filter>
-	<table-filter match-name="pay_record" match-catalog="check_a_db"></table-filter>
 	<table-filter match-name="agent" match-catalog="check_a_db"></table-filter>
-	<table-filter match-name="pay_record_history"
+	<table-filter match-name="assistance" match-catalog="check_a_db"></table-filter>
+	<table-filter match-name="backup" match-catalog="check_a_db"></table-filter>
+	<table-filter match-name="bank_input" match-catalog="check_a_db"></table-filter>
+	<table-filter match-name="bank_input_backup"
 		match-catalog="check_a_db">
 	</table-filter>
 	<table-filter match-name="caresult_history"
 		match-catalog="check_a_db">
 	</table-filter>
-	<table-filter match-name="pay_record_cache"
+	<table-filter match-name="connect_person"
 		match-catalog="check_a_db">
 	</table-filter>
-	<table-filter match-name="op_log" match-catalog="check_a_db"></table-filter>
-	<table-filter match-name="bank_input_backup"
-		match-catalog="check_a_db">
-	</table-filter>
-	<table-filter match-name="ori_order_backup"
-		match-catalog="check_a_db">
-	</table-filter>
-	<table-filter match-name="backup" match-catalog="check_a_db"></table-filter>
 	<table-filter match-name="cus_sdstore_backup"
 		match-catalog="check_a_db">
 	</table-filter>
-	<table-filter match-name="assistance" match-catalog="check_a_db"></table-filter>
+	<table-filter match-name="cus_secondstore"
+		match-catalog="check_a_db">
+	</table-filter>
+	<table-filter match-name="op_log" match-catalog="check_a_db"></table-filter>
+	<table-filter match-name="ori_order" match-catalog="check_a_db"></table-filter>
+	<table-filter match-name="ori_order_backup"
+		match-catalog="check_a_db">
+	</table-filter>
+	<table-filter match-name="pay_record" match-catalog="check_a_db"></table-filter>
+	<table-filter match-name="pay_record_cache"
+		match-catalog="check_a_db">
+	</table-filter>
+	<table-filter match-name="pay_record_history"
+		match-catalog="check_a_db">
+	</table-filter>
 	<table-filter match-name="weixin_bind_assistance"
 		match-catalog="check_a_db">
 	</table-filter>
 	<table-filter match-name="weixin_bind_connect_person"
+		match-catalog="check_a_db">
+	</table-filter>
+	<table-filter match-name="all_payrecord"
+		match-catalog="check_a_db">
+	</table-filter>
+	<table-filter match-name="bank_input_history"
 		match-catalog="check_a_db">
 	</table-filter>
 </hibernate-reverse-engineering>

@@ -11,6 +11,7 @@ import org.hibernate.Transaction;
 import org.hibernate.query.Query;
 
 import entity.BankInput;
+import entity.PayRecordCache;
 import entity.PayRecordHistory;
 
 /**
@@ -147,6 +148,36 @@ public class PayRecordHistory_Dao {
 			System.out.println("find client failed");
 			return null;
 		}
+	}
+	
+	/**
+	 * GetMaxID 查找最大id的记录的id
+	 * @return
+	 */
+	public int GetMaxID(){
+		String hql_getmaxid = "SELECT precord from PayRecordHistory precord where id = (SELECT max(id) FROM PayRecordHistory)";
+		
+		try {
+			
+			session = sessionFactory.openSession();
+			Query query = session.createQuery(hql_getmaxid);
+			java.util.List<PayRecordHistory> pCaches = query.list();
+			session.close();
+			
+			if (pCaches.size() > 0) {
+				return pCaches.get(0).getId();
+			}
+			else {
+				logger.warn("pCaches 表为空");
+				return 0;
+			}
+			
+		
+		} catch (RuntimeException e) {
+			// TODO: handle exception
+			logger.error("查询最大id失败" + e);
+			return -1;
+		}	
 	}
 	
 	/*寻找匹配的出纳记录*/

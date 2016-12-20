@@ -1,14 +1,14 @@
 <div>
     <uib-tabset>
         <uib-tab select="sel(2)">
-            <uib-tab-heading title="未到账的货款" class="text-danger">
+            <uib-tab-heading title="" class="text-danger">
                 <span class="glyphicon glyphicon-exclamation-sign"></span>未到账货款
             </uib-tab-heading>
             <div ng-include="'x-order.html'" ng-controller="X2Ctrl"></div>
         </uib-tab>
 
         <uib-tab select="sel(1)">
-            <uib-tab-heading title="无法匹配到合同或客户的出纳" class="text-danger">
+            <uib-tab-heading title="" class="text-danger">
                 <span class="glyphicon glyphicon-question-sign"></span>未知出纳
             </uib-tab-heading>
             <div ng-include="'x-trans.html'" ng-controller="X1Ctrl"></div>
@@ -16,49 +16,49 @@
 
         <uib-tab select="sel(3)">
             <uib-tab-heading title="无实际出纳的用户上传付款通知" class="text-danger">
-                <span class="glyphicon glyphicon-exclamation-sign"></span>未知付款通知
+                <span class="glyphicon glyphicon-exclamation-sign"></span>未知付款记录
             </uib-tab-heading>
             <div ng-include="'x-notif.html'" ng-controller="X3Ctrl"></div>
         </uib-tab>
 
         <uib-tab select="sel(4)">
-            <uib-tab-heading title="匹配到合同的出纳" class="text-success">
-                <span class="glyphicon glyphicon-ok-sign"></span>匹配合同的出纳
+            <uib-tab-heading title="" class="text-success">
+                <span class="glyphicon glyphicon-ok-sign"></span>匹配货款的出纳
             </uib-tab-heading>
             <div ng-include="'x-trans.html'" ng-controller="X4Ctrl"></div>
         </uib-tab>
 
         <uib-tab select="sel(5)">
-            <uib-tab-heading title="匹配到客户的出纳（不包含匹配到合同的出纳）" class="text-success">
-                <span class="glyphicon glyphicon-ok-sign"></span>有匹配客户的出纳
+            <uib-tab-heading title="" class="text-success">
+                <span class="glyphicon glyphicon-ok-sign"></span>匹配客户的出纳
             </uib-tab-heading>
             <div ng-include="'x-trans.html'" ng-controller="X5Ctrl"></div>
         </uib-tab>
 
         <uib-tab select="sel(6)">
-            <uib-tab-heading title="能匹配到出纳记录的用户上传付款通知" class="text-success">
-                <span class="glyphicon glyphicon-ok-sign"></span>有出纳的付款通知
+            <uib-tab-heading title="" class="text-success">
+                <span class="glyphicon glyphicon-ok-sign"></span>匹配出纳的付款记录
             </uib-tab-heading>
             <div ng-include="'x-notif.html'" ng-controller="X6Ctrl"></div>
         </uib-tab>
 
         <uib-tab select="sel(7)">
-            <uib-tab-heading title="已到账的货款" class="text-success">
+            <uib-tab-heading title="" class="text-success">
                 <span class="glyphicon glyphicon-ok-sign"></span>已到账货款
             </uib-tab-heading>
             <div ng-include="'x-order.html'" ng-controller="X7Ctrl"></div>
         </uib-tab>
 
         <uib-tab select="sel(8)">
-            <uib-tab-heading title="无效、不可用的用户上传付款通知" class="text-muted">
-                <span class="glyphicon glyphicon-trash"></span>无效付款通知
+            <uib-tab-heading title="" class="text-muted">
+                <span class="glyphicon glyphicon-trash"></span>无效付款记录
             </uib-tab-heading>
             <div ng-include="'x-notif.html'" ng-controller="X8Ctrl"></div>
         </uib-tab>
 
 
         <uib-tab>
-            <uib-tab-heading title="导出报表到本机文件" class="text-info">
+            <uib-tab-heading title="" class="text-info">
                 <span class="glyphicon glyphicon-floppy-save"></span>对账结果操作
             </uib-tab-heading>
             <div class="">
@@ -146,7 +146,7 @@
     <div>
         <div class="modal-header">
             <span class="glyphicon glyphicon-remove top-right pull-right close" ng-click="closeMsgbox()"></span>
-            <h3 class="modal-title">合同详情</h3>
+            <h3 class="modal-title"><!--合同-->详情</h3>
         </div>
         <div class="modal-body">
             <table class="table table-bordered">
@@ -161,7 +161,8 @@
                 </thead>
                 <tbody>
                 <tr ng-repeat="row in gridRows track by $index">
-                    <td>{{row.orderNum}}</td>
+                    <!--<td>{{row.orderNum}}</td>-->
+                    <td>{{row.id.paymentNature}}</td>
                     <td>{{row.client}}</td>
                     <td>{{row.input}}</td>
                     <td>{{row.debt}}</td>
@@ -282,7 +283,8 @@
 
         <tbody ng-show="isNonEmptyGrid">
         <tr ng-repeat="row in rows">
-            <td>{{row.orderNum}}</td>
+            <!--<td>{{row.orderNum}}</td>-->
+            <td>{{row.id.paymentNature}}</td>
             <td>{{row.client}}</td>
             <td>{{row.input}}</td>
             <td>{{row.debt}}</td>

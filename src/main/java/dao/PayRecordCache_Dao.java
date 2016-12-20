@@ -1,5 +1,6 @@
 package dao;
 
+import java.io.Serializable;
 import java.util.List;
 
 import org.apache.logging.log4j.LogManager;
@@ -41,14 +42,29 @@ public class PayRecordCache_Dao {
 		session.close();
 	}
 	
-	public void add(PayRecordCache in_pR){
+	public PayRecordCache findById(Class<PayRecordCache> cla,Serializable id){
+		try {
+			session = sessionFactory.openSession();
+			PayRecordCache find_PayR = (PayRecordCache) session.get(cla, id);
+			session.close();
+			return find_PayR;	
+		} catch (RuntimeException e) {
+			// TODO: handle exception
+			System.out.println("findById failed");
+			return null;
+		}
+	}
+	
+	public boolean add(PayRecordCache in_pR){
 		try {
 			beginTransaction();
 			session.save(in_pR);
-			endTransaction();	
+			endTransaction();
+			return true;
 		} catch (RuntimeException e) {
 			// TODO: handle exception
 			logger.error("插入失败" + e);
+			return false;
 			//System.out.println("save failed");
 		}
 	}
@@ -67,6 +83,28 @@ public class PayRecordCache_Dao {
 		} catch (RuntimeException e) {
 			// TODO: handle exception
 			logger.error("根据owner=" + owner + "获取整张PayRecordCache失败" + e);
+			return null;
+		}
+	}
+	
+	/*根据指定字段进行查找，字段类型为字符串类型*/
+	public java.util.List<PayRecordCache> FindBySpeElement_S_Page(String filed,String value,int offset,int pageszie){
+		String fdclient_hql = "select order from PayRecord order where " +  filed + " = :value";
+		try {
+			
+			session = sessionFactory.openSession();
+			java.util.List<PayRecordCache> payRecords = session.createQuery(fdclient_hql)
+					.setParameter("value", value)
+					.setFirstResult(offset)
+					.setMaxResults(pageszie)
+					.list();
+			session.close();
+	
+			return payRecords;
+		
+		} catch (RuntimeException e) {
+			// TODO: handle exception
+			logger.error("根据" + filed + "=" + value + "查找付款记录失败" + e);
 			return null;
 		}
 	}
@@ -169,12 +207,25 @@ public class PayRecordCache_Dao {
 
 	}
 	
+	public boolean update(PayRecordCache pRecord){
+		try {
+			beginTransaction();
+			session.update(pRecord);
+			endTransaction();	
+			return true;
+		} catch (RuntimeException e) {
+			// TODO: handle exception
+			System.out.println("payrecord update failed");
+			return false;
+		}
+	}
+	
 	/**
 	 * GetMaxID 查找最大id的记录的id
 	 * @return
 	 */
 	public int GetMaxID(){
-		String hql_getmaxid = "SELECT precord from PayRecordCache precord where id = (SELECT max(id) FROM BankInput)";
+		String hql_getmaxid = "SELECT precord from PayRecordCache precord where id = (SELECT max(id) FROM PayRecordCache)";
 		
 		try {
 			

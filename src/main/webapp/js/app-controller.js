@@ -88,7 +88,7 @@ var signInCtrl = ['$scope', '$state', 'AccountService',
              return false;
              }*/
             if (!(formUser && formUser.upwd && formUser.uid)) {
-                ctrl.errMsg = '登陆名、密码不能为空';
+                ctrl.errMsg = '用户名、密码不能为空';
                 return false;
             }
 
@@ -149,6 +149,10 @@ var signUpCtrl = ['$scope', '$state', 'AccountService', '$uibModal', '$timeout',
 
         ctrl.submitForm = function () {
 
+            if (!ctrl.formUser.uid) {
+                ctrl.errMsg = '用户名不能为空';
+                return false;
+            }
             var pwd = ctrl.formUser.upwd;
             if (!(
                     pwd.length && pwd.length >= 8 && pwd.length <= 16       // 长度限制
@@ -163,6 +167,35 @@ var signUpCtrl = ['$scope', '$state', 'AccountService', '$uibModal', '$timeout',
             var pwdCfm = ctrl.formUser.upwdCfm;
             if (pwdCfm != pwd) {
                 ctrl.errMsg = '两次输入的密码不一致';
+                return false;
+            }
+
+            function isChinese(str) {
+                return str.match(/^[\u4E00-\u9FFF\u3400-\u4DFF\uF900-\uFAFF]+$/g);
+            }
+
+            if (!ctrl.formUser.name || !isChinese(ctrl.formUser.name)) {
+                ctrl.errMsg = '请填写全中文的真实姓名';
+                return false;
+            }
+            if (!ctrl.formUser.phone) {
+                ctrl.errMsg = '请填写电话';
+                return false;
+            }
+            function validEmail(email) {
+                if (!email)return false;
+                var domainIdx = email.indexOf('@');
+                if (domainIdx < 0)return false;
+                var domain = email.substr(domainIdx);
+                return appConf.regEmailDomainRestrict && appConf.regEmailDomainRestrict.length ? appConf.indexOf(domain) > -1 : true;
+            }
+
+            if (!ctrl.formUser.email || !validEmail(ctrl.formUser.email)) {
+                ctrl.errMsg = '请填写公司内部电子邮箱';
+                return false;
+            }
+            if (!ctrl.formUser.agent) {
+                ctrl.errMsg = '请选择所属的代理商';
                 return false;
             }
 
@@ -325,7 +358,7 @@ var uCtrl = ['$scope', '$state', 'AccountService', '$timeout', '$uibModal', 'Fnc
     //
     // //如果未登陆
     // if (sgop.loggedInUser === undefined) {
-    //     // todo go login?  auto-login? popup-login?
+    //     // go login?  auto-login? popup-login?
     //     var reLoged = false;
     //     // console.debug('trying to re-login by: ',sessionStorage, sessionStorage.getItem('formUser'));
     //     AccSvc.signInBySessionStorage().then(function () {
@@ -394,7 +427,7 @@ var fwCtrl = ['$scope', '$state', '$timeout', '$uibModal', 'FncRmindService', 'C
 
         sgop.checkingEnv = function () {
             ChkSvc.initCheckingEnv().then(function (data) {
-                $.extend(sgop.lastUpload, data.lastUpload);
+                // $.extend(sgop.lastUpload, data.lastUpload);
                 var caid = data.caid;
                 var dash1 = caid.indexOf('-');
                 var stateParams = {};
@@ -404,7 +437,7 @@ var fwCtrl = ['$scope', '$state', '$timeout', '$uibModal', 'FncRmindService', 'C
             }, function (errMsgObj) {
                 var boxInst = showMsg({
                     msgbox: msgbox,
-                    msgHtml: '对账环境准备收了，网络或系统错误，请重试。'
+                    msgHtml: '对账流程进入失败，请重试，' + ensureErrMsg(errMsgObj)
                 });
                 timeout(function () {
                     boxInst.dismiss();
@@ -422,7 +455,7 @@ var fwCtrl = ['$scope', '$state', '$timeout', '$uibModal', 'FncRmindService', 'C
  }];*/
 
 function ensureErrMsg(errMsgObj) {
-    return errMsgObj.msg || errMsgObj.errmsg || '无更详细信息';
+    return errMsgObj.msg || errMsgObj.errmsg || '未知原因';
 }
 /*
  // 财务人员账单
@@ -503,7 +536,7 @@ var uploadCtrl = ['$scope', 'Upload', '$timeout', '$state', '$rootScope', '$filt
          var resbody = resPkg.data;
          if (isOkResBody(resbody)) {
          info.uploadResult = true;
-         //todo refresh data <- upload
+         // refresh data <- upload
          console.debug('trying to refresh grid of orders after successful uploading file');
 
          if (sgop.uploadFileType == 'A') {
@@ -540,12 +573,12 @@ var uploadCtrl = ['$scope', 'Upload', '$timeout', '$state', '$rootScope', '$filt
          }
          };*/
 
-        var str = sessionStorage.getItem(lastUploadInfoKey);
-        rootsgop.lastUpload = rootsgop.lastUpload || {};
-        $.extend(rootsgop.lastUpload, str ? JSON.parse(str).lastUpload : {});
 
         sgop.formSubmit = function () {
             var info = sgop.uploadInfo;
+            // validate form
+            var uploadCfg = sgop.uploadCfg;
+            var incrUpload = !uploadCfg.fileA;
             try {
                 //console.debug('上传货款和账单', sgop.uploadCfg);
                 info.isUploading = true;
@@ -553,7 +586,7 @@ var uploadCtrl = ['$scope', 'Upload', '$timeout', '$state', '$rootScope', '$filt
                 timeout(function () {
                     sgop.uploadCfg.caid = Encrypt(rootsgop.caid, true);
                     Upld.upload({
-                        url: ReqUrl.fwOrderUpload,
+                        url: incrUpload ? ReqUrl.fwOrderIncrUpload : ReqUrl.fwOrderUpload,
                         data: sgop.uploadCfg
                     }).then(function (resPkg) {
                         console.debug('(upload) response recved', resPkg);
@@ -707,6 +740,8 @@ function gridPage(sgop, tableState, $filter, businessFnc) {
 
         tableState.pagination.lastStartIdx = start;
 
+        // sgop.pageStart = start;
+
         var items = data.items || data.data;
 
         sgop.items = items;
@@ -739,7 +774,7 @@ var fwnCtrl = ['$scope', 'FncRmindService', 'Lightbox', "$uibModal", '$state', '
         };
 
         function opPaymentNotifyItem(paymentNotifyItem, logtxt, svcFnc) {
-            //console.debug(logtxt);
+            // console.debug(logtxt);
             //console.debug('数据操作，前：', paymentNotifyItem);
 
             var approveCfg = {
@@ -1580,77 +1615,398 @@ var fsdCtrl = ['$scope', '$timeout', 'MgmtSvc', '$uibModal', function (sgop, tim
 }];
 
 // 超级管理员客户积分
-var fssvCtrl = ['$scope', '$filter', 'ScoreService',
-    function (sgop, $filter, ScoreSvc) {
-        console.debug('ctrl->超级管理员客户积分查看');
+var fssvCtrl = ['$scope', '$filter', 'ScoreService', '$uibModal', '$timeout',
+    function (sgop, $filter, ScoreSvc, msgbox, timeout) {
+        // console.debug('ctrl->超级管理员客户积分查看');
 
         sgop.refreshGrid = function (tableState) {
             gridPage(sgop, tableState, $filter, ScoreSvc.scoreInAllAgents);
         };
 
-        // TODO
+        // 查看积分变动详情
         sgop.detail = function (item) {
-            'fs-client-score-detail.html'
+            msgbox.open({
+                templateUrl: 'fs-score-view-detail.html'
+                , controller: ['$scope', function (scope) {
+                    scope.r = item;
+                    if (!(item.changes && item.changes.length)) {
+                        scope.isLoading = true;
+                        ScoreSvc.scoreDetail({username: item.username}).then(function (changes) {
+                            item.changes = changes;
+                        }, function (errObj) {
+                            scope.errMsg = ensureErrMsg(errObj);
+                        }).finally(function () {
+                            scope.isLoading = false;
+                        });
+                    }
+                }]
+            });
+        };
+
+        function failExportReport(errmsg) {
+            var boxInst = showMsg({
+                msgbox: msgbox,
+                title: '导出操作',
+                msgHtml: '导出操作<strong class="text-warning">失败</strong>，' + errmsg
+            });
+            timeout(function () {
+                boxInst.dismiss();
+            }, msgErrTimeout);
+        }
+
+        sgop.scoreCfg = {exportTable: {}};
+        // 导出
+        sgop.exportTable = function () {
+            sgop.scoreCfg.exportTable.progress = true;
+            ScoreSvc.scoreTableUrl().then(function (url) {
+                timeout(function () {
+                    window.open(url, '_blank');
+                });
+                // sgop.scoreCfg.exportTable.url=url;   //这里的更新会被延迟到下次点击才会生效
+            }, function (errObj) {
+                failExportReport(ensureErrMsg(errObj));
+            }).catch(function (ex) {
+                console.error(ex);
+                failExportReport('未知原因');
+            }).finally(function () {
+                sgop.scoreCfg.exportTable.progress = false;
+            });
         };
     }];
+
+function showMsgThenClose(msgcfg, $timeout, time) {
+    if (arguments.length == 2) {
+        time = $timeout;
+        $timeout = setTimeout;
+    }
+    var boxInst = showMsg(msgcfg);
+    $timeout(function () {
+        boxInst.close();
+    }, time);
+}
 
 // 超级管理员积分管理
-var fssmCtrl = ['$scope', '$filter', 'ScoreService',
-    function (sgop, $filter, ScoreSvc) {
-        console.debug('ctrl->超级管理员客户积分管理');
+var fssmCtrl = ['$scope', '$filter', 'ScoreService', '$uibModal', '$timeout', 'Upload',
+        function (sgop, $filter, ScoreSvc, msgbox, timeout, Upld) {
+            console.debug('ctrl->超级管理员客户积分管理');
 
-        sgop.refreshGrid = function (tableState) {
-            gridPage(sgop, tableState, $filter, ScoreSvc.scoreMgmtAll);
-        };
+            sgop.refreshGrid = function (tableState) {
+                gridPage(sgop, tableState, $filter, ScoreSvc.scoreMgmtAll);
+            };
 
-        // 详情 TODO
-        sgop.detail = function (item) {
+            var detailProgress = sgop.detailProgress = {};
+            // 详情
+            sgop.detail = function (item) {
+                detailProgress[item.randKey] = true;
+                ScoreSvc.scoreExchangeDetail(item.randKey).then(function (detail) {
+                    item.detail = detail;
 
-        };
-        // 确认礼品 TODO
-        sgop.confirm = function (item) {
+                    if (item.exchangeType == '红包') {
+                        moneyDetail();
+                    } else if (item.exchangeType == '礼品') {
+                        giftDetail();
+                    }
+                }, function (errMsgObj) {
+                    showMsgThenClose({
+                        msgbox: msgbox,
+                        title: '获取详情',
+                        msgHtml: '操作<strong class="text-warning">失败</strong>，' + ensureErrMsg(errMsgObj),
+                    }, msgErrTimeout);
+                }).finally(function () {
+                    detailProgress[item.randKey] = false
+                });
 
-        };
-    }];
+                function giftDetail() {
+                    msgbox.open({
+                        templateUrl: 'fs-score-mgmt-gift.html'
+                        , controller: ['$scope', function (scope) {
+                            scope.r = item;
+                        }]
+                        , size: 'lg'
+                    });
+                }
+
+                function moneyDetail() {
+                    msgbox.open({
+                        templateUrl: 'fs-score-mgmt-money.html'
+                        , controller: ['$scope', function (scope) {
+                            scope.r = item;
+                        }]
+                        , size: 'lg'
+                    });
+
+                }
+            };
+            // 确认礼品
+            sgop.confirm = function (item) {
+                var msgcfg = {
+                    msgbox: msgbox
+                    , title: '确认兑换礼品'
+                    , msgHtml: '操作<strong class="text-info">进行中……</strong>'
+                };
+                var boxInst = showMsg(msgcfg);
+                ScoreSvc.approveScoreExchange(item.randKey).then(function (newStatus) {
+                    item.status = newStatus;
+                    msgcfg.msgHtml = '操作<strong class="text-success">成功</strong>';
+                    timeout(function () {
+                        boxInst.close();
+                    }, msgOkTimeout);
+                }, function (fail) {
+                    msgcfg.msgHtml = '操作<strong class="text-warning">失败</strong>，' + ensureErrMsg(fail);
+                    timeout(function () {
+                        boxInst.dismiss();
+                    }, msgErrTimeout);
+                });
+            };
+
+            (function init() {
+                sgop.scoreCfg = {
+                    exportTable: {},
+                    shipUpload: {},
+                    giftCatUpload: {},
+                    exportGiftCat: {},
+                };
+            })();
+
+            function failExportReport(errmsg) {
+                var boxInst = showMsg({
+                    msgbox: msgbox,
+                    title: '导出操作',
+                    msgHtml: '导出操作<strong class="text-warning">失败</strong>，' + errmsg
+                });
+                timeout(function () {
+                    boxInst.dismiss();
+                }, msgErrTimeout);
+            }
+
+            sgop.exportTable = function () {
+                sgop.scoreCfg.exportTable.progress = true;
+                ScoreSvc.scoreExchangeTableUrl().then(function (url) {
+                    timeout(function () {
+                        window.open(url, '_blank');
+                    });
+                    // sgop.scoreCfg.exportTable.url=url;   //这里的更新会被延迟到下次点击才会生效
+                }, function (errObj) {
+                    failExportReport(ensureErrMsg(errObj));
+                }).catch(function (ex) {
+                    console.error(ex);
+                    failExportReport('未知原因');
+                }).finally(function () {
+                    sgop.scoreCfg.exportTable.progress = false;
+                });
+            };
+
+            var importResultReport = {
+                msgbox: msgbox,
+                title: '导入操作',
+                // size:'',
+            };
+
+            function failReport(errmsg) {
+                importResultReport.msgHtml = '导入<strong class="text-warning">失败</strong>，' + errmsg;
+                var boxInst = showMsg(importResultReport);
+                timeout(function () {
+                    boxInst.dismiss();
+                }, msgErrTimeout);
+            }
+
+            function succReport() {
+                importResultReport.msgHtml = '导入<strong class="text-success">成功</strong>';
+                var boxInst = showMsg(importResultReport);
+                timeout(function () {
+                    boxInst.close();
+                }, msgOkTimeout);
+            }
+
+            sgop.importShipInfo = function (file) {
+                sgop.scoreCfg.shipUpload.progress = true;
+                Upld.upload({
+                    url: ReqUrl.uploadShipInfo,
+                    data: {file: file}
+                }).then(function (resPkg) {
+                    console.debug('(upload) response recved', resPkg);
+                    var resbody = JSON.parse(Decrypt(resPkg.data));
+                    console.debug('upload response decrypted: ', resbody);
+                    if (isOkResBody(resbody)) {
+                        succReport();
+                    } else {
+                        failReport(ensureErrMsg(resbody));
+                    }
+                }, function (errPkg) {
+                    console.debug('upload err', errPkg);
+                    failReport('网络或系统错误');
+                }, function (evt) {
+                    // console.debug('evt', evt);
+                    var total = parseInt(evt.total) || 1;
+                    scoreCfg.shipUpload.progress = parseInt(evt.loaded) / total;
+                }).catch(function (ex) {
+                    console.error(ex);
+                    failReport('未知原因');
+                }).finally(function () {
+                    sgop.scoreCfg.shipUpload.progress = false;
+                });
+            };
+            sgop.importGiftCat = function (file) {
+                sgop.scoreCfg.giftCatUpload.progress = true;
+                Upld.upload({
+                    url: ReqUrl.uploadGiftCat,
+                    data: {file: file}
+                }).then(function (resPkg) {
+                    console.debug('(upload) response recved', resPkg);
+                    var resbody = JSON.parse(Decrypt(resPkg.data));
+                    console.debug('upload response decrypted: ', resbody);
+                    if (isOkResBody(resbody)) {
+                        succReport();
+                    } else {
+                        failReport(ensureErrMsg(resbody));
+                    }
+                }, function (errPkg) {
+                    console.debug('upload err', errPkg);
+                    failReport('网络或系统错误');
+                }, function (evt) {
+                    // console.debug('evt', evt);
+                    var total = parseInt(evt.total) || 1;
+                    scoreCfg.giftCatUpload.progress = parseInt(evt.loaded) / total;
+                }).catch(function (ex) {
+                    console.error(ex);
+                }).finally(function () {
+                    sgop.scoreCfg.giftCatUpload.progress = false;
+                });
+            };
+            sgop.exportGiftCat = function () {
+                sgop.scoreCfg.exportGiftCat.progress = true;
+                ScoreSvc.giftCategoryUrl().then(function (url) {
+                    timeout(function () {
+                        window.open(url, '_blank');
+                    });
+                    // sgop.scoreCfg.exportGiftCat.url=url;   //这里的更新会被延迟到下次点击才会生效
+                }, function (errObj) {
+                    failExportReport(ensureErrMsg(errObj));
+                }).catch(function (ex) {
+                    console.error(ex);
+                    failExportReport('未知原因');
+                }).finally(function () {
+                    sgop.scoreCfg.exportGiftCat.progress = false;
+                });
+            };
+        }
+
+    ]
+    ;
 
 
 // 财务员积分查看
-var fwsvCtrl = ['$scope', '$filter', 'ScoreService', '$uibModal',
-    function (sgop, $filter, ScoreSvc, msgbox) {
+var fwsvCtrl = ['$scope', '$filter', 'ScoreService', '$uibModal', '$timeout',
+    function (sgop, $filter, ScoreSvc, msgbox, timeout) {
         console.debug('ctrl->财务员客户积分查看');
-
-        sgop.nonSuperAdmin = true;
 
         sgop.refreshGrid = function (tableState) {
             gridPage(sgop, tableState, $filter, ScoreSvc.scoreInAgent);
         };
 
-        // TODO
+        // 查看积分变动详情
         sgop.detail = function (item) {
-            ScoreSvc.scoreDetail({username:item.username}).then(function (changes) {
-               /* msgbox.open({
-                    templateUrl: 'fs-score-view-detail.html'
-                });*/
-            }, function (fail) {
+            msgbox.open({
+                templateUrl: 'fs-score-view-detail.html'
+                , controller: ['$scope', function (scope) {
+                    scope.r = item;
+                    if (!(item.changes && item.changes.length)) {
+                        scope.isLoading = true;
+                        ScoreSvc.scoreDetail({username: item.username}).then(function (changes) {
+                            item.changes = changes;
+                        }, function (errObj) {
+                            scope.errMsg = ensureErrMsg(errObj);
+                        }).finally(function () {
+                            scope.isLoading = false;
+                        });
+                    }
+                }]
             });
+        };
 
+        function failExportReport(errmsg) {
+            var boxInst = showMsg({
+                msgbox: msgbox,
+                title: '导出操作',
+                msgHtml: '导出操作<strong class="text-warning">失败</strong>，' + errmsg
+            });
+            timeout(function () {
+                boxInst.dismiss();
+            }, msgErrTimeout);
+        }
+
+        sgop.scoreCfg = {exportTable: {}};
+        // 导出
+        sgop.exportTable = function () {
+            sgop.scoreCfg.exportTable.progress = true;
+            ScoreSvc.scoreTableUrl().then(function (url) {
+                timeout(function () {
+                    window.open(url, '_blank');
+                });
+                // sgop.scoreCfg.exportTable.url=url;   //这里的更新会被延迟到下次点击才会生效
+            }, function (errObj) {
+                failExportReport(ensureErrMsg(errObj));
+            }).catch(function (ex) {
+                console.error(ex);
+                failExportReport('未知原因');
+            }).finally(function () {
+                sgop.scoreCfg.exportTable.progress = false;
+            });
         };
     }];
 
 // 财务员积分管理
-var fwsmCtrl = ['$scope', '$filter', 'ScoreService',
-    function (sgop, $filter, ScoreSvc) {
+var fwsmCtrl = ['$scope', '$filter', 'ScoreService', '$uibModal', '$timeout',
+    function (sgop, $filter, ScoreSvc, msgbox, timeout) {
         console.debug('ctrl->财务员客户积分管理');
-
-        sgop.nonSuperAdmin = true;
 
         sgop.refreshGrid = function (tableState) {
             gridPage(sgop, tableState, $filter, ScoreSvc.scoreMgmtInAgent);
         };
 
-        // 详情 TODO
-        sgop.detail = function (item) {
 
+        var detailProgress = sgop.detailProgress = {};
+        // 详情
+        sgop.detail = function (item) {
+            detailProgress[item.randKey] = true;
+            ScoreSvc.scoreExchangeDetail(item.randKey).then(function (detail) {
+                item.detail = detail;
+
+                if (item.exchangeType == '红包') {
+                    moneyDetail();
+                } else if (item.exchangeType == '礼品') {
+                    giftDetail();
+                }
+            }, function (errMsgObj) {
+                showMsgThenClose({
+                    msgbox: msgbox,
+                    title: '获取详情',
+                    msgHtml: '操作<strong class="text-warning">失败</strong>，' + ensureErrMsg(errMsgObj),
+                }, msgErrTimeout);
+            }).finally(function () {
+                detailProgress[item.randKey] = false
+            });
+
+            function giftDetail() {
+                msgbox.open({
+                    templateUrl: 'fs-score-mgmt-gift.html'
+                    , controller: ['$scope', function (scope) {
+                        scope.r = item;
+                    }]
+                    , size: 'lg'
+                });
+            }
+
+            function moneyDetail() {
+                msgbox.open({
+                    templateUrl: 'fs-score-mgmt-money.html'
+                    , controller: ['$scope', function (scope) {
+                        scope.r = item;
+                    }]
+                    , size: 'lg'
+                });
+
+            }
         };
     }];
 
@@ -1820,4 +2176,12 @@ app.run(['$rootScope', function (rootsgop) {
             });
         }
     });
+
+    rootsgop.appConf = appConf;
+}]);
+
+app.config(['stConfig', function (stConfig) {
+    stConfig.pagination.template = 'fw-grid-pagination.html';
+    stConfig.pagination.itemsByPage = 10;
+    stConfig.pagination.displayedPages = 10;
 }]);

@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
 "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
-<!-- Generated 2016-12-1 21:09:21 by Hibernate Tools 5.1.0.Beta1 -->
+<!-- Generated 2016-12-17 23:35:50 by Hibernate Tools 5.1.0.Beta1 -->
 <hibernate-mapping>
     <class name="entity.PayRecordHistory" table="pay_record_history" catalog="check_a_db" optimistic-lock="version">
         <id name="id" type="int">
@@ -14,17 +14,17 @@
             </column>
         </property>
         <property name="payMoney" type="double">
-            <column name="pay_money" precision="22" scale="0" not-null="true">
+            <column name="payMoney" precision="22" scale="0" not-null="true">
                 <comment>&#184;&#182;&#191;&#238;&#189;&#240;&#182;&#238;</comment>
             </column>
         </property>
         <property name="payWay" type="string">
-            <column name="pay_way" length="30" not-null="true">
+            <column name="payWay" length="30" not-null="true">
                 <comment>&#184;&#182;&#191;&#238;&#183;&#189;&#202;&#189;</comment>
             </column>
         </property>
         <property name="payAccount" type="string">
-            <column name="pay_account" length="30">
+            <column name="payAccount" length="30">
                 <comment>&#184;&#182;&#191;&#238;&#213;&#203;&#187;&#167;</comment>
             </column>
         </property>
@@ -47,7 +47,7 @@
             </column>
         </property>
         <property name="bankinputId" type="java.lang.Integer">
-            <column name="bankinput_id">
+            <column name="bankinputId">
                 <comment>&#185;&#216;&#193;&#170;&#181;&#196;&#179;&#246;&#196;&#201;id</comment>
             </column>
         </property>
@@ -70,17 +70,17 @@
             </column>
         </property>
         <property name="manyPay" type="string">
-            <column name="many_pay" length="1000">
+            <column name="manyPay" length="1000">
                 <comment>&#184;&#182;&#191;&#238;&#181;&#196;&#186;&#207;&#205;&#172;&#186;&#197;&#188;&#176;&#189;&#240;&#182;&#238;</comment>
             </column>
         </property>
         <property name="uploadTime" type="string">
-            <column name="upload_time" length="20">
+            <column name="uploadTime" length="20">
                 <comment>&#201;&#207;&#180;&#171;&#202;&#177;&#188;&#228;</comment>
             </column>
         </property>
         <property name="contractNum" type="string">
-            <column name="contract_num" length="10" />
+            <column name="contractNum" length="10" />
         </property>
         <property name="caid" type="string">
             <column name="caid" length="30">
@@ -91,6 +91,15 @@
             <column name="freeback">
                 <comment>&#183;&#181;&#192;&#251;&#177;&#234;&#214;&#190;</comment>
             </column>
+        </property>
+        <property name="actualPayer" type="string">
+            <column name="actualPayer" length="50" />
+        </property>
+        <property name="paymentNature" type="string">
+            <column name="paymentNature" length="1000" />
+        </property>
+        <property name="actualPayTime" type="string">
+            <column name="actualPayTime" length="30" />
         </property>
     </class>
 </hibernate-mapping>

@@ -223,7 +223,7 @@ public class ConnectPerson_Dao {
 		int num = 0;
 		try {
 			session = sessionFactory.openSession();
-			String hql_select_all = "select count(*) from ConnectPerson where agent = :agent_id" + filed1 + " = :value1";
+			String hql_select_all = "select count(*) from ConnectPerson where agent = :agent_id and " + filed1 + " = :value1";
 		//	String hql_select_all = "select count(*) from Assistance";
 			Query query =   session.createQuery(hql_select_all)
 					.setParameter("agent_id", agent_id)
@@ -262,7 +262,7 @@ public class ConnectPerson_Dao {
 		int num = 0;
 		try {
 			session = sessionFactory.openSession();
-			String hql_select_all = "select count(*) from ConnectPerson where agent = :agent_id" + filed1 + " = :value1" + " or " + filed2 + " = :value2";
+			String hql_select_all = "select count(*) from ConnectPerson where agent = :agent_id and " + filed1 + " = :value1" + " or " + filed2 + " = :value2";
 		//	String hql_select_all = "select count(*) from Assistance";
 			Query query =   session.createQuery(hql_select_all)
 					.setParameter("agent_id", agent_id)

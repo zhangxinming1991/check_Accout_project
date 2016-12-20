@@ -41,17 +41,8 @@ app.filter('notifStatusPrinter', function () {
 });
 
 app.filter('userRolePrinter', function () {
-    return function (rolecode) {
-        switch (rolecode) {
-            case "bu":
-                return '代理商财务';
-            case 'bm':
-                return '管理员';
-            case 'ba':
-                return '代理商管理';
-            default:
-                return '其他';
-        }
+    return function (roleCode) {
+        return appConf.mappings.webUserRole[roleCode] || '其他';
     };
 });
 
@@ -153,8 +144,8 @@ app.filter('rmdsFilter', ['$filter', function ($filter) {
 }]);
 /*
 
-app.filter('scoreStatus', function () {
-    return function (statusCode) {
-        return appConf.mappings.scoreStatus[statusCode] || statusCode;
-    }
-});*/
+ app.filter('scoreStatus', function () {
+ return function (statusCode) {
+ return appConf.mappings.scoreStatus[statusCode] || statusCode;
+ }
+ });*/

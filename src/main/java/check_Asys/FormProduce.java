@@ -320,42 +320,45 @@ public class FormProduce {
 		public final static int debt = 2;
 		public final static int total = 3;
 		public final static int client = 4;*/
-		public static final int province = 0;//省份
-		public static final int client_name = 1;//客户名称
-		public static final int client_id = 2;//客户身份证或组织机构代码证
-		public static final int contract = 3;//设备销售编号/合同号
-		public static final int product_time = 4;//发货时间
-		public static final int owner_product = 5;//货款主体
-		public static final int total_money = 6;//合同总额
-		public static final int debet_money = 7;//在外货款金额
-		public static final int as_name = 8;//代理商管理员
-		public static final int as_phone = 9;//代理商电话
-		public static final int as_email = 10;//代理商邮箱
-		public static final int cp_name = 11;//对账联系人
-		public static final int cp_cardid = 12;//对账联系人身份证
-		public static final int cp_phone = 13;//对账联系人移动电话
-		public static final int cp_weixin = 14;//对账联系人微信
-		public static final int input = 15;//本月回款
+		public final static int num = 0;//序号
+		public final static int province = 1;//省份
+		public final static int clientName = 2;//客户名称
+		public final static int cusCompanyid = 3;//客户id
+		public final static int dingdanNum = 4;//订单号
+		public final static int productName = 5;//产品名称
+		public final static int facilityName = 6;//设备名称
+		public final static int contract = 7;//合同号
+		public final static int productTime = 8;//发货时间
+		public final static int paymentOwner = 9;//货款主体
+		public final static int paymentNature = 10;//货款性质
+		public final static int inputNature = 11;//回款性质
+		public final static int totalMoney  =12;//合同总额
+		public final static int debetMoney  = 13;//在外金额
+		public final static int actualPayer  = 14;//实际付款人
+		public final static int payway  = 15;//付款方式
+		public final static int inputMonth = 16;//本月回款
+		public final static int inputClient = 17;//客户回款
 		
 		public List<String> formhead;
 		public Export_TotalOriForm(){
 			formhead = new ArrayList<String>();
+			formhead.add(num,"序号");
 			formhead.add(province,"省份");
-			formhead.add(client_name, "客户名称/按揭借款人");
-			formhead.add(client_id, "身份证号码/组织机构代码证");
-			formhead.add(contract, "分期销售设备编号/按揭、融资合同号");
-			formhead.add(product_time, "发货时间");
-			formhead.add(owner_product, "货款主体");
-			formhead.add(total_money, "合同总额");
-			formhead.add(debet_money, "在外货款总额");
-			formhead.add(as_name, "代理商数据管理员");
-			formhead.add(as_phone, "代理商数据管理员电话");
-			formhead.add(as_email, "代理商数据管理员邮箱");
-			formhead.add(cp_name, "客户对账联系人");
-			formhead.add(cp_cardid, "对账联系人身份证");
-			formhead.add(cp_phone, "客户对账人移动电话");
-			formhead.add(cp_weixin, "客户对账联系人微信");
-			formhead.add(input, "本月回款");
+			formhead.add(clientName, "客户名称/按揭借款人");
+			formhead.add(cusCompanyid, "合同买受人客户码");
+			formhead.add(dingdanNum, "订单号");
+			formhead.add(productName, "产品名称");
+			formhead.add(facilityName, "设备名称");
+			formhead.add(contract, "合同号");
+			formhead.add(productTime, "发货时间");
+			formhead.add(paymentOwner, "货款主体");
+			formhead.add(paymentNature, "货款性质");
+			formhead.add(inputNature, "回款性质");
+			formhead.add(totalMoney, "合同总额");
+			formhead.add(debetMoney, "在外货款总额");
+			formhead.add(actualPayer, "实际付款人");
+			formhead.add(payway, "付款方式");
+			formhead.add(inputMonth, "本月回款");
 		}
 	}
 	

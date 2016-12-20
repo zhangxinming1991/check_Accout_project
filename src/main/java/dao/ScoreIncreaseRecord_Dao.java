@@ -18,7 +18,8 @@ import entity.ScoreIncreaseRecord;
  *
  */
 public class ScoreIncreaseRecord_Dao {
-	private static Logger logger = LogManager.getLogger(PayRecord_Dao.class);
+	private static Logger logger = LogManager.getLogger(ScoreIncreaseRecord_Dao.class);
+	private static Logger logger_error = LogManager.getLogger("error");
 	protected SessionFactory sessionFactory;
 	protected Session session;
 	protected Transaction transaction;
@@ -46,7 +47,7 @@ public class ScoreIncreaseRecord_Dao {
 			endTransaction();			
 		} catch (RuntimeException e) {
 			// TODO: handle exception
-			System.out.println("save failed");
+			logger_error.error("save failed");
 		}
 	}
 	
@@ -62,7 +63,7 @@ public class ScoreIncreaseRecord_Dao {
 			endTransaction();
 			return infos;
 		}catch(RuntimeException e){
-			System.out.println("get info failed");
+			logger_error.error("get info failed");
 			return null;
 		}
 	}
@@ -80,7 +81,7 @@ public class ScoreIncreaseRecord_Dao {
 			endTransaction();
 			return infos;
 		}catch(RuntimeException e){
-			System.out.println("get info failed");
+			logger_error.error("get info failed");
 			return null;
 		}
 	}

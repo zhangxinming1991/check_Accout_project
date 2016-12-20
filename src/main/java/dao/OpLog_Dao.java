@@ -115,6 +115,19 @@ public class OpLog_Dao {
 	}
 	
 	/*获取整张数据表*/
+	public java.util.List GetOpLogTb_InvertedOrder_ByPage(int offset,int pagesize){
+		
+		session = sessionFactory.openSession();
+		String hql_select_all = "select op from OpLog op order by id desc";
+		java.util.List oplogs =  (java.util.List) session.createQuery(hql_select_all)
+				.setFirstResult(offset)
+				.setMaxResults(pagesize)
+				.list();
+		session.close();
+		return oplogs;
+	}
+	
+	/*获取整张数据表*/
 	public int GetOpLogTb_Num(){
 		int num = 0;
 		try {

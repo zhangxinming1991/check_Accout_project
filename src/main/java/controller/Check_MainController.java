@@ -3,6 +3,7 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
 import java.io.Writer;
+import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -27,6 +28,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import com.mysql.fabric.xmlrpc.base.Data;
 import com.sun.jndi.url.corbaname.corbanameURLContextFactory;
 import com.sun.org.apache.bcel.internal.generic.NEW;
 
@@ -47,8 +49,10 @@ import entity.BankInput;
 import entity.CaresultHistory;
 import entity.CusSecondstore;
 import entity.OriOrder;
+import entity.OriOrderId;
 import entity.PayRecord;
 import entity.PayRecordCache;
+import entity.ScoreIncreaseRecord;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 
@@ -75,21 +79,30 @@ public class Check_MainController {
 	 */
 	@RequestMapping(value="enter_camodel")
 	public void Enter_CaModel(HttpServletRequest request,HttpServletResponse response){
+		logger.info("***Get enter_camodel request***");
+		
 		HttpSession session = request.getSession(false);
 		JSONObject jsonObject = new JSONObject();
 		if (session == null) {
 			jsonObject.element("flag", -1);
 			jsonObject.element("errmsg", "登录超时，请重新登录");
 			Common_return_en(response,jsonObject);
+			logger.info("***Get enter_camodel request***");
 			return;
 		}
 		String who = (String)session.getAttribute("workId");//获取用户名
 		String agentid = (String)session.getAttribute("agentid");//设置操作者的所属代理商id
 		Owner owner = cOp.new Owner();
 		owner.work_id = agentid;
+		owner.who = who;
+		
+		String caid = cOp.auccount.CreateCaid(agentid);
+		String savedir_A = request.getServletContext().getRealPath("/" + CheckAcManage.SaveDirName_Orider);
+		String filenameA = caid + CheckAcManage.FileName_Orider;
+		Import_Object import_Object = cOp.new Import_Object('N', null, null, savedir_A, filenameA, null);
 		
 //		String caid = (String) cOp.OpSelect(CheckAcManage.ENTRER_CaModel, null,owner);//处理进入对账就模式操作
-		 jsonObject = (JSONObject) cOp.OpSelect(CheckAcManage.ENTRER_CaModel, who,owner);//处理进入对账就模式操作
+		jsonObject = (JSONObject) cOp.OpSelect(CheckAcManage.ENTRER_CaModel, import_Object,owner);//处理进入对账就模式操作
 		if (jsonObject.getString("caid") != null) {
 			oLog_Service.AddLog(OpLog_Service.utype_as, who, OpLog_Service.ENTRER_CaModel, OpLog_Service.result_success);//插入操作日志
 			jsonObject.element("flag", 0);
@@ -103,8 +116,8 @@ public class Check_MainController {
 			jsonObject.element("errmsg", "产生对账id失败，进入对账模式失败");
 			Common_return_en(response,jsonObject);
 		}
-		
-		
+		logger.info("***Get enter_camodel request***");
+		return;
 	}
 	
 	/**
@@ -221,6 +234,53 @@ public class Check_MainController {
 	}
 	
 	/**
+	 * uploadBinput_incre 增量式上传出纳记录
+	 */
+	@RequestMapping(value="/uploadBinput_incre")
+	public void uploadBinput_incre(HttpServletRequest request,@RequestParam("fileB") MultipartFile mfileB,HttpServletResponse response){
+		logger.info("***Get uploadBinput_incre request***");
+		
+		HttpSession session = request.getSession(false);
+		if (session == null) {
+			JSONObject jsonObject = new JSONObject();
+			jsonObject.element("flag", -1);
+			jsonObject.element("errmsg", "登录超时，请重新登录");
+			Common_return_en(response,jsonObject);
+			return;
+		}
+		String workId = (String)session.getAttribute("workId");//获取用户名
+		String agentid = (String)session.getAttribute("agentid");//或者操作者所属代理商id
+		
+		String caid = null;
+		try {
+			caid = AES.aesDecrypt(request.getParameter("caid"), AES.key);
+			logger.info("对账id为" + caid);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		String binputfilename = caid + CheckAcManage.FileName_BankInput;//出纳excel保存文件名
+		String savedir_B = request.getServletContext().getRealPath("/" + CheckAcManage.SaveDirName_BankInput);
+		Import_Object iObjectb = cOp.new Import_Object('I', mfileB,agentid,savedir_B,binputfilename,caid);
+		JSONObject re_json_b = (JSONObject) cOp.OpSelect(CheckAcManage.IMPORT,iObjectb,null);//上传出纳表
+		if (re_json_b.getInt("flag") == -1) {
+			oLog_Service.AddLog(OpLog_Service.utype_as,workId,OpLog_Service.IMPORT_INCRE, OpLog_Service.result_failed);
+			Common_return_en(response, re_json_b);
+			return;
+		}
+		
+		oLog_Service.AddLog(OpLog_Service.utype_as,workId,OpLog_Service.IMPORT_INCRE, OpLog_Service.result_success);
+		/*返回*/
+		JSONObject re_json = new JSONObject();
+		re_json.element("flag", 0);
+		re_json.element("errmsg", "增量式上传成功");
+		Common_return_en(response, re_json);
+		/*返回*/
+		
+	}
+	
+	/**
 	 * map 关联付款记录和出纳记录
 	 * @param request
 	 * @param response
@@ -237,7 +297,8 @@ public class Check_MainController {
 			return;
 		}
 		String agent_id = (String)session.getAttribute("agentid");
-
+		String who = (String) session.getAttribute("workId");
+		
 		Owner owner = cOp.new Owner();
 		owner.work_id = agent_id;
 		
@@ -263,6 +324,22 @@ public class Check_MainController {
 		if (map_op.equals("cer_map")) {//确定匹配
 			bank_id = jstr.getInt("bank_id");
 			map_Object = cOp.new Map_Object(map_op, pay_id,bank_id);
+			
+			/*插入积分*/
+	/*		ScoreIncreaseRecord in_sr = new ScoreIncreaseRecord();
+			in_sr.setHander(who);
+			
+			String client = cOp.dao_List.pDao.findById(PayRecord.class, pay_id).getPayer();
+			in_sr.setUsername(client);
+			
+			Date date = new Date();
+			Timestamp time = new Timestamp(date.getTime());
+			in_sr.setTime(time);
+			in_sr.setDescription("匹配通过，获得积分");
+			Integer source = 5;
+			in_sr.setStatus(source.byteValue());
+			cOp.dao_List.sRc_Dao.add(in_sr);*/
+			/*插入积分*/
 		}
 		else if(map_op.equals("find_map")){//查找匹配
 			map_Object = cOp.new Map_Object(map_op, pay_id);
@@ -311,10 +388,30 @@ public class Check_MainController {
 		
 		String request_s = null;
 		String request_s_de = null;
+		
+		Watch_Object wObject = null;
+		
+		int pagenum = 1;
+		int pagesize = 10;
+		int offset = (pagenum-1)*10;
 		try {
 				request_s = IOUtils.toString(request.getInputStream());
 				request_s_de = AES.aesDecrypt(request_s, AES.key);
+				
 				logger.info("receive" + request_s_de);
+				JSONObject jstr = JSONObject.fromObject(request_s_de);
+				wObject = cOp.Create_Watch_Object(jstr);//设置查看参数
+				
+				if (!wObject.table_name.equals("caresult_history")) {
+					pagenum = jstr.getInt("pagenum");
+					offset = (pagenum-1)*10;
+					pagesize = 10;
+				}
+				else{
+					pagenum = 1;
+					offset = (pagenum-1)*10;
+					pagesize = 12;
+				}
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			logger.error("获取提交参数失败" + e);
@@ -324,15 +421,13 @@ public class Check_MainController {
 			Common_return_en(response,re_jsonobject);
 		}
 		
-		JSONObject jstr = JSONObject.fromObject(request_s_de);
-		Watch_Object wObject = cOp.Create_Watch_Object(jstr);//设置查看参数
-		
-		int offset = 0;
-		int pagesize = 2;
-		java.util.List list = cOp.Watch(wObject, owner,offset,pagesize);
-		
-		Watch_return(list,response,wObject);//返回数据到前台
-		
+		//java.util.List list = cOp.Watch(wObject, owner,offset,pagesize);
+		re_jsonobject = cOp.Watch(wObject, owner,offset,pagesize);
+		//Watch_return(list,response,wObject);//返回数据到前台
+    	re_jsonobject.element("flag", 0);
+    	re_jsonobject.element("errmsg", "查看成功");
+		Common_return_en(response, re_jsonobject);
+		return;
 	//	cOp.Close_All_Dao();
 	}
 	
@@ -467,6 +562,7 @@ public class Check_MainController {
 		}
 		
 		Common_return_en(response,jmesg);
+		return;
 	}
 	
 	/**
@@ -628,7 +724,7 @@ public class Check_MainController {
 		Owner owner = cOp.new Owner();
 		owner.work_id = (String)session.getAttribute("agentid");
 		String who = (String) session.getAttribute("workId");
-		
+		owner.who = who;
 		String request_s;
 		JSONObject jstr;
 		String caid = null;
@@ -652,12 +748,13 @@ public class Check_MainController {
 			
 			cOp.auccount.HisCancelAndCaAgain(owner.work_id, caid, savedir_A, savedir_B, filenameA, filenameB);*/
 		}
-		cOp.OpSelect(CheckAcManage.CANCEL_CaAgain, caid, owner);
+		jsonObject = (JSONObject) cOp.OpSelect(CheckAcManage.CANCEL_CaAgain, caid, owner);
 		
 		oLog_Service.AddLog(OpLog_Service.utype_as, who, OpLog_Service.CANCEL_CaAgain, OpLog_Service.result_success);
 		jsonObject.element("flag", 0);
 		jsonObject.element("errmsg", "取消并重新对账成功");
 		Common_return_en(response, jsonObject);
+		return;
 		
 	}
 	
@@ -702,6 +799,13 @@ public class Check_MainController {
 			month = Integer.toString(jstr.getInt("month"));
 		}
 		String caid = year + "-" + month + "-" + agentid;//对账id
+		String curmonthcaid = cOp.auccount.CreateCaid(agentid);
+		if (caid.equals(curmonthcaid)) {//如果历史对账中选择了本月份，则会提示通过另外的途径进行对账
+			jsonObject.element("flag", -1);
+			jsonObject.element("errmsg", "选择的月份为本月，请通过导航栏的[对账流程]进行对账");
+			Common_return_en(response,jsonObject);
+			return;
+		}
 		
 		jsonObject.element("flag", 0);
 		jsonObject.element("errmsg", "操作成功");
@@ -712,7 +816,7 @@ public class Check_MainController {
 		String filenameB = caid + CheckAcManage.FileName_BankInput;
 		
 		int flag = cOp.auccount.HisCancelAndCaAgain(agentid, caid, savedir_A, savedir_B, filenameA, filenameB);
-		if (flag == -1) {
+	/*	if (flag == -1) {
 			jsonObject.element("flag", -1);
 			jsonObject.element("errmsg", "操作失败，请确认上次对账是否成功");
 			Common_return_en(response,jsonObject);
@@ -721,9 +825,23 @@ public class Check_MainController {
 			jsonObject.element("flag", -1);
 			jsonObject.element("errmsg", "操作非法，不允许从历史对账中跳转到历史对账");
 			Common_return_en(response,jsonObject);
+		}*/
+		if (flag == -1) {
+		jsonObject.element("flag", -1);
+		jsonObject.element("errmsg", "操作失败，请确认上次对账是否成功");
+		Common_return_en(response,jsonObject);
+		return;
 		}
 		else {
-			OneKeyData_return(response, jsonObject, "caid", caid);
+			Owner owner = cOp.new Owner();
+			owner.who = who;
+			owner.work_id = agentid;
+			jsonObject = (JSONObject) cOp.OpSelect(CheckAcManage.HISCA, caid, owner);
+			jsonObject.element("caid", caid);
+			jsonObject.element("flag", 0);
+			//OneKeyData_return(response, jsonObject, "caid", caid);
+			Common_return_en(response,jsonObject);
+			return;
 		}
 	}
 
@@ -750,12 +868,13 @@ public class Check_MainController {
 		
 		Owner owner = cOp.new Owner();
 		owner.work_id = agent_id;
-		
+		owner.who = work_id;
 		cOp.OpSelect(CheckAcManage.FREEBACK, null, owner);
 		
 		jsonObject.element("flag", 0);
 		jsonObject.element("errmsg", "返利成功");
 		Common_return_en(response, jsonObject);
+		return;
 	}
 	
 	public void Watch_return(List list,HttpServletResponse response,Watch_Object wobject){
@@ -828,8 +947,12 @@ public class Check_MainController {
 				for (int j = 0; j < jmany_c.size(); j++) {
 					JSONObject jObject = (JSONObject) jmany_c.get(j);
 					String contract = (String)jObject.get("contract");
-					OriOrder fOrder = cOp.dao_List.tDao.findById(OriOrder.class, contract);
-					jforder.add(fOrder);
+					//OriOrder fOrder = cOp.dao_List.tDao.findById(OriOrder.class, contract);
+					List<OriOrder> fList = cOp.dao_List.tDao.FindBySpeElement_S("client",bankInput.getPayer());
+					if (!fList.isEmpty()) {
+						OriOrder fOrder = fList.get(0);
+						jforder.add(fOrder);						
+					}
 				}
 				wRes_ReObject = new wRes_ReObject(bankInput, jforder); 
 				data.add(wRes_ReObject);

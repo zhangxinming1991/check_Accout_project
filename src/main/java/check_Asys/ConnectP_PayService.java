@@ -9,6 +9,8 @@ import org.apache.logging.log4j.Logger;
 import org.hibernate.SessionFactory;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.sun.org.apache.regexp.internal.recompile;
+
 import check_Asys.CheckAcManage.Dao_List;
 import dao.Assistance_Dao;
 import dao.BankInput_Dao;
@@ -58,8 +60,40 @@ public class ConnectP_PayService {
 	 * @param fileName 凭证保存的文件名
 	 * @author zhangxinming
 	 */
-	public void Upload_Pay(PayRecordCache pRecord,MultipartFile mfile,String savedir,String fileName){
+	public boolean Upload_Pay(PayRecordCache pRecord,MultipartFile mfile,String savedir,String fileName){
 		
+		if (mfile != null) {
+			AnyFile_Op aOp= new AnyFile_Op();
+			long filesize = mfile.getSize();
+		
+			AnyFileElement aElement = aOp.new AnyFileElement(fileName, savedir, (int)filesize);
+			
+			/*读取并保存文件*/
+			aOp.CreateDir(aElement.dirname);
+			File upload_file = aOp.CreateFile(aElement.dirname, aElement.filename);
+			byte read_b[] = aOp.ReadFile(mfile);
+			if (read_b == null) {
+				return false;
+			}
+			boolean wresult = aOp.WriteFile(aElement, read_b, upload_file);
+			if (wresult == false) {
+				return false;
+			}
+			/*读取并保存文件*/	
+		}
+		
+		pRecord.setPass(false);
+		pRecord.setLinkCer("/check_Accout/" + "付款记录/" + pRecord.getOwner() + "/" + pRecord.getPayer() + "/" + fileName);
+		boolean aresult = pCDao.add(pRecord);
+		if (aresult == false) {
+			return false;
+		}
+		else {
+			return true;
+		}
+	}
+	
+	public void Save_UploadPicture(MultipartFile mfile,String savedir,String fileName){
 		if (mfile != null) {
 			AnyFile_Op aOp= new AnyFile_Op();
 			long filesize = mfile.getSize();
@@ -73,10 +107,32 @@ public class ConnectP_PayService {
 			aOp.WriteFile(aElement, read_b, upload_file);
 			/*读取并保存文件*/	
 		}
+	}
+	
+	/**
+	 * GetMaxId_InPayCWH：获取付款记录三个区中的最大id记录的信息
+	 * @return
+	 */
+	public int GetMaxId_InPayCWH(){
+		int maxid_c = -1;
+		int maxid_w = -1;
+		int maxid_h = -1;
+		int maxid = -1;
 		
-		pRecord.setPass(false);
-		pRecord.setLinkCer("/check_Accout/" + "付款记录/" + pRecord.getOwner() + "/" + pRecord.getPayer() + "/" + fileName);
-		pCDao.add(pRecord);
+		maxid_c = pCDao.GetMaxID();
+		maxid_w = pDao.GetMaxID();
+		maxid_h = pHDao.GetMaxID();
+		
+		if (maxid_w > maxid_c) {
+			maxid = maxid_w;
+		}
+		else {
+			maxid = maxid_c;
+		}
+		if (maxid_h > maxid) {
+			maxid = maxid_h;
+		}
+		return maxid;
 	}
 	
 	/**
