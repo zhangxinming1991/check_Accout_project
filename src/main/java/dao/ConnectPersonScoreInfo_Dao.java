@@ -17,7 +17,7 @@ import entity.ConnectPersonScoreInfo;
  *
  */
 public class ConnectPersonScoreInfo_Dao {
-	private static Logger logger = LogManager.getLogger(PayRecord_Dao.class);
+	private static Logger logger = LogManager.getLogger(ConnectPersonScoreInfo_Dao.class);
 	protected SessionFactory sessionFactory;
 	protected Session session;
 	protected Transaction transaction;
