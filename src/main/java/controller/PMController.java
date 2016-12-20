@@ -91,6 +91,85 @@ public class PMController {
 	@RequestMapping(value="/modifyClientMes")
 	public void ModifyClientMes(HttpServletRequest request,HttpServletResponse response){
 		logger.info("***Get modifyClientMes request***");
+		
+		JSONObject re_jsonobject = new JSONObject();
+		
+    	String workId = null;
+    	String name = null;
+    	String phone = null;
+    	String email = null;
+    	String agentid = null;
+        try {
+			String request_s = IOUtils.toString(request.getInputStream());
+			String request_s_de = AES.aesDecrypt(request_s, AES.key);
+			logger.info("receive" + request_s_de);
+			JSONObject jstr = JSONObject.fromObject(request_s_de);
+			workId = jstr.getString("workId");//获取登录id
+			name = jstr.getString("name");//获取登录密码
+			phone = jstr.getString("phone");
+			email = jstr.getString("email");
+			agentid = jstr.getString("agentid");
+
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			logger_error.error("获取提交参数失败" + e);
+			e.printStackTrace();
+			
+			
+			re_jsonobject.element("flag", -1);
+			re_jsonobject.element("errmsg", "获取提交参数失败");
+			Common_return_en(response,re_jsonobject);
+			return;
+		}
+        
+        Assistance mf_assis = new Assistance();
+        mf_assis.setWorkId(workId);
+        mf_assis.setName(name);
+        mf_assis.setPhone(phone);
+        mf_assis.setEmail(email);
+        
+        re_jsonobject = pManage.ModifyAssistanceMes(mf_assis);
+        if (re_jsonobject.getInt("flag") == 0) {
+			re_jsonobject.element("flag", 0);
+			re_jsonobject.element("errmsg", "修改个人信息成功");
+			Common_return_en(response,re_jsonobject);
+			oLog_Service.AddLog(ChangeUsertypeToChinses(re_jsonobject.getString("usertype")), workId, OpLog_Service.MODIFY_MES, OpLog_Service.result_success);
+			return;
+		}
+        else if (re_jsonobject.getInt("flag") == -1) {
+			oLog_Service.AddLog(ChangeUsertypeToChinses(re_jsonobject.getString("usertype")), workId, OpLog_Service.MODIFY_MES, OpLog_Service.result_success);
+			re_jsonobject.element("flag", -1);
+			re_jsonobject.element("errmsg", "修改个人信息失败");
+			Common_return_en(response,re_jsonobject);
+			return;
+		}
+        else {
+			oLog_Service.AddLog(ChangeUsertypeToChinses(re_jsonobject.getString("usertype")), workId, OpLog_Service.MODIFY_MES, OpLog_Service.result_success);
+			re_jsonobject.element("flag", -1);
+			re_jsonobject.element("errmsg", "用户名不存在");
+			Common_return_en(response,re_jsonobject);
+			return;
+		}
+	}
+	
+	/**
+	 * 转换用户类型为对应中文
+	 * @param usertype
+	 * @return
+	 */
+	public String ChangeUsertypeToChinses(String usertype){
+		if (usertype.equals("bm")) {
+			return "超级管理员";
+		}
+		else if (usertype.equals("bu")) {
+			return "代理商财务";
+		}
+		else if (usertype.equals("ba")) {
+			return "代理商管理员";
+		}
+		else {
+			return "未知用户类型";
+		}
 	}
 	
 	/**
@@ -728,6 +807,7 @@ public class PMController {
 			re_jsonobject.element("flag", -1);
 			re_jsonobject.element("errmsg", "获取提交参数失败");
 			Common_return_en(response,re_jsonobject);
+			return;
 		}
         
         Login_Mange login_Mange = pManage.new Login_Mange();

@@ -93,6 +93,39 @@ public class Person_Manage {
 	}
 	
 	/**
+	 * ModifyAssistanceMes 修改代理商财务个人信息
+	 */
+	public JSONObject ModifyAssistanceMes(Assistance mf_assis){
+		JSONObject re_jsonobject = new JSONObject();
+		
+		String username = mf_assis.getWorkId();
+		Assistance fAssistance  = aS_Dao.findById(Assistance.class, username);
+		if (fAssistance != null) {
+			fAssistance.setAgentid(mf_assis.getAgentid());
+			fAssistance.setName(mf_assis.getName());
+			fAssistance.setPhone(mf_assis.getPhone());
+			fAssistance.setEmail(mf_assis.getEmail());
+			
+			if (aS_Dao.update(fAssistance)) {
+				re_jsonobject.element("flag", 0);
+				re_jsonobject.element("errmsg", "修改个人信息成功");
+				re_jsonobject.element("usertype", fAssistance.getUsertype());
+				return re_jsonobject;
+			}
+			else {
+				re_jsonobject.element("flag", -1);
+				re_jsonobject.element("errmsg", "修改个人信息失败");
+				re_jsonobject.element("usertype", fAssistance.getUsertype());
+				return re_jsonobject;
+			}
+		}
+		else {
+			re_jsonobject.element("flag", -2);
+			re_jsonobject.element("errmsg", "修改个人信息失败");
+			return re_jsonobject;
+		}
+	}
+	/**
 	 * Get_AgentCAN 获取所有代理商的id及名字，用于注册时提供给用户选择
 	 * @return
 	 * @author zhangxinming
