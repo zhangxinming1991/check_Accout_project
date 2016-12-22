@@ -9,7 +9,7 @@
         </caption>-->
         <thead>
         <tr>
-            <th></th>
+            <th ng-show="checkInoperable"></th>
             <th ng-hide="checkInoperable"><input st-search="id" placeholder="流水号" type="search" class="input-sm form-control"></th>
             <th><input st-search="payer" placeholder="终端用户" type="search" class="input-sm form-control"></th>
             <th><input st-search="actualPayer" placeholder="实际付款人" type="search" class="input-sm form-control"></th>
@@ -18,7 +18,7 @@
             </th>
             <th>
                 <!--<input st-search="payMoney" placeholder="付款金额" type="search" class="input-sm form-control">-->
-                <st-number-range predicate="payMoney" lower="query.lower" higher="query.higher"></st-number-range>
+                <st-number-range predicate="payMoney" lower="query.lower" higher="query.higher" step="10000"></st-number-range>
             </th>
             <!--<th><st-select-distinct collection="['银行转账','电汇','现金']" predicate="payWay" st-search="payWay" placeholder="付款方式" type="search" class="input-sm form-control"></th>-->
             <th>
@@ -43,7 +43,7 @@
             <th><input st-search="comment" placeholder="备注" type="search" class="input-sm form-control"></th>
         </tr>
         <tr>
-            <th>序号</th>
+            <th ng-show="checkInoperable">序号</th>
             <th ng-hide="checkInoperable">流水号</th>
             <!--<th st-sort="payer">付款人</th>-->
             <th st-sort="payer">终端用户</th>
@@ -63,7 +63,7 @@
 
         <tbody ng-show="isNonEmptyGrid" class="">
         <tr ng-repeat="r in dispItems" on-finish-render-event="fwcnGridDone">
-            <td>{{$index+1}}</td>
+            <td ng-show="checkInoperable">{{$index+1}}</td>
             <td ng-hide="checkInoperable">{{r.id}}</td>
             <td>{{r.payer}}</td>  <!--之前的付款人，现在的终端用户-->
             <td>{{r.actualPayer}}</td>
@@ -283,16 +283,16 @@
 
             </div>
             <div class="modal-footer" id="assocPanelFooter">
-                <button ng-disabled="progress.rejecting||progressaccepting||progress.attaching||!ctrl.attachCfg.targetId"
+                <button ng-disabled="progress.rejecting||progress.tbding||progress.attaching||!ctrl.attachCfg.targetId"
                         ladda="progress.attaching" class="btn btn-primary" ng-click="attachSubmit()"><i class="fa fa-exchange"></i> 匹配
                 </button>
-                <button ng-disabled="progress.rejecting||progressaccepting||progress.attaching" ladda="progress.rejecting"
+                <button ng-disabled="progress.rejecting||progress.tbding||progress.attaching" ladda="progress.rejecting"
                         ng-click="rejectPaymentNotification(ctrl.r)" class="btn btn-primary"><i class="fa fa-trash"></i> 否决</button>
-                <button ng-disabled="progress.rejecting||progressaccepting||progress.attaching" ladda="progress.accepting"
+                <button ng-disabled="progress.rejecting||progress.tbding||progress.attaching" ladda="progress.accepting"
                         ng-click="tbdPaymentNotification(ctrl.r)" class=" btn btn-primary"><i class="fa fa-hourglass"></i> 待定</button>
                 <!--<button class="btn btn-default" ng-click="closeMsgbox()">取消</button>-->
                 <div>
-                    <span class="text-info" ng-show="ctrl.isProcessing">操作进行中……</span>
+                    <!--<span class="text-info" ng-show="ctrl.isProcessing">操作进行中……</span>-->
                     <span class="text-warning" ng-show="ctrl.attachErrMsg">操作失败：{{ctrl.attachErrMsg}}</span>
                 </div>
             </div>

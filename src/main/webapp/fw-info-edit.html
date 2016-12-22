@@ -1,0 +1,67 @@
+<div>
+    <style>
+        .item {
+            margin-top: 20px;
+        }
+
+        .item .item-key {
+            display: inline-block;
+            vertical-align: middle;
+            /*text-align: right;*/
+        }
+
+        .item .item-value {
+            display: inline-block;
+            vertical-align: middle;
+            margin-left: 20px;
+            /*font-weight: bold;*/
+        }
+    </style>
+    <div class="modal-header">
+            <span class="glyphicon glyphicon-remove top-right pull-right close" ng-click="closeMsgbox()"
+                  ng-hide="msgCfg.noCloseBtn"></span>
+        <p class="modal-title h3 text-center">信息修改</p>
+    </div>
+    <div class="modal-body">
+        <div class="">
+            <div class="row col-md-offset-3 item">
+                <div class="col-md-3 item-key">用户名</div>
+                <div class="col-md-offset-3 text-primary item-value">{{loggedInUser.username}}</div>
+            </div>
+            <div class="row col-md-offset-3 item">
+                <div class="col-md-3">姓名</div>
+                <div class="col-md-offset-3 text-primary item-value">
+                    <input ng-model="formUser.name" required>
+                </div>
+            </div>
+            <div class="row col-md-offset-3 item">
+                <div class="col-md-3 item-key">用户类型</div>
+                <div class="col-md-offset-3 text-primary item-value">{{loggedInUser.role|userRolePrinter}}</div>
+            </div>
+            <div class="row col-md-offset-3 item" ng-show="loggedInUser.agentname">
+                <div class="col-md-3 item-key">所属代理商</div>
+                <div class="col-md-offset-3 text-primary item-value">{{loggedInUser.agentname}}</div>
+            </div>
+            <div class="row col-md-offset-3 item">
+                <div class="col-md-3 item-key">电话</div>
+                <div class="col-md-offset-3 text-primary item-value">
+                    <input ng-model="formUser.phone" type="tel" required>
+                </div>
+            </div>
+            <div class="row col-md-offset-3 item">
+                <div class="col-md-3 item-key">邮箱</div>
+                <div class="col-md-offset-3 text-primary item-value">
+                    <input ng-model="formUser.email" type="email" required>
+                </div>
+            </div>
+            <div class="row col-md-offset-3 item"></div>
+        </div>
+        <div class="text-warning text-center" ng-show="errMsg">{{errMsg}}</div>
+    </div>
+    <div class="modal-footer">
+        <div class="text-center">
+            <button class="btn btn-primary" ng-click="save()" ladda="progress.saving" type="submit">保存</button>
+            <button class="btn btn-primary" ng-click="closeMsgbox()">取消</button>
+        </div>
+    </div>
+</div>

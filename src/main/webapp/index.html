@@ -53,8 +53,7 @@
                         </li>
                     </ul>-->
                     <!--</div>-->
-                    <div id="" class="nav navbar-nav navbar-right small "
-                         style="margin-right: 30px; margin-top: 15px; ">
+                    <div id="" class="nav navbar-nav navbar-right small " style="margin-right: 30px; margin-top: 15px; ">
                     <span uib-dropdown on-toggle="toggled(open)">
                         <button href id="infoOpMenu" uib-dropdown-toggle class="btn btn-primary"
                                 ng-class="{'btn-danger':loggedInUser.role=='bm'}"
@@ -64,14 +63,17 @@
                             <i class="caret"></i>
                         </button>
                         <ul class="dropdown-menu" uib-dropdown-menu aria-labelledby="infoOpMenu">
-                             <li>
-                            <a ng-click="userInfo()" href>个人信息</a>
-                        </li>
-                        <li class="divider"></li>
-                        <li>
-                            <a class="" ng-click="signOut()" href>
-                                注销登陆</a>
-                        </li>
+                            <li>
+                                <a ng-click="userInfo()" href>个人信息</a>
+                            </li>
+                            <li>
+                                <a ng-click="userInfoEdit()" href>信息修改</a>
+                            </li>
+                            <li class="divider"></li>
+                            <li>
+                                <a class="" ng-click="signOut()" href>
+                                    注销登陆</a>
+                            </li>
                         </ul>
                     </span>
                     </div>
@@ -384,9 +386,9 @@
 
 <script id="stNumberRange.html" type="text/ng-template">
     <div class="">
-        <input type="number" class="form-control input-sm" step="" ng-model="higher" placeholder="总额高于" min="0"
+        <input type="number" class="form-control input-sm" step="{{lowerStep||step}}" ng-model="higher" placeholder="总额高于" min="0"
                max="{{lower}}"/>
-        <input class="form-control input-sm" type="number" step="" ng-model="lower" placeholder="总额低于"
+        <input class="form-control input-sm" type="number" step="{{higherStep||step}}" ng-model="lower" placeholder="总额低于"
                min="{{higher}}"/>
     </div>
 </script>
@@ -401,7 +403,7 @@
                 <a href ng-click="selectPage(page)">{{page}}</a>
             </li>
             <li ng-show="pages[pages.length-1]<numPages"><a>…</a></li>
-            <li ng-class="{disabled:currentPage>=numPages}"><a href ng-click="">下页</a></li>
+            <li ng-class="{disabled:currentPage>=numPages}"><a href ng-click="selectPage(currentPage+1)">下页</a></li>
             <li><a href ng-click="selectPage(numPages)">尾页</a></li>
 
             <li><a>&nbsp;</a></li>
