@@ -1,44 +1,33 @@
 package controller;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.Writer;
 import java.sql.Timestamp;
 import java.util.List;
 
-import javafx.scene.control.Cell;
-
-import javax.mail.Session;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
-import org.apache.catalina.startup.WebAnnotationSet;
 import org.apache.commons.io.IOUtils;
-import org.apache.http.HttpResponse;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.poi.hssf.usermodel.HSSFCell;
-import org.apache.poi.hssf.usermodel.HSSFCellStyle;
-import org.apache.poi.hssf.usermodel.HSSFRow;
-import org.apache.poi.hssf.usermodel.HSSFSheet;
-import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.multipart.MultipartFile;
 
-import com.sun.rowset.internal.Row;
-
-import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 import check_Asys.ScoreManage;
 import random_create.RandomCreate;
 import encrypt_decrpt.AES;
 import entity.ConnectPersonScoreInfo;
+import entity.Gift;
 import entity.ScoreExchangeRecord;
-import file_op.AnyFile_Op;
 
 
 /**
@@ -72,6 +61,7 @@ public class ScoreController {
 	public void insertExRecord(HttpServletRequest request, HttpServletResponse response){
 		
 		logger.info("申请积分兑换");
+		response.addHeader("Access-Control-Allow-Origin", "*");	
 		String username;
 		int exchangeScore;
 		byte exchangeType;
@@ -102,10 +92,17 @@ public class ScoreController {
 				logger_error.error("当前拥有积分少于所申请积分");
 				Common_return_en(response,re_jsonobject);
 			}
-			ScoreExchangeRecord scoreExchangeRecord = new ScoreExchangeRecord(username,exchangeScore, exchangeType, status, applicaTime, randKey, description);
-			scoreManage.insertExchangeRecord(scoreExchangeRecord);
-			re_jsonobject.element("flag", 0);
-			re_jsonobject.element("errmsg", "兑换申请提交成功");
+			ScoreExchangeRecord scoreExchangeRecord = new ScoreExchangeRecord(username,
+					exchangeScore, exchangeType, status, applicaTime, randKey, description);
+			int result = scoreManage.insertExchangeRecord(scoreExchangeRecord);
+			if(result != 0 ){
+				re_jsonobject.element("flag", -1);
+				re_jsonobject.element("errmsg", "库存不足，请选择其他礼物");
+			}
+			else{			
+				re_jsonobject.element("flag", 0);
+				re_jsonobject.element("errmsg", "兑换申请提交成功");
+			}
 			Common_return_en(response,re_jsonobject);
 		}catch(Exception e){
 			logger_error.error("获取提交参数失败" + e);
@@ -196,7 +193,7 @@ public class ScoreController {
 		try {
 			request_s = IOUtils.toString(request.getInputStream());
 			request_s_de = AES.aesDecrypt(request_s, AES.key);	//解密数据
-			logger.info("接口all_scoreinfos received content:" + request_s_de);
+			logger.info("接口agent_scoreinfos received content:" + request_s_de);
 			JSONObject jstr = JSONObject.fromObject(request_s_de);
 			pagenum = jstr.getInt("pagenum");
 		} catch (Exception e) {
@@ -216,7 +213,6 @@ public class ScoreController {
 		Common_return_en(response, re_jsonobject);
 			
 	}
-	
 	/**
 	 * 下载用户积分信息报表
 	 * @address: /check_Accout/ScoreController/download_scoreinfo
@@ -228,25 +224,23 @@ public class ScoreController {
 	@RequestMapping(value="/download_scoreinfo")
 	public void createScoreInfoExcel(HttpServletRequest request, HttpServletResponse response){
 		HttpSession session = request.getSession();
-		// String usertype = session.getAttribute("usertype").toString();
-		// String agentId = session.
-		String usertype = "bm";
-		String agentId = "gd0001";
+		String usertype = session.getAttribute("usertype").toString();
+		String agentId = session.getAttribute("agentid").toString();
 		String dirPath =  request.getServletContext().getRealPath("/报表中心/scoreinfo");
 		String fileName = "客户积分报表.xlsx";
 		if(usertype.equals("bm")){
 			logger.info("客户积分报表下载");
 			List<ConnectPersonScoreInfo> infos = scoreManage.getScoreAllInfo();
-			produceCPScoreExcel(infos, dirPath, fileName);
+			scoreManage.produceCPScoreExcel(infos, dirPath, fileName);
 		}else if(usertype.equals("bu")){
 			logger.info("客户积分报表下载");
-			fileName = agentId + "_客户积分报表";
+			fileName = agentId + "_客户积分报表.xlsx";
 			List<ConnectPersonScoreInfo> infos = scoreManage.getScoreInfoByAgent(agentId);
-			produceCPScoreExcel(infos, dirPath, fileName);
+			scoreManage.produceCPScoreExcel(infos, dirPath, fileName);
 		}else{
 			logger_error.error("用户身份错误");
 		}
-		String urlString = "/check_Accout/scoreinfo" + "/" + fileName;
+		String urlString = "/check_Accout/报表中心/scoreinfo" + "/" + fileName;
 		JSONObject returnJsonObject = new JSONObject();
 		returnJsonObject.element("url", urlString);
 		returnJsonObject.element("flag", 0);
@@ -263,7 +257,7 @@ public class ScoreController {
 	 * @param request
 	 * @param response
 	 */
-	@RequestMapping (value="/score_reocrds")
+	@RequestMapping (value="/score_records")
 	public void getScoreRecords(HttpServletRequest request, HttpServletResponse response){
 		logger.info("查看用户的积分详情");
 		HttpSession session = request.getSession(false);
@@ -281,7 +275,7 @@ public class ScoreController {
 		try {
 			request_s = IOUtils.toString(request.getInputStream());
 			request_s_de = AES.aesDecrypt(request_s, AES.key);	//解密数据
-			logger.info("接口all_scoreinfos received content:" + request_s_de);
+			logger.info("接口score_records received content:" + request_s_de);
 			JSONObject jstr = JSONObject.fromObject(request_s_de);
 			username = jstr.getString("username");
 		} catch (Exception e) {
@@ -305,7 +299,7 @@ public class ScoreController {
 	 * @address: /check_Accout/ScoreController/manage_exchange
 	 * @input : pagenum 页码
 	 * @output: {data:[{"agentName","username","realName","weiXin","company","exchangeScore",
-	 * "exchangeType","exchangeCategory","applicaTime","finishTime","randKey","status","description"}], totalpage, flag, errormsg}
+	 * "exchangeType","exchangeCategory","applicaTime","finishTime","randKey","hander","status","description"}], totalpage, flag, errormsg}
 	 * @param request
 	 * @param response
 	 */
@@ -328,7 +322,7 @@ public class ScoreController {
 		try {
 			request_s = IOUtils.toString(request.getInputStream());
 			request_s_de = AES.aesDecrypt(request_s, AES.key);	//解密数据
-			logger.info("接口all_scoreinfos received content:" + request_s_de);
+			logger.info("接口manage_exchange received content:" + request_s_de);
 			JSONObject jstr = JSONObject.fromObject(request_s_de);
 			pagenum = jstr.getInt("pagenum");
 		} catch (Exception e) {
@@ -353,7 +347,7 @@ public class ScoreController {
 	 * @address: /check_Accout/ScoreController/agent_exchangeinfos
 	 * @input : pagenum 页码
 	 * @output: { {data:[{"agentName","username","realName","weiXin","company","exchangeScore",
-	 * "exchangeType","exchangeCategory","applicaTime","finishTime","randKey", "status","description"}], totalpage,flag, errormsg}
+	 * "exchangeType","exchangeCategory","applicaTime","finishTime","randKey", "hander","status","description"}], totalpage,flag, errormsg}
 	 * @param request
 	 * @param response
 	 */
@@ -377,7 +371,7 @@ public class ScoreController {
 		try {
 			request_s = IOUtils.toString(request.getInputStream());
 			request_s_de = AES.aesDecrypt(request_s, AES.key);	//解密数据
-			logger.info("接口all_scoreinfos received content:" + request_s_de);
+			logger.info("接口agent_exchangeinfos received content:" + request_s_de);
 			JSONObject jstr = JSONObject.fromObject(request_s_de);
 			pagenum = jstr.getInt("pagenum");
 		} catch (Exception e) {
@@ -408,26 +402,24 @@ public class ScoreController {
 	@RequestMapping(value="/download_exchangeinfo")
 	public void createExchangeInfoExcel(HttpServletRequest request, HttpServletResponse response){
 		HttpSession session = request.getSession();
-		// String usertype = session.getAttribute("usertype").toString();
-		//String agentId = session.getAttribute("agentid").toString();
-		String usertype = "bm";
-		String agentId = "gd0001";
-		String dirPath =  request.getServletContext().getRealPath("/报表中心/exchanginfo");;
+		 String usertype = session.getAttribute("usertype").toString();
+		String agentId = session.getAttribute("agentid").toString();
+		String dirPath =  request.getServletContext().getRealPath("/报表中心/exchanginfo");
 		String fileName = "";
 		if(usertype.equals("bm")){
 			logger.info("客户积分兑换报表下载");
 			JSONObject infos = scoreManage.getExchangeInfos();
 			fileName = "客户积分兑换报表.xlsx";
-			produceCPSExchangeExcel(infos.getJSONArray("data"), dirPath, fileName);
+			scoreManage.produceCPSExchangeExcel(infos.getJSONArray("data"), dirPath, fileName);
 		}else if(usertype.equals("bu")){
 			logger.info("客户积分兑换报表下载");
 			JSONObject infos = scoreManage.getExchangeInfosByAgentId(agentId);
-			fileName = agentId + "_客户积分兑换报表";
-			produceCPSExchangeExcel(infos.getJSONArray("data"), dirPath, fileName);
+			fileName = agentId + "_客户积分兑换报表.xlsx";
+			scoreManage.produceCPSExchangeExcel(infos.getJSONArray("data"), dirPath, fileName);
 		}else{
 			logger_error.error("用户身份错误");
 		}
-		String urlString = "/check_Accout/scoreinfo" + "/" + fileName;
+		String urlString = "/check_Accout/报表中心/exchanginfo" + "/" + fileName;
 		JSONObject returnJsonObject = new JSONObject();
 		returnJsonObject.element("url", urlString);
 		returnJsonObject.element("flag", 0);
@@ -456,13 +448,14 @@ public class ScoreController {
 			re_jsonobject.element("errmsg", "权限错误");
 			Common_return_en(response,re_jsonobject);
 		}
+		String workId = session.getAttribute("workId").toString();
 		String request_s;
 		String request_s_de;
 		String randKey = null;
 		try {
 			request_s = IOUtils.toString(request.getInputStream());
 			request_s_de = AES.aesDecrypt(request_s, AES.key);	//解密数据
-			logger.info("接口all_scoreinfos received content:" + request_s_de);
+			logger.info("接口approval_exchange received content:" + request_s_de);
 			JSONObject jstr = JSONObject.fromObject(request_s_de);
 			randKey = jstr.getString("randKey");
 		} catch (Exception e) {
@@ -473,7 +466,7 @@ public class ScoreController {
 			re_jsonobject.element("errmsg", "参数解析失败");
 			Common_return_en(response,re_jsonobject);
 		}
-		scoreManage.updateExchangeStatus(randKey);
+		scoreManage.updateExchangeStatus(randKey,(byte)1, workId);
 		re_jsonobject.element("flag", 0);
 		re_jsonobject.element("errmsg", "批准成功");
 		
@@ -503,189 +496,134 @@ public class ScoreController {
 		/*传递json数据给前台*/
     }
     /**
-     * 生成用户积分execl文件
-     * @param infos
-     * @param dirPath
-     * @param fileName
+     * 礼物列表上传接口
+     * @address:  /check_Accout/ScoreController/upload_gift
+     * @input : MultipartFile
+     * @output: {flag, errmsg}
+     * @param request
+     * @param mfileA
+     * @param response
+     * @throws IOException
      */
-    private void produceCPScoreExcel(List<ConnectPersonScoreInfo> infos, String dirPath, String fileName)
-    {
-    	 AnyFile_Op anyFile_Op = new AnyFile_Op();
-    	File dir = anyFile_Op.CreateDir(dirPath);//创建保存目录
-		File file = anyFile_Op.CreateFile(dirPath,fileName);//创建保存文件
-		
-		// 创建一个workbook，即一个Excel表
-		HSSFWorkbook wb = new HSSFWorkbook();
-		// 在workbook中添加一个sheet，对应Excel文件中的sheet
-		HSSFSheet sheet = wb.createSheet("客户积分信息");
-		// 设置格式：居中
-		HSSFCellStyle style = wb.createCellStyle();
-		style.setAlignment(HSSFCellStyle.ALIGN_CENTER);
-		
-		// 在sheet中新建表头
-		final String[] headStrings = {"所属代理商", "用户名", "真实姓名", "微信号", "客户名", "当前积分", "已兑换积分", "正在兑换积分", "状态"};
-		final int[] columnWidths = {3000, 3000, 3000, 5000, 8000, 3000, 3000, 3000, 3000};
-		final String[] detailHeadStrings = {"时间", "积分变动", "状态", "操作人", "流水号", "描述"};
-		final int[] detailColumnWidths = {3000, 3000, 3000, 3000, 5000, 8000};
-		HSSFRow row = sheet.createRow(0);
-		for(int i = 0; i < headStrings.length; i++){
-			HSSFCell cell = row.createCell(i);
-			cell.setCellValue(headStrings[i]);
-			cell.setCellStyle(style);
-			// 设置列宽
-			sheet.setColumnWidth(i, columnWidths[i]);
+    @RequestMapping(value="/upload_gift")
+    public void uploadGift(HttpServletRequest request, @RequestParam("file") MultipartFile mfile,HttpServletResponse response) throws IOException{
+    	logger.info("上传礼品信息");
+    	HttpSession session = request.getSession();
+		String usertype = session.getAttribute("usertype").toString();
+		if(!usertype.equals("bm")){
+			logger_error.error("该用户不是超级管理员，无权上传礼品信息");
+			JSONObject re_jsonobject = new JSONObject();
+			re_jsonobject.element("flag", -1);
+			re_jsonobject.element("errmsg", "权限错误");
+			Common_return_en(response,re_jsonobject);
 		}
-		for(int i = 0; i < infos.size(); i++){
-			row = sheet.createRow(i + 1);
-			ConnectPersonScoreInfo connectPersonScoreInfo = infos.get(i);
-			HSSFCell cell = row.createCell(0);
-			cell.setCellValue(connectPersonScoreInfo.getAgentName());
-			cell = row.createCell(1);
-			cell.setCellValue(connectPersonScoreInfo.getUsername());		
-			cell = row.createCell(2);
-			cell.setCellValue(connectPersonScoreInfo.getRealName());
-			cell = row.createCell(3);
-			cell.setCellValue(connectPersonScoreInfo.getWeiXin());
-			cell = row.createCell(4);
-			cell.setCellValue(connectPersonScoreInfo.getCompany());
-			cell = row.createCell(5);
-			cell.setCellValue(connectPersonScoreInfo.getScore());
-			cell = row.createCell(6);
-			if(connectPersonScoreInfo.getExchangedScore() == null)
-				cell.setCellValue(0);
-			else
-				cell.setCellValue(connectPersonScoreInfo.getExchangedScore());
-			cell = row.createCell(7);
-			if(connectPersonScoreInfo.getExchangingScore() == null)
-				cell.setCellValue(0);
-			else
-				cell.setCellValue(connectPersonScoreInfo.getExchangingScore());
-			cell = row.createCell(8);
-			if(connectPersonScoreInfo.getExchangingScore() == null)
-				cell.setCellValue("正常");
-			else
-				cell.setCellValue("正在兑换");
-			
-			// 用户明细
-			String username = connectPersonScoreInfo.getUsername();
-			JSONObject userScoreData = scoreManage.getScoreRecord(username, 0);
-			JSONArray userScoreRecordsArray = userScoreData.getJSONArray("data");
-			if(userScoreRecordsArray.isEmpty())
-				continue;
-			HSSFSheet userScoreRecordsSheet = wb.createSheet(username);
-			HSSFRow detailRow = userScoreRecordsSheet.createRow(0);
-			HSSFCell detailCell;
-			for(int k = 0; k < detailHeadStrings.length; k++){
-				detailCell = detailRow.createCell(k);
-				detailCell.setCellValue(detailHeadStrings[k]);
-				detailCell.setCellStyle(style);
-				// 设置列宽
-				userScoreRecordsSheet.setColumnWidth(k, detailColumnWidths[k]);
-			}
-			for(int j = 0; j < userScoreRecordsArray.size(); j++){
-				JSONObject jsonObject = userScoreRecordsArray.getJSONObject(j);
-				detailRow = userScoreRecordsSheet.createRow(j + 1);
-				detailCell = detailRow.createCell(0);
-				detailCell.setCellValue(jsonObject.getString("time"));
-				detailCell = detailRow.createCell(1);
-				detailCell.setCellValue(jsonObject.getString("change"));
-				detailCell = detailRow.createCell(2);
-				detailCell.setCellValue(jsonObject.getString("status"));
-				detailCell = detailRow.createCell(3);
-				detailCell.setCellValue(jsonObject.getString("hander"));
-				detailCell = detailRow.createCell(4);
-				detailCell.setCellValue(jsonObject.getString("serial"));
-				detailCell = detailRow.createCell(5);
-				detailCell.setCellValue(jsonObject.getString("description"));
-				
-			}
-		}
-				
-	    // 将文件存在指定位置
-	    try{
-	    	FileOutputStream outer = new FileOutputStream(file);
-	    	wb.write(outer);
-	    	outer.close();
-	    }catch(Exception e){
-	    	logger_error.error("生成Excel失败");
-	    	logger_error.error(e);
-	    	e.printStackTrace();
-	    }
+    	InputStream infos = mfile.getInputStream();
+    	JSONObject returnObject = scoreManage.uploadInfo(infos, "gift");
+    	Common_return_en(response, returnObject);
     }
-
     /**
-     * 生成积分兑换记录execl文件
-     * @param infos
-     * @param dirPath
-     * @param fileName
+     * 上传物流信息接口
+     * @address:  /check_Accout/ScoreController/upload_logistic
+     * @input: MultipartFile
+     * @output: {flag, errmsg}
+     * @param request
+     * @param mfileA
+     * @param response
+     * @throws IOException
      */
-    private void produceCPSExchangeExcel(JSONArray infos, String dirPath, String fileName)
-    {
-    	 AnyFile_Op anyFile_Op = new AnyFile_Op();
-    	File dir = anyFile_Op.CreateDir(dirPath);//创建保存目录
-		File file = anyFile_Op.CreateFile(dirPath,fileName);//创建保存文件
-		
-		// 创建一个workbook，即一个Excel表
-		HSSFWorkbook wb = new HSSFWorkbook();
-		// 在workbook中添加一个sheet，对应Excel文件中的sheet
-		HSSFSheet sheet = wb.createSheet("客户积分兑换记录");
-		// 设置格式：居中
-		HSSFCellStyle style = wb.createCellStyle();
-		style.setAlignment(HSSFCellStyle.ALIGN_CENTER);
-		
-		// 在sheet中新建表头
-		final String[] headStrings = {"所属代理商", "用户名", "真实姓名", "微信号", "客户名", "已兑换积分"
-						, "兑换类型", "礼品类型", "申请时间", "完成时间", "状态", "说明"};
-		final int[] columnWidths = {3000, 3000, 3000, 5000, 8000, 3000, 3000, 3000, 5000, 5000, 3000, 3000, 5000};
-		HSSFRow row = sheet.createRow(0);
-		for(int i = 0; i < headStrings.length; i++){
-			HSSFCell cell = row.createCell(i);
-			cell.setCellValue(headStrings[i]);
-			cell.setCellStyle(style);
-			// 设置列宽
-			sheet.setColumnWidth(i, columnWidths[i]);
+    @RequestMapping(value="/upload_logistic")
+    public void uploadLogistic(HttpServletRequest request,@RequestParam("file") MultipartFile mfile,HttpServletResponse response) throws IOException{
+    	logger.info("上传物流信息");
+    	HttpSession session = request.getSession();
+		String usertype = session.getAttribute("usertype").toString();
+		if(!usertype.equals("bm")){
+			logger_error.error("该用户不是超级管理员，无权上传物流信息");
+			JSONObject re_jsonobject = new JSONObject();
+			re_jsonobject.element("flag", -1);
+			re_jsonobject.element("errmsg", "权限错误");
+			Common_return_en(response,re_jsonobject);
 		}
-
-		for(int i = 0; i < infos.size(); i++){
-			row = sheet.createRow(i + 1);
-			JSONObject tmp = infos.getJSONObject(i);
-			HSSFCell cell = row.createCell(0);
-			cell.setCellValue(tmp.getString("agentName"));
-			cell = row.createCell(1);
-			cell.setCellValue(tmp.getString("username"));
-			cell = row.createCell(2);
-			cell.setCellValue(tmp.getString("realName"));
-			cell = row.createCell(3);
-			cell.setCellValue(tmp.getString("weiXin"));
-			cell = row.createCell(4);
-			cell.setCellValue(tmp.getString("company"));
-			cell = row.createCell(5);
-			cell.setCellValue(tmp.getString("exchangeScore"));
-			cell = row.createCell(6);
-			cell.setCellValue(tmp.getString("exchangeType"));
-			cell = row.createCell(7);
-			cell.setCellValue(tmp.getString("exchangeCategory"));
-			cell = row.createCell(8);
-			cell.setCellValue(tmp.getString("applicaTime"));
-			cell = row.createCell(9);
-			cell.setCellValue(tmp.getString("finishTime"));
-			cell = row.createCell(10);
-			cell.setCellValue(tmp.getString("status"));
-			cell = row.createCell(11);
-			cell.setCellValue(tmp.getString("description"));
-		}
-				
-	    // 将文件存在指定位置
-	    try{
-	    	FileOutputStream outer = new FileOutputStream(file);
-	    	wb.write(outer);
-	    	outer.close();
-	    }catch(Exception e){
-	    	logger_error.error("生成Excel失败");
-	    	logger_error.error(e);
-	    	e.printStackTrace();
-	    }
+    	InputStream infos = mfile.getInputStream();
+    	JSONObject returnObject = scoreManage.uploadInfo(infos, "logistic");
+    	Common_return_en(response, returnObject);
     }
+    
+	/**
+	 * 查看物流详情入口
+	 * @address: /check_Accout/ScoreController/logistic_info
+	 * @input: randkey  流水号
+	 * @output: {data:{user, phone, address, logisticCompany, logisticNumber}, flag, errmsg}
+	 * @param request
+	 * @param response
+	 */
+	@RequestMapping (value="/logistic_info")
+	public void getLogisticInfo(HttpServletRequest request, HttpServletResponse response){
+		logger.info("查看礼品兑换物流详情");
+		HttpSession session = request.getSession(false);
+		JSONObject re_jsonobject = new JSONObject();
+		String usertype = session.getAttribute("usertype").toString();
+		if(!usertype.equals("bu") && !usertype.equals("bm")){
+			logger_error.error("该用户没有权限查看");
+			re_jsonobject.element("flag", -1);
+			re_jsonobject.element("errmsg", "权限错误");
+			Common_return_en(response,re_jsonobject);
+		}
+		String request_s;
+		String request_s_de;
+		String randKey = "";
+		try {
+			request_s = IOUtils.toString(request.getInputStream());
+			request_s_de = AES.aesDecrypt(request_s, AES.key);	//解密数据
+			logger.info("接口logistic_info received content:" + request_s_de);
+			JSONObject jstr = JSONObject.fromObject(request_s_de);
+			randKey = jstr.getString("randkey");
+		} catch (Exception e) {
+			e.printStackTrace();
+			logger_error.error("参数解析失败");
+			logger_error.error(e);
+			re_jsonobject.element("flag", -1);
+			re_jsonobject.element("errmsg", "参数解析失败");
+			Common_return_en(response,re_jsonobject);
+		}
+		
+		re_jsonobject = scoreManage.getLogisticInfo(randKey);
+		re_jsonobject.element("flag", 0);
+		re_jsonobject.element("errmsg", "查看成功");
+		Common_return_en(response, re_jsonobject);
+	}
+	
+	/**
+	 * 下载礼品信息报表
+	 * @address: /check_Accout/ScoreController/download_giftinfo
+	 * @input: null
+	 * @output: {url, flag, errmsg}
+	 * @param request
+	 * @param response
+	 */
+	@RequestMapping(value="/download_giftinfo")
+	public void createGiftInfoExcel(HttpServletRequest request, HttpServletResponse response){
+		logger.info("礼品信息报表下载");
+		HttpSession session = request.getSession();
+		JSONObject returnJsonObject = new JSONObject();
+		String usertype = session.getAttribute("usertype").toString();
+		if(!usertype.equals("bm")){
+			logger_error.error("用户身份错误");
+			returnJsonObject.element("flag", -1);
+			returnJsonObject.element("errmsg", "权限不够");
+			Common_return_en(response, returnJsonObject);
+		}
+		String dirPath =  request.getServletContext().getRealPath("/报表中心");
+		String fileName = "礼品信息.xlsx";
+		List<Gift> infos = scoreManage.getGiftInfos();
+		scoreManage.produceGiftInfoExcel(infos, dirPath, fileName);
+		String urlString = "/check_Accout/报表中心" + "/" + fileName;
+		
+		returnJsonObject.element("url", urlString);
+		returnJsonObject.element("flag", 0);
+		returnJsonObject.element("errmsg", "生成报表成功");
+		
+		Common_return_en(response, returnJsonObject);
+	}
 }
 
 

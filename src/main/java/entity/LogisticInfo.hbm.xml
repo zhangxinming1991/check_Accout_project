@@ -1,0 +1,29 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+"http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+<hibernate-mapping>
+    <class name="entity.LogisticInfo" table="logistic_info" catalog="check_a_db" optimistic-lock="version">
+        <id name="id" type="java.lang.Integer">
+            <column name="id" />
+            <generator class="identity" />
+        </id>
+        <property name="randKey" type="string">
+            <column name="randkey" length="30" />
+        </property>
+        <property name="user" type="string">
+            <column name="user" length="20" />
+        </property>
+        <property name="phone" type="string">
+            <column name="phone" length="15" />
+        </property>
+        <property name="address" type="string">
+            <column name="address" length="300" />
+        </property>
+        <property name="logisticCompany" type="string">
+            <column name="logistic_company" length="30" />
+        </property>
+        <property name="logisticNumber" type="string">
+            <column name="logistic_number" length="30" />
+        </property>
+    </class>
+</hibernate-mapping>
