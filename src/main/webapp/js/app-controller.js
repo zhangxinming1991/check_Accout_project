@@ -136,6 +136,14 @@ var signInCtrl = ['$scope', '$state', 'AccountService',
     }];
 app.controller('SignInCtrl', signInCtrl);
 
+function validEmail(email) {
+    if (!email)return false;
+    var domainIdx = email.indexOf('@');
+    if (domainIdx < 0)return false;
+    var domain = email.substr(domainIdx + 1);
+    return appConf.regEmailDomainRestrict && appConf.regEmailDomainRestrict.length ? appConf.regEmailDomainRestrict.indexOf(domain) > -1 : true;
+}
+
 // 注册
 var signUpCtrl = ['$scope', '$state', 'AccountService', '$uibModal', '$timeout',
     function (sgop, $state, AccountService, msgbox, timeout) {
@@ -170,10 +178,6 @@ var signUpCtrl = ['$scope', '$state', 'AccountService', '$uibModal', '$timeout',
                 return false;
             }
 
-            function isChinese(str) {
-                return str.match(/^[\u4E00-\u9FFF\u3400-\u4DFF\uF900-\uFAFF]+$/g);
-            }
-
             if (!ctrl.formUser.name || !isChinese(ctrl.formUser.name)) {
                 ctrl.errMsg = '请填写全中文的真实姓名';
                 return false;
@@ -182,16 +186,9 @@ var signUpCtrl = ['$scope', '$state', 'AccountService', '$uibModal', '$timeout',
                 ctrl.errMsg = '请填写电话';
                 return false;
             }
-            function validEmail(email) {
-                if (!email)return false;
-                var domainIdx = email.indexOf('@');
-                if (domainIdx < 0)return false;
-                var domain = email.substr(domainIdx);
-                return appConf.regEmailDomainRestrict && appConf.regEmailDomainRestrict.length ? appConf.indexOf(domain) > -1 : true;
-            }
 
             if (!ctrl.formUser.email || !validEmail(ctrl.formUser.email)) {
-                ctrl.errMsg = '请填写公司内部电子邮箱';
+                ctrl.errMsg = '请填写公司内部电子邮箱：' + appConf.regEmailDomainRestrict;
                 return false;
             }
             if (!ctrl.formUser.agent) {
@@ -395,6 +392,55 @@ var uCtrl = ['$scope', '$state', 'AccountService', '$timeout', '$uibModal', 'Fnc
         });
     };
 
+    ctrl.userInfoEdit = function () {
+        msgbox.open({
+            templateUrl: 'fw-info-edit.html'
+            , controller: ['$scope', '$uibModalInstance', function (boxsgop, boxInst) {
+                // console.debug('个人信息修改弹框');
+
+                var formUser = boxsgop.formUser = {};
+                var progress = boxsgop.progress = {};
+                $.extend(formUser, boxsgop.$root.loggedInUser);
+
+                boxsgop.closeMsgbox = function () {
+                    boxInst.dismiss();
+                };
+
+                function clearErr() {
+                    boxsgop.errMsg = undefined;
+                }
+
+                boxsgop.save = function () {
+                    clearErr();
+
+                    // validate
+                    if (!formUser.name || !isChinese(formUser.name)) {
+                        boxsgop.errMsg = '请填写全中文姓名';
+                        return false;
+                    }
+                    if (!formUser.phone) {
+                        ctrl.errMsg = '请填写电话';
+                        return false;
+                    }
+                    if (!validEmail(formUser.email)) {
+                        boxsgop.errMsg = '请填写公司内部电子邮箱：' + appConf.regEmailDomainRestrict;
+                        return false;
+                    }
+
+                    progress.saving = true;
+                    AccSvc.updateInfo(angular.copy(formUser))
+                        .then(function (ok) {
+                            boxInst.close();
+                        }, function (errObj) {
+                            boxsgop.errMsg = ensureErrMsg(errObj);
+                        }).finally(function () {
+                        progress.saving = false;
+                    });
+                };
+            }]
+        });
+    };
+
     /*
      // 页面被销毁时自动注销会导致刷新页面也会注销登陆，这是不允许的
      // 存在问题：利用登陆过本网站的标签页访问其他网站后，继续使用该标签页访问本站时，登陆信息还在（跳转其他网站时没有自动注销登陆）
@@ -407,7 +453,7 @@ var uCtrl = ['$scope', '$state', 'AccountService', '$timeout', '$uibModal', 'Fnc
     //关闭标签页自动注销
     window.close = function (event) {
         // console.debug('window close');
-        sessionStorage.setItem('last-close', 'window-close');
+        // sessionStorage.setItem('last-close', 'window-close');    // for debug
         AccSvc.signOut();
     }
 }];
@@ -773,30 +819,30 @@ var fwnCtrl = ['$scope', 'FncRmindService', 'Lightbox', "$uibModal", '$state', '
             gridPage(sgop, tableState, $filter, FncRmindService.fncReminds);
         };
 
-        function opPaymentNotifyItem(paymentNotifyItem, logtxt, svcFnc) {
-            // console.debug(logtxt);
-            //console.debug('数据操作，前：', paymentNotifyItem);
+        /*function opPaymentNotifyItem(paymentNotifyItem, logtxt, svcFnc) {
+         // console.debug(logtxt);
+         //console.debug('数据操作，前：', paymentNotifyItem);
 
-            var approveCfg = {
-                "id": paymentNotifyItem.id
-            };
-            var msgcfg = {msgbox: msgBox, title: '审核通过操作', msgHtml: '操作<strong class="">正在进行……</strong>'};
-            var boxInst = showMsg(msgcfg);
-            svcFnc(approveCfg).then(function (status) {
-                paymentNotifyItem.result = status;
-                msgcfg.msgHtml = '操作<strong class="text-success">成功</strong>';
-                timeout(function () {
-                    boxInst.dismiss();
-                }, msgOkTimeout)
-            }, function (errMsgObj) {
-                //console.debug(logtxt + '失败');
-                msgcfg.msgHtml = '操作<strong class="text-info">失败</strong>';
-                timeout(function () {
-                    boxInst.dismiss();
-                }, msgErrTimeout)
-            }).finally(function () {
-            });
-        }
+         var approveCfg = {
+         "id": paymentNotifyItem.id
+         };
+         var msgcfg = {msgbox: msgBox, title: '审核通过操作', msgHtml: '操作<strong class="">正在进行……</strong>'};
+         var boxInst = showMsg(msgcfg);
+         svcFnc(approveCfg).then(function (status) {
+         paymentNotifyItem.result = status;
+         msgcfg.msgHtml = '操作<strong class="text-success">成功</strong>';
+         timeout(function () {
+         boxInst.dismiss();
+         }, msgOkTimeout)
+         }, function (errMsgObj) {
+         //console.debug(logtxt + '失败');
+         msgcfg.msgHtml = '操作<strong class="text-info">失败</strong>';
+         timeout(function () {
+         boxInst.dismiss();
+         }, msgErrTimeout)
+         }).finally(function () {
+         });
+         }*/
 
 
         //  // "通过"付款通知和出纳
@@ -804,22 +850,23 @@ var fwnCtrl = ['$scope', 'FncRmindService', 'Lightbox', "$uibModal", '$state', '
         //     opPaymentNotifyItem(paymentNotifyItem, "“通过”（关联付款通知和出纳）", FncRmindService.approvePaymentNotification)
         // };
 
-        // 否决付款通知（标记为无效的用户上传数据）
-        sgop.rejectPaymentNotification = function (paymentNotifyItem) {
-            opPaymentNotifyItem(paymentNotifyItem, '“否决”（取消付款通知与出纳的关联）', FncRmindService.rejectPaymentNotification)
-        };
+        /*        // 否决付款通知（标记为无效的用户上传数据）
+         sgop.rejectPaymentNotification = function (paymentNotifyItem) {
+         opPaymentNotifyItem(paymentNotifyItem, '“否决”（取消付款通知与出纳的关联）', FncRmindService.rejectPaymentNotification)
+         };
 
-        // “待定”
-        sgop.tbdPaymentNotification = function (paymentNotifyItem) {
-            opPaymentNotifyItem(paymentNotifyItem, '“待定”（）', FncRmindService.tbdPaymentNotification);
-        };
+         // “待定”
+         sgop.tbdPaymentNotification = function (paymentNotifyItem) {
+         opPaymentNotifyItem(paymentNotifyItem, '“待定”（）', FncRmindService.tbdPaymentNotification);
+         };*/
 
         // 关联到出纳
         sgop.attachPaymentNotification = function (paymentNotifyItem) {
             msgBox.open({
                 templateUrl: 'attach-to-t.html',
-                controller: ['$scope', '$uibModalInstance', function (sgop, msgbox) {
+                controller: ['$scope', '$uibModalInstance', function (sgop, boxInst) {
                     var ctrl = this;
+                    var progress = sgop.progress = {};
                     ctrl.r = paymentNotifyItem;
                     (function getCandidates() {
                         ctrl.isLoading = true;
@@ -845,37 +892,63 @@ var fwnCtrl = ['$scope', 'FncRmindService', 'Lightbox', "$uibModal", '$state', '
 
                     sgop.attachSubmit = function () {
                         ctrl.isProcessing = true;
+                        progress.attaching = true;
                         ctrl.attachErrMsg = undefined;
                         FncRmindService.attachToBankTransaction(ctrl.attachCfg)
                             .then(function (res) {
                                 // 显示为“已通过”
-                                paymentNotifyItem.result = 'Y';
-                                msgbox.close();
+                                paymentNotifyItem.checkResult = 'Y';
+                                boxInst.close();
                             }, function (errMsgObj) {
                                 ctrl.attachErrMsg = errMsgObj.msg;
                             })
                             .finally(function () {
                                 ctrl.isProcessing = false;
+                                progress.attaching = false;
                             });
                     };
 
+                    // 否决付款通知（标记为无效的用户上传数据）
+                    sgop.rejectPaymentNotification = function (paymentNotifyItem) {
+                        // opPaymentNotifyItem(paymentNotifyItem, '“否决”（取消付款通知与出纳的关联）', FncRmindService.rejectPaymentNotification)
+                        opPayItem(paymentNotifyItem, FncRmindService.rejectPaymentNotification, "rejecting");
+                    };
+
+                    // “待定”
+                    sgop.tbdPaymentNotification = function (paymentNotifyItem) {
+                        // opPaymentNotifyItem(paymentNotifyItem, '“待定”（）', FncRmindService.tbdPaymentNotification);
+                        opPayItem(paymentNotifyItem, FncRmindService.tbdPaymentNotification, "tbding");
+                    };
+
+                    function opPayItem(paymentNotifyItem, svcFnc, progressProp) {
+                        sgop.progress[progressProp] = true;
+                        svcFnc({id: paymentNotifyItem.id}).then(function (status) {
+                            paymentNotifyItem.checkResult = status;
+                            boxInst.close();
+                        }, function (errMsgObj) {
+                            ctrl.attachErrMsg = ensureErrMsg(errMsgObj);
+                        }).finally(function () {
+                            sgop.progress[progressProp] = false;
+                        });
+                    }
+
                     sgop.closeMsgbox = function () {
-                        msgbox.dismiss();
+                        boxInst.dismiss();
                     };
                 }],
                 size: 'lg',
                 controllerAs: 'ctrl'
 
-            }).result.then(function (ok) {
-                var boxInst = showMsg({
-                    msgbox: msgBox,
-                    title: '匹配付款通知到出纳',
-                    msgHtml: '匹配<strong class="text-success">成功</strong>'
-                });
-                timeout(function () {
-                    boxInst.dismiss();
-                }, msgOkTimeout);
-            });
+            })/*.result.then(function (ok) {
+             var boxInst = showMsg({
+             msgbox: msgBox,
+             title: '匹配付款通知到出纳',
+             msgHtml: '匹配<strong class="text-success">成功</strong>'
+             });
+             timeout(function () {
+             boxInst.dismiss();
+             }, msgOkTimeout);
+             })*/;
         };
 
         // 显示凭证图片
@@ -1866,7 +1939,7 @@ var fssmCtrl = ['$scope', '$filter', 'ScoreService', '$uibModal', '$timeout', 'U
                 }, function (evt) {
                     // console.debug('evt', evt);
                     var total = parseInt(evt.total) || 1;
-                    scoreCfg.giftCatUpload.progress = parseInt(evt.loaded) / total;
+                    sgop.scoreCfg.giftCatUpload.progress = parseInt(evt.loaded) / total;
                 }).catch(function (ex) {
                     console.error(ex);
                 }).finally(function () {
@@ -2041,7 +2114,10 @@ app.directive('onFinishRenderEvent', ['$timeout', function (timeout) {
             require: '^stTable',
             scope: {
                 before: '=',
-                after: '='
+                after: '=',
+                // lowerStep: '@',
+                // higherStep: '@',
+                // step: '@',
             },
             templateUrl: 'stDateRange.html',
 

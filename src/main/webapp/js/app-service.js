@@ -67,7 +67,7 @@ app.factory('HttpReqService', ['$http', '$q', function (http, Q) {
                     if (okfnc) {
                         ret = okfnc(resbody);
                         if (!ret) {
-                            console.debug('okfnc defined but no return value!!!');
+                            console.debug('okfnc defined but no return value');
                         }
                     } else {
                         /*okfnc = okfnc || function (resbody) {
@@ -175,6 +175,7 @@ app.factory('AccountService', ['$rootScope', '$cookies', '$q', 'HttpReqService',
             }).then(function (resbody) {
                 // successful login
                 var userInfo = resbody.user;
+                userInfo.username = userInfo.username || userInfo.uid;
                 // store info locally(cookieStore), token
                 rootsgop.loggedInUser = userInfo;
                 // var token = resbody.token;
@@ -270,6 +271,18 @@ app.factory('AccountService', ['$rootScope', '$cookies', '$q', 'HttpReqService',
     };
     svc.resetPwd = function (form) {
         return Req.req(ReqUrl.rstPwd, form);
+    };
+    // 修改个人信息
+    svc.updateInfo = function (formUser) {
+        formUser.username = formUser.username || formUser.uid;
+        return Req.req(ReqUrl.updateUserInfo, formUser, function (resbody) {
+            // update js env and storage
+            var storedUser = getStoredUser();
+            $.extend(storedUser, formUser);
+            storeUser(storedUser);
+            $.extend(rootsgop.loggedInUser, storedUser);
+            // return nothing
+        });
     };
 
 // 代理商列表获取，为注册时提供自动补全输入以及避免输入不存在的代理商
@@ -508,25 +521,25 @@ app.factory('AccountService', ['$rootScope', '$cookies', '$q', 'HttpReqService',
 app.factory('FncRmindService', ['$q', 'HttpReqService', function (Q, Req) {
     var svc = {};
 
-/*    function notifTransFnc(resbody) {
-        var resdata = resbody.data;
-        var payWaysInItems = [];
-        for (var k in resdata) {
-            var item = resdata[k];
-            if (!item) continue;    // 可能有null……
-            item.checkResult = item.checkResult || 'V'; // 设置V标志，为“无”，表示没有设置状态
-            item.result = item.checkResult;
-            item.payTime = item.payTime || item.uploadTime;
-            // item.payTime = new Date(item.payTime);      // 字符串时间转Date类型
-            item.mcontract_data = item.manyPay;
-            if (payWaysInItems.indexOf(item.payWay) < 0) {
-                payWaysInItems.push(item.payWay);
-            }
-        }
-        resdata.payWaysInItems = payWaysInItems;
+    /*    function notifTransFnc(resbody) {
+     var resdata = resbody.data;
+     var payWaysInItems = [];
+     for (var k in resdata) {
+     var item = resdata[k];
+     if (!item) continue;    // 可能有null……
+     item.checkResult = item.checkResult || 'V'; // 设置V标志，为“无”，表示没有设置状态
+     item.result = item.checkResult;
+     item.payTime = item.payTime || item.uploadTime;
+     // item.payTime = new Date(item.payTime);      // 字符串时间转Date类型
+     item.mcontract_data = item.manyPay;
+     if (payWaysInItems.indexOf(item.payWay) < 0) {
+     payWaysInItems.push(item.payWay);
+     }
+     }
+     resdata.payWaysInItems = payWaysInItems;
 
-        return $.extend({}, resbody, {items: resdata});
-    }*/
+     return $.extend({}, resbody, {items: resdata});
+     }*/
 
     function notifTransFnc2(resbody) {
         for (var idx = 0; idx < resbody.data.length; idx++) {

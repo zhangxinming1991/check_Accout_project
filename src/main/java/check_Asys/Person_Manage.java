@@ -101,7 +101,7 @@ public class Person_Manage {
 		String username = mf_assis.getWorkId();
 		Assistance fAssistance  = aS_Dao.findById(Assistance.class, username);
 		if (fAssistance != null) {
-			fAssistance.setAgentid(mf_assis.getAgentid());
+	//		fAssistance.setAgentid(mf_assis.getAgentid());
 			fAssistance.setName(mf_assis.getName());
 			fAssistance.setPhone(mf_assis.getPhone());
 			fAssistance.setEmail(mf_assis.getEmail());

@@ -101,6 +101,7 @@ public class PMController {
     	String phone = null;
     	String email = null;
     	String agentid = null;
+    	String agentname = null;
         try {
 			String request_s = IOUtils.toString(request.getInputStream());
 			String request_s_de = AES.aesDecrypt(request_s, AES.key);
@@ -110,7 +111,8 @@ public class PMController {
 			name = jstr.getString("name");//»ñÈ¡µÇÂ¼ÃÜÂë
 			phone = jstr.getString("phone");
 			email = jstr.getString("email");
-			agentid = jstr.getString("agentid");
+		//	agentid = jstr.getString("agentid");
+			agentname = jstr.getString("agentname");
 
 		} catch (Exception e) {
 			// TODO Auto-generated catch block

@@ -38,7 +38,6 @@
         $provide.decorator('$httpBackend', function ($delegate, $timeout) {
             // console.debug('decorator');
             var proxy = function (method, url, data, callback, headers) {
-                console.debug('mock-> request method url reqdata headers', method, url, data, headers);
 
                 var encryptedReq = method === 'POST';
                 if (encryptedReq) {
@@ -49,7 +48,9 @@
                 if (jsonReq) {
                     data = JSON.parse(data);
                 }
-                console.debug('mock-> request data:', data);
+
+                console.debug('mock-> request (method, url, reqdata/*, headers*/):', method, url, data/*, headers*/);
+                // console.debug('mock-> request data:', data);
 
                 var interceptor = function () {
                     // console.debug('interceptor');
@@ -234,6 +235,13 @@
         }).respond(function () {
             return [200, {flag: failOrNot()}];
         });
+        // 修改个人信息
+        bkd.whenPOST(ReqUrl.updateUserInfo, function (reqbody) {
+            return reqbody.username;
+        }).respond(function (method, url, reqbody) {
+            console.debug('mock->个人信息修改', reqbody);
+            return [200, {flag: failOrNot()}];
+        });
 
 
         // // get months
@@ -316,11 +324,11 @@
                         "actualPayer": "手表一",
                         "bankinputId": 0,
                         "caid": "2016-12-gd0001",
-                        "checkResult": "N",
+                        "checkResult": randIn(['Y', 'W', 'V', 'N']),
                         "connPerson": "dengfa",
                         "contractNum": "",
                         "freeback": 0,
-                        "id": 1,
+                        "id": i,
                         "isconnect": 0,
                         "linkCer": "welcome.jpg",
                         "manyPay": [{"contract": "主机款", "money": 1547}],
@@ -381,7 +389,7 @@
         var notifsInChk;
 
         function resPage(pagenum, data, resbody, reqbody) {
-            if(!reqbody.pagenum){
+            if (!reqbody.pagenum) {
                 console.error('no pagenum', reqbody);
             }
             /* if (reqbody.sort) {
@@ -452,7 +460,7 @@
 
         // 付款通知审核通过操作
         bkd.whenPOST(ReqUrl.fwPaymentNotifApprov).respond(function (method, url, reqBody) {
-            console.debug('mock backend->待审付款通知“通过”');
+            console.debug('mock backend->待审付款通知 否决|待定', reqBody);
             // reqBody = JSON.parse(reqBody);
             var resbody = {flag: failOrNot()};
             // switch (reqBody.op_result) {
@@ -468,6 +476,7 @@
             //     default:
             //         console.error("INVALID operation on payment notification");
             // }
+            delay = 500;
             return [200, resbody];
         });
 
@@ -583,7 +592,7 @@
         });
 
         bkd.whenPOST(ReqUrl.attachToTransCandidates, function (reqbody) {
-            return reqbody.map_op == "find_map" && reqbody.pay_id;
+            return reqbody.map_op == "find_map" && reqbody.pay_id !== undefined;
         }).respond(function (method, url, reqbody) {
             // reqbody = JSON.parse(reqbody);
             console.debug("mock backend->待关联付款通知的出纳候选集", reqbody);
@@ -595,6 +604,7 @@
         }).respond(function (method, url, reqBody) {
             // reqBody = JSON.parse(reqBody);
             console.debug('mock backend -> 关联付款通知到出纳', reqBody);
+            delay = 500;
             return [200, {flag: failOrNot()}, {}];
         });
 
