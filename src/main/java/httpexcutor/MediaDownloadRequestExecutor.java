@@ -5,21 +5,27 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpHost;
+import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.ContentType;
+import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.io.ChunkedInputStream;
+import org.apache.http.util.EntityUtils;
 
+import check_Asys.WeixinPush_Service.Push_Template;
 import file_op.AnyFile_Op;
+import net.sf.json.JSONObject;
 
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -53,7 +59,7 @@ public class MediaDownloadRequestExecutor {
 	   * @throws ClientProtocolException
 	   * @throws IOException
 	   */
-	  public String  Excute_post(CloseableHttpClient httpclient, HttpHost httpProxy, String uri, String filename,String savedir) throws ClientProtocolException, IOException{
+	  public String  Excute_post_GetPic(CloseableHttpClient httpclient, HttpHost httpProxy, String uri, String filename,String savedir) throws ClientProtocolException, IOException{
 	    
 	    HttpPost httpPost = new HttpPost(uri);
 	    if (httpProxy != null) {
@@ -88,6 +94,46 @@ public class MediaDownloadRequestExecutor {
 		}
 	      httpclient.close();
 	      return newfilename;
+	  }
+	  
+	  /**
+	   * Excute_post 微信推送
+	   * @param httpclient
+	   * @param httpProxy
+	   * @param uri
+	   * @return
+	   */
+	  public String WeiXinPush(CloseableHttpClient httpclient, HttpHost httpProxy, String uri,Push_Template push_Template){
+		  String res = null;
+		  try {		    
+			HttpPost httpPost = new HttpPost(uri);
+		    if (httpProxy != null) {
+		      RequestConfig config = RequestConfig.custom().setProxy(httpProxy).build();
+		      httpPost.setConfig(config);
+		    }
+		    
+		    /*JSON参数发送方式*/
+		/*    JSONObject jsonObject = new JSONObject();
+		    jsonObject.put("fea", "freaf");
+		    StringEntity s = new StringEntity(jsonObject.toString());
+		    s.setContentEncoding("UTF-8");
+		    s.setContentType("application/json");
+		    httpPost.setEntity(s);*/
+		    /*JSON参数发送方式*/
+		    
+		    HttpResponse response;
+			response = httpclient.execute(httpPost);
+			Header[] contentTypeHeader = response.getHeaders("Content-Type");
+			HttpEntity hEntity = response.getEntity();
+			res = EntityUtils.toString(hEntity);
+		} catch (ClientProtocolException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return res;
 	  }
 
 	  protected String getFileName(CloseableHttpResponse response) {
