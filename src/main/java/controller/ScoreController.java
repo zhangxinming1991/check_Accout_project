@@ -20,6 +20,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.multipart.commons.CommonsMultipartFile;
 
 import net.sf.json.JSONObject;
 import check_Asys.ScoreManage;
@@ -52,7 +53,7 @@ public class ScoreController {
 	/**
 	 * 用户提交积分兑换申请
 	 * @address: /check_Accout/ScoreController/insert_exrecord
-	 * @input : username、exchange_score、exchange_type
+	 * @input : username、exchange_score、exchange_type、serial_number
 	 * @output: {flag, errormsg}
 	 * @param request
 	 * @param response
@@ -68,17 +69,19 @@ public class ScoreController {
 		byte status = 0;
 		Timestamp applicaTime;
 		String randKey;
+		String serialId;
 		String description;
 		JSONObject re_jsonobject = new JSONObject();
 		try {
 			@SuppressWarnings("deprecation")
 			String request_s = IOUtils.toString(request.getInputStream());
 			String request_s_de = AES.aesDecrypt(request_s, AES.key);
-			logger.info("接口insert_exrecord receive" + request_s_de);
+			logger.info("接口insertExRecord receive" + request_s_de);
 			JSONObject jstr = JSONObject.fromObject(request_s_de);
 			username = jstr.getString("username");
 			exchangeScore = jstr.getInt("exchange_score");
 			exchangeType = (byte) jstr.getInt("exchange_type");
+			serialId = jstr.getString("serial_number");
 			applicaTime = new Timestamp(System.currentTimeMillis());
 			randKey = RandomCreate.createRandomString(18);
 			if(exchangeType == 0)
@@ -506,7 +509,7 @@ public class ScoreController {
      * @throws IOException
      */
     @RequestMapping(value="/upload_gift")
-    public void uploadGift(HttpServletRequest request, @RequestParam("file") MultipartFile mfile,HttpServletResponse response) throws IOException{
+    public void uploadGift(HttpServletRequest request, @RequestParam("file") CommonsMultipartFile mfile,HttpServletResponse response) throws IOException{
     	logger.info("上传礼品信息");
     	HttpSession session = request.getSession();
 		String usertype = session.getAttribute("usertype").toString();
