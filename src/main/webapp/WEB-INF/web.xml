@@ -66,11 +66,20 @@
   </servlet-mapping>
   
     <servlet>
-    <servlet-name>ScoreController</servlet-name>
+    <servlet-name>score</servlet-name>
     <servlet-class>org.springframework.web.servlet.DispatcherServlet</servlet-class>
   </servlet>
   <servlet-mapping>
-    <servlet-name>ScoreController</servlet-name>
+    <servlet-name>score</servlet-name>
     <url-pattern>/ScoreController/*</url-pattern>
+  </servlet-mapping>
+  
+   <servlet>
+    <servlet-name>DebugCheckAccout</servlet-name>
+    <servlet-class>org.springframework.web.servlet.DispatcherServlet</servlet-class>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>DebugCheckAccout</servlet-name>
+    <url-pattern>/Test_Controller/*</url-pattern>
   </servlet-mapping>
 </web-app>

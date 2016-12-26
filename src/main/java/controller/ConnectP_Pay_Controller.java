@@ -288,7 +288,7 @@ public class ConnectP_Pay_Controller {
 		try {
 			
 			CloseableHttpClient client = HttpClients.createDefault();
-			newfilename = new MediaDownloadRequestExecutor().Excute_post(client, null, imageUrl, fileName,savedir);
+			newfilename = new MediaDownloadRequestExecutor().Excute_post_GetPic(client, null, imageUrl, fileName,savedir);
 			ipayRecord.setLinkCer("/check_Accout/" + "¸¶¿î¼ÇÂ¼/" + owner + "/" + payer + "/" + newfilename);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
@@ -409,7 +409,7 @@ public class ConnectP_Pay_Controller {
 				String fileName = sFormatf.format(date);
 				
 				CloseableHttpClient client = HttpClients.createDefault();
-				newfilename = new MediaDownloadRequestExecutor().Excute_post(client, null, imageUrl, fileName,savedir);
+				newfilename = new MediaDownloadRequestExecutor().Excute_post_GetPic(client, null, imageUrl, fileName,savedir);
 			}
 			
 			String id_s = AES.aesDecrypt(request.getParameter("id"), AES.key);
