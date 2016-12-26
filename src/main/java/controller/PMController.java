@@ -962,6 +962,7 @@ public class PMController {
     	String email = null;
     	String contractMes = null;
     	String cardid = null;
+    	String weixinid = null;
     	
 		try {
 			username = AES.aesDecrypt(request.getParameter("username"),AES.key);
@@ -976,6 +977,7 @@ public class PMController {
 	    	email = AES.aesDecrypt(request.getParameter("email"),AES.key);//邮箱
 	    	contractMes = AES.aesDecrypt(request.getParameter("contract_mes"),AES.key);//有效凭证
 	    	cardid = AES.aesDecrypt(request.getParameter("cardid"),AES.key);//对账联系人身份证
+	    	weixinid = AES.aesDecrypt(request.getParameter("weixinid"),AES.key);//
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -996,6 +998,7 @@ public class PMController {
     	inConnectPerson.setEmail(email);
     	inConnectPerson.setContractMes(contractMes);
     	inConnectPerson.setCardid(cardid);
+    	inConnectPerson.setWeixinid(weixinid);
     	inConnectPerson.setScore(0);
     	
     	Register_Manage register_Manage = pManage.new Register_Manage();
