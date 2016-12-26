@@ -287,6 +287,23 @@ public class Assistance_Dao {
 		
 	}
 	
+	public boolean checkExistBu(String agentId, int flag){
+		boolean result = false;
+		try {
+			beginTransaction();
+			String sqlString = "select count(*) from Assistance where agentid = :agentId and flag = :flag";
+			Query query =   session.createQuery(sqlString).setParameter("agentId", agentId).setParameter("flag", flag);
+			int num = ((Long)query.uniqueResult()).intValue();
+			if(num != 0)
+				result = true;
+			endTransaction();
+		} catch (RuntimeException e) {
+			logger.error("检查代理商财务状态失败");
+			// TODO: handle exception
+		}
+		return result;
+	}
+	
 	public void Close_Connect(){
 		
 	/*	try {
