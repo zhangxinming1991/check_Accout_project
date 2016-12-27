@@ -5,8 +5,9 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.sql.Date;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 
@@ -24,12 +25,19 @@ import org.apache.xmlbeans.impl.xb.xsdschema.Public;
 import org.eclipse.jdt.internal.compiler.ast.ThisReference;
 import org.hibernate.SessionFactory;
 
+import check_Asys.WeixinPush_Service.Push_Template;
+import sun.net.www.content.image.gif;
+import dao.Agent_Dao;
 import dao.Assistance_Dao;
 import dao.ConnectPersonScoreInfo_Dao;
+import dao.ConnectPerson_Dao;
 import dao.Gift_Dao;
 import dao.LogisticInfo_Dao;
 import dao.ScoreExchangeRecord_Dao;
 import dao.ScoreIncreaseRecord_Dao;
+import entity.Agent;
+import entity.Assistance;
+import entity.ConnectPerson;
 import entity.ConnectPersonScoreInfo;
 import entity.Gift;
 import entity.LogisticInfo;
@@ -50,12 +58,14 @@ public class ScoreManage {
 	private SessionFactory mFactory;
 	
 	/*连接数据库表的dao*/
-	private Assistance_Dao assistance_Dao;               // 代理商财务dao
-	private ConnectPersonScoreInfo_Dao cps_Dao; // 客户积分汇总记录dao 
-	private ScoreIncreaseRecord_Dao sir_Dao;   	//   积分增加记录dao
-	private ScoreExchangeRecord_Dao ser_Dao; 	//	  积分兑换记录dao
-	private Gift_Dao gift_Dao;											// 礼物信息dao
-	private LogisticInfo_Dao logisticInfo_Dao;			//  兑换礼物物流信息
+	private Agent_Dao agent_Dao;                                      // 代理商信息dao
+	private Assistance_Dao assistance_Dao;             		  // 代理商财务dao
+	private ConnectPerson_Dao cPerson_Dao;				 // 客户信息dao
+	private ConnectPersonScoreInfo_Dao cps_Dao;	 // 客户积分汇总记录dao 
+	private ScoreIncreaseRecord_Dao sir_Dao;   			//   积分增加记录dao
+	private ScoreExchangeRecord_Dao ser_Dao; 		//	  积分兑换记录dao
+	private Gift_Dao gift_Dao;												// 礼物信息dao
+	private LogisticInfo_Dao logisticInfo_Dao;				//  兑换礼物物流信息
 	/*连接数据库表的dao*/
 
 	/*查看资源的定义*/
@@ -73,7 +83,9 @@ public class ScoreManage {
 		// TODO Auto-generated constructor stub
 		mFactory = wFactory;
 		
+		agent_Dao = new Agent_Dao(wFactory);
 		assistance_Dao = new Assistance_Dao(wFactory);
+		cPerson_Dao = new ConnectPerson_Dao(wFactory);
 		cps_Dao = new ConnectPersonScoreInfo_Dao(wFactory);
 		sir_Dao = new ScoreIncreaseRecord_Dao(wFactory);
 		ser_Dao = new ScoreExchangeRecord_Dao(wFactory);
@@ -85,13 +97,30 @@ public class ScoreManage {
 	 * 插入一条积分兑换记录
 	 * @param ser
 	 */
-	public int insertExchangeRecord(ScoreExchangeRecord ser){
+	public int insertExchangeRecord(String username, ScoreExchangeRecord ser, String description){
 		logger.info("插入一条客户积分兑换申请");
 		Gift gift = gift_Dao.getInfoById(ser.getExchangeType());
 		if(gift.getStock() <= 0)
 			return -1;
 		else
 			ser_Dao.add(ser);
+		
+		// 微信推送积分兑换提交申请消息
+		ConnectPerson person = cPerson_Dao.findById(ConnectPerson.class, username);
+		String openId = person.getWeixinid();
+		String clientMes = person.getRealName();
+		String agentID = person.getAgent();
+		String convertAgent = agent_Dao.findById(Agent.class, agentID).getAgentName();
+		Date date = new Date();
+		SimpleDateFormat sFormat = new SimpleDateFormat("yyyy年MM月dd日 HH:mm:ss");
+		String payTime = sFormat.format(date);
+	
+		WeixinPush_Service wp_ser = new WeixinPush_Service();
+		Push_Template pushMessage = wp_ser.new Push_Template();
+		int index = description.indexOf("兑换");
+		String convertMes = description.substring(index + 1, description.length());
+		pushMessage.Create_ConvertScore_Template(username, openId, payTime, convertMes, clientMes, convertAgent);
+		wp_ser.Push_OpSelect(wp_ser.pushoneUrl,WeixinPush_Service.CONVERT_SCORE, pushMessage);
 		return 0;
 	}
 	
@@ -649,7 +678,13 @@ public class ScoreManage {
 	    	e.printStackTrace();
 	    }
     }
-    
+    /**
+     * 处理上传的excel
+     * @param infos
+     * @param type
+     * @return
+     * @throws IOException
+     */
     public  JSONObject uploadInfo(InputStream infos, String type) throws IOException{
     	JSONObject result = new JSONObject();
 	    	if(type.equals("gift")){
@@ -685,7 +720,20 @@ public class ScoreManage {
 		    	System.out.println(logisticList.size());
 		    	for(int i = 0; i < logisticList.size(); i++){
 		    		LogisticInfo logisticInfo = logisticList.get(i);
-		    		logisticInfo_Dao.upload(logisticInfo);
+		    		if(logisticInfo_Dao.upload(logisticInfo) > 0){ 		
+			    		// 微信推送物流更新消息
+		    			ScoreExchangeRecord scoreExchangeRecord = ser_Dao.getInfoByRandKey(logisticInfo.getRandKey());
+			    		ConnectPerson person = cPerson_Dao.findById(ConnectPerson.class, scoreExchangeRecord.getUsername());
+			    		String openId = person.getWeixinid();
+			    		Date date = new Date();
+			    		SimpleDateFormat sFormat = new SimpleDateFormat("yyyy年MM月dd日 HH:mm:ss");
+			    		String deliverTime = sFormat.format(date);
+			    	
+			    		WeixinPush_Service wp_ser = new WeixinPush_Service();
+			    		Push_Template pushMessage = wp_ser.new Push_Template();
+			    		pushMessage.Create_DeliverGoods_Template(openId, logisticInfo.getLogisticNumber(), logisticInfo.getRandKey(), deliverTime);
+			    		wp_ser.Push_OpSelect(wp_ser.pushoneUrl,WeixinPush_Service.DELIVER_GOODS, pushMessage);
+		    		}
 		    	}
 	    	}
 	    	else{
@@ -762,5 +810,13 @@ public class ScoreManage {
     		logisticList.add(logisticInfo);
     	}
     	return logisticList;
+    }
+    
+    public String getGift(int id){
+    	Gift gift = gift_Dao.getInfoById(id);
+    	if(gift != null)
+    		return gift.getGift();
+    	else
+    		return null;
     }
 }

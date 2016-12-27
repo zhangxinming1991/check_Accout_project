@@ -5,6 +5,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.Writer;
 import java.sql.Timestamp;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
@@ -23,8 +25,11 @@ import org.springframework.web.multipart.MultipartFile;
 
 import net.sf.json.JSONObject;
 import check_Asys.ScoreManage;
+import check_Asys.WeixinPush_Service;
+import check_Asys.WeixinPush_Service.Push_Template;
 import random_create.RandomCreate;
 import encrypt_decrpt.AES;
+import entity.ConnectPerson;
 import entity.ConnectPersonScoreInfo;
 import entity.Gift;
 import entity.ScoreExchangeRecord;
@@ -48,7 +53,7 @@ public class ScoreController {
 	private static final String descriptionMoney = "兑换现金";
 	private static final String descriptionGift = "兑换礼品";
 	private static final int PAGESIZE = 10;
-		
+	private static final float SCALE = 1;
 	/**
 	 * 用户提交积分兑换申请
 	 * @address: /check_Accout/ScoreController/insert_exrecord
@@ -81,10 +86,18 @@ public class ScoreController {
 			exchangeType = (byte) jstr.getInt("exchange_type");
 			applicaTime = new Timestamp(System.currentTimeMillis());
 			randKey = RandomCreate.createRandomString(18);
-			if(exchangeType == 0)
-				description = descriptionMoney;
-			else
-				description = descriptionGift;
+			if(exchangeType == 0){
+				StringBuffer tmpBuffer = new StringBuffer();
+				tmpBuffer.append("使用").append(exchangeScore)
+						.append("积分, ").append("兑换").append(exchangeScore * SCALE).append("元红包");
+				description = tmpBuffer.toString();
+			}
+			else{
+				StringBuffer tmpBuffer = new StringBuffer();
+				tmpBuffer.append("使用").append(exchangeScore)
+						.append("积分, ").append("兑换").append(scoreManage.getGift(exchangeType));
+				description = tmpBuffer.toString();
+			}
 			int score = scoreManage.getCurrentScoreByUsername(username);
 			if(score < exchangeScore){
 				re_jsonobject.element("flag", -2);
@@ -94,12 +107,12 @@ public class ScoreController {
 			}
 			ScoreExchangeRecord scoreExchangeRecord = new ScoreExchangeRecord(username,
 					exchangeScore, exchangeType, status, applicaTime, randKey, description);
-			int result = scoreManage.insertExchangeRecord(scoreExchangeRecord);
+			int result = scoreManage.insertExchangeRecord(username, scoreExchangeRecord, description);
 			if(result != 0 ){
 				re_jsonobject.element("flag", -1);
 				re_jsonobject.element("errmsg", "库存不足，请选择其他礼物");
 			}
-			else{			
+			else{		
 				re_jsonobject.element("flag", 0);
 				re_jsonobject.element("errmsg", "兑换申请提交成功");
 			}

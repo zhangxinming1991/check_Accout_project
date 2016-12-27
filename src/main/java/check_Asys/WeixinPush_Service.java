@@ -31,8 +31,8 @@ public class WeixinPush_Service {
 	
 	//String TestUrl = "http://119.29.235.201:8080/check_Accout/Test_Controller/DebugRegNotePush";
 	//String TestUrl = "http://192.168.137.1:8080/check_Accout/Test_Controller/DebugRegNotePush";
-	String pushoneUrl = "http://baas/weixin/weixin/sendMessage";//单条推送
-	String pushmanyUrl = "http://baas/weixin/weixin/sendMessages";//多条推送
+	public String pushoneUrl = "http://www.xmaples.cn/baas/weixin/weixin/sendMessage";//单条推送
+	public String pushmanyUrl = "http://www.xmaples.cn/baas/weixin/weixin/sendMessages";//多条推送
 	/*模板号定义*/
 	public static final int REGISTER_NOTE = 1;//账户注册通知
 	public static final int REGISTE_CHECK = 2;//注册审核结果通知
@@ -272,9 +272,9 @@ public class WeixinPush_Service {
 		 * @param totalSource
 		 * @return
 		 */
-		public boolean Create_ChangeScore_Template(String userid,String sourceChange,String state,String totalSource){
+		public boolean Create_ChangeScore_Template(String username, String userid,String sourceChange,String state,String totalSource){
 			template = CHANGE_SCORE;
-			String first = "您的账号(1111)有一个积分变更通知信息：";
+			String first = "您的账号("+ username +")有一个积分变更通知信息：";
 			String remark = "可通过积分兑换功能申请兑换，祝愉快！";
 			try {	
 				this.user = AES.aesEncrypt(userid, AES.key);
@@ -305,9 +305,9 @@ public class WeixinPush_Service {
 		 * @param convertAgent
 		 * @return
 		 */
-		public boolean Create_ConvertScore_Template(String userid,String payTime,String convertMes,String clientMes,String convertAgent){
+		public boolean Create_ConvertScore_Template(String username, String userid,String payTime,String convertMes,String clientMes,String convertAgent){
 			template = CONVERT_SCORE;
-			String first = "您的账号(1111)积分兑换申请提交成功：";
+			String first = "您的账号(" + username +")积分兑换申请提交成功：";
 			String remark = "兑换过程需要3-4天，请耐心等待！";
 			try {	
 				this.user = AES.aesEncrypt(userid, AES.key);

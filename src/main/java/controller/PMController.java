@@ -870,9 +870,10 @@ public class PMController {
      * @param request
      * @param response
      * @author zhangxinming
+     * @throws Exception 
      */
     @RequestMapping(value="/as_register")
-    public void Assistance_register(HttpServletRequest request,HttpServletResponse response){
+    public void Assistance_register(HttpServletRequest request,HttpServletResponse response) throws Exception{
     	logger.info("Get as_register request");
     	JSONObject re_jsonobject = new JSONObject();
     	
@@ -939,9 +940,10 @@ public class PMController {
      * @param request
      * @param response
      * @author zhangxinming
+     * @throws Exception 
      */
     @RequestMapping(value="/conectp_register")
-    public void Conectp_register(HttpServletRequest request,HttpServletResponse response){
+    public void Conectp_register(HttpServletRequest request,HttpServletResponse response) throws Exception{
     	logger.info("***Get Conectp_register request***");
     	try {
 			request.setCharacterEncoding("utf-8");

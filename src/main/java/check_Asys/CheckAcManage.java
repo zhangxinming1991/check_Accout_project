@@ -11,6 +11,7 @@ import java.util.List;
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.ObjectUtils.Null;
 import org.apache.commons.lang.Validate;
 import org.apache.commons.logging.impl.Log4JLogger;
 import org.apache.logging.log4j.LogManager;
@@ -74,6 +75,7 @@ public class CheckAcManage {
 	public Dao_List dao_List;
 	public FormProduce formProduce;
 	public byte m_op;
+	private ConnectPerson_Dao connectPersonDao;
 	public static final String IMPORT = "import";//导入(最好采用十六进制表示)
 	public static final String WATCH = "watch";//查看
 	public static final String CHECK = "check";//审阅
@@ -100,6 +102,7 @@ public class CheckAcManage {
 	public CheckAcManage(SessionFactory wFactory) {
 		// TODO Auto-generated constructor stub
 		  dao_List = new Dao_List(wFactory);
+		  connectPersonDao = new ConnectPerson_Dao(wFactory);
 		  auccount = new AutoCheckAuccount(dao_List.bDao,dao_List.pDao,dao_List.tDao,dao_List.sDao
 				  ,dao_List.pHDao,dao_List.cDao,dao_List.pCDao
 				  ,dao_List.cPerson_Dao,dao_List.oUp_Dao
@@ -949,6 +952,13 @@ public class CheckAcManage {
 		public Owner() {
 	}
 		// TODO Auto-generated constructor stub
+	}
+	public String getWeiXinId(String username){
+		ConnectPerson connectPerson = connectPersonDao.findById(ConnectPerson.class, username);
+		if(connectPerson != null)
+			return connectPerson.getWeixinid();
+		else
+			return null;
 	}
 }
 	

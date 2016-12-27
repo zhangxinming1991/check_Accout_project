@@ -57,18 +57,17 @@ public class Test_Controller {
 		SimpleDateFormat sFormat = new SimpleDateFormat("yyyy年MM月dd日 HH:mm:ss");
 		String dates = sFormat.format(date);
 		logger.info(date);
-		String userid = "oqOkRv6pe3uNgfToBej4R0X7cEMs";
+		String userid = "oN6los7yaXFPenJdeUqxKP4kdCk8";
 		String url = null;
 		
 		/*账户注册通知*/
-		url = "http://192.168.137.1:8080/check_Accout/Test_Controller/DebugRegNotePush";
+		url = wp_ser.pushoneUrl;
 		Push_Template regNotepushTemplate = wp_ser.new Push_Template();
 		regNotepushTemplate.Create_RegNoteTemplate(userid,"张三", "1234", dates);
 		wp_ser.Push_OpSelect(url,WeixinPush_Service.REGISTER_NOTE, regNotepushTemplate);
 		/*账户注册通知*/
-		
 		/*注册审核结果通知*/
-		url = "http://192.168.137.1:8080/check_Accout/Test_Controller/DebugRegCheckPush";
+		url = wp_ser.pushoneUrl;
 		Push_Template regCheckPushTemplate = wp_ser.new Push_Template();
 		regCheckPushTemplate.Create_RegCheck_Template(userid, "zhangsan", "通过");
 		wp_ser.Push_OpSelect(url,WeixinPush_Service.REGISTE_CHECK, regCheckPushTemplate);
