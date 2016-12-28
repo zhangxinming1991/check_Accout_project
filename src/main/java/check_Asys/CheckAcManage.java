@@ -26,6 +26,7 @@ import com.sun.org.apache.regexp.internal.recompile;
 import com.sun.org.apache.xml.internal.resolver.helpers.PublicId;
 
 import check_Asys.CheckAcManage.Watch_Object;
+import check_Asys.WeixinPush_Service.Push_Template;
 import dao.Agent_Dao;
 import dao.AllPayRecord_Dao;
 import dao.Assistance_Dao;
@@ -262,14 +263,27 @@ public class CheckAcManage {
 				Date date = new Date();
 				Timestamp time = new Timestamp(date.getTime());
 				in_sr.setTime(time);
-				in_sr.setDescription("匹配通过，获得积分");
-				
+		
 				Integer status = 2;
 				in_sr.setStatus(status.byteValue());
 				int source = ChangeMoneyTosource(pRecord.getPayMoney(),0.001);
 				in_sr.setIncreaseScore(source);
+				StringBuffer descriptionBuffer = new StringBuffer();
+				descriptionBuffer.append("匹配").append(pRecord.getPayMoney())
+													.append("元付款记录,增加").append(source).append("积分");
+				in_sr.setDescription(descriptionBuffer.toString());
 				dao_List.sRc_Dao.add(in_sr);
 				/*插入积分*/
+				// 微信推送积分变更消息
+				WeixinPush_Service wp_ser = new WeixinPush_Service();
+				ConnectPerson connectPerson = connectPersonDao.findById(ConnectPerson.class,  connectp);
+				String url = wp_ser.pushoneUrl;
+				String userid = connectPerson.getWeixinid();	
+				String totalSource = connectPerson.getScore().toString();
+				Push_Template pushMessage = wp_ser.new Push_Template();
+				String[] changeState = in_sr.getDescription().split(",");
+				pushMessage.Create_ChangeScore_Template(connectp, userid, changeState[0], changeState[1], totalSource);
+				wp_ser.Push_OpSelect(url,WeixinPush_Service.CHANGE_SCORE, pushMessage);
 			}
 		}
 	}
