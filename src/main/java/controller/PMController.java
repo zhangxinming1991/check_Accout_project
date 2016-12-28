@@ -940,7 +940,8 @@ public class PMController {
      * @param response
      * @author zhangxinming
      */
-    @RequestMapping(value="/conectp_register")
+    //@RequestMapping(value="/conectp_register")
+    @RequestMapping(value="/")
     public void Conectp_register(HttpServletRequest request,HttpServletResponse response){
     	logger.info("***Get Conectp_register request***");
     	try {
@@ -978,6 +979,7 @@ public class PMController {
 	    	contractMes = AES.aesDecrypt(request.getParameter("contract_mes"),AES.key);//有效凭证
 	    	cardid = AES.aesDecrypt(request.getParameter("cardid"),AES.key);//对账联系人身份证
 	    	weixinid = AES.aesDecrypt(request.getParameter("weixinid"),AES.key);//
+	    	logger.info("weixinid:" + weixinid);
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

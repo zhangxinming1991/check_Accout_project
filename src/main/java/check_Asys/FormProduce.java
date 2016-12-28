@@ -320,7 +320,7 @@ public class FormProduce {
 		public final static int debt = 2;
 		public final static int total = 3;
 		public final static int client = 4;*/
-		public final static int num = 0;//序号
+/*		public final static int num = 0;//序号
 		public final static int province = 1;//省份
 		public final static int clientName = 2;//客户名称
 		public final static int cusCompanyid = 3;//客户id
@@ -337,7 +337,16 @@ public class FormProduce {
 		public final static int actualPayer  = 14;//实际付款人
 		public final static int payway  = 15;//付款方式
 		public final static int inputMonth = 16;//本月回款
-		public final static int inputClient = 17;//客户回款
+		public final static int inputClient = 17;//客户回款*/
+		
+		public final static int num = 0;//序号
+		public final static int  province = 1;//省份
+		public final static int clientName = 2;//客户名称
+		public final static int cusCompanyid = 3;//客户id
+		public final static int paymentNature = 4;//货款性质
+		public final static int totalMoney = 5;//合同总额
+		public final static int debetMoney = 6;//在外金额
+		public final static int inputMonth = 7;//本月回款
 		
 		public List<String> formhead;
 		public Export_TotalOriForm(){
@@ -346,18 +355,9 @@ public class FormProduce {
 			formhead.add(province,"省份");
 			formhead.add(clientName, "客户名称/按揭借款人");
 			formhead.add(cusCompanyid, "合同买受人客户码");
-			formhead.add(dingdanNum, "订单号");
-			formhead.add(productName, "产品名称");
-			formhead.add(facilityName, "设备名称");
-			formhead.add(contract, "合同号");
-			formhead.add(productTime, "发货时间");
-			formhead.add(paymentOwner, "货款主体");
 			formhead.add(paymentNature, "货款性质");
-			formhead.add(inputNature, "回款性质");
 			formhead.add(totalMoney, "合同总额");
 			formhead.add(debetMoney, "在外货款总额");
-			formhead.add(actualPayer, "实际付款人");
-			formhead.add(payway, "付款方式");
 			formhead.add(inputMonth, "本月回款");
 		}
 	}

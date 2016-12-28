@@ -44,6 +44,7 @@ import check_Asys.OpLog_Service;
 import controller.FormManagerController.OwerAtr;
 import en_de_code.ED_Code;
 import encrypt_decrpt.AES;
+import entity.Agent;
 import entity.Assistance;
 import entity.BankInput;
 import entity.CaresultHistory;
@@ -574,7 +575,8 @@ public class Check_MainController {
 		String date = caid.substring(0, 8);
 		String owner = caid.substring(8);
 		String chinese_owner = null;
-		if (owner.equals("gd0001")) {
+
+/*		if (owner.equals("gd0001")) {
 			chinese_owner = "广东代理商";
 			caid = date + chinese_owner;
 		}
@@ -606,11 +608,37 @@ public class Check_MainController {
 			chinese_owner = "新疆代理商";
 			caid = date + chinese_owner;
 		}
+		else if (owner.equals("fj0001")) {
+			chinese_owner = "福建代理商";
+			caid = date + chinese_owner;
+		}
+		else if (owner.equals("sx0001")) {
+			chinese_owner = "陕西代理商";
+			caid = date + chinese_owner;
+		}
+		else if (owner.equals("qz0001")) {
+			chinese_owner = "青藏代理商";
+			caid = date + chinese_owner;
+		}
+		else if (owner.equals("zj0001")) {
+			chinese_owner = "浙江代理商";
+			caid = date + chinese_owner;
+		}
 		else {
 			chinese_owner = "未知代理商";
 			caid = date + chinese_owner;
-		}
+		}*/
 		
+		Agent agent = cOp.dao_List.agent_Dao.findById(Agent.class, owner);
+		if (agent != null) {
+			chinese_owner = agent.getAgentName();
+			caid = date + chinese_owner;
+		}
+		else {
+			logger_error.error("未知代理商");
+			chinese_owner = "未知代理商";
+			caid = date + chinese_owner;
+		}
 		return caid;
 	}
 	

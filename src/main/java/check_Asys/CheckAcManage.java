@@ -263,7 +263,7 @@ public class CheckAcManage {
 				
 				Integer status = 2;
 				in_sr.setStatus(status.byteValue());
-				int source = ChangeMoneyTosource(pRecord.getPayMoney(),0.001);
+				int source = ChangeMoneyTosource(pRecord.getPayMoney(),0.0005);
 				in_sr.setIncreaseScore(source);
 				dao_List.sRc_Dao.add(in_sr);
 				/*插入积分*/
@@ -271,9 +271,19 @@ public class CheckAcManage {
 		}
 	}
 	
-	/**/
+	/**
+	 * ChangeMoneyTosource 将积分兑换成金钱
+	 * @param pay_money 付款金额
+	 * @param coefficient 系数
+	 * @return
+	 */
 	public int ChangeMoneyTosource(Double pay_money,Double coefficient){
-		return (int) (pay_money * coefficient);
+		Double threshold = 6000.0;
+		if (pay_money < threshold) {
+			return 3;
+		}
+		else
+			return (int) (pay_money * coefficient);
 	}
 	
 	/*进入对账模式*/
