@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
 "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
-<!-- Generated 2016-12-17 23:35:50 by Hibernate Tools 5.1.0.Beta1 -->
+<!-- Generated 2016-12-26 13:35:33 by Hibernate Tools 5.1.0.Beta1 -->
 <hibernate-mapping>
     <class name="entity.ConnectPerson" table="connect_person" catalog="check_a_db" optimistic-lock="version">
         <id name="username" type="string">
@@ -68,6 +68,9 @@
             <column name="score">
                 <comment>&#187;&#253;&#183;&#214;</comment>
             </column>
+        </property>
+        <property name="weixinid" type="string">
+            <column name="weixinid" length="36" />
         </property>
     </class>
 </hibernate-mapping>

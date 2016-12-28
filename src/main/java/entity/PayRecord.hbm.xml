@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
 "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
-<!-- Generated 2016-12-17 23:35:50 by Hibernate Tools 5.1.0.Beta1 -->
+<!-- Generated 2016-12-26 13:35:33 by Hibernate Tools 5.1.0.Beta1 -->
 <hibernate-mapping>
     <class name="entity.PayRecord" table="pay_record" catalog="check_a_db" optimistic-lock="version">
         <id name="id" type="int">
@@ -99,7 +99,9 @@
             <column name="paymentNature" length="1000" />
         </property>
         <property name="actualPayTime" type="string">
-            <column name="actualPayTime" length="30" />
+            <column name="actualPayTime" length="30">
+                <comment>&#202;&#181;&#188;&#202;&#184;&#182;&#191;&#238;&#202;&#177;&#188;&#228;</comment>
+            </column>
         </property>
     </class>
 </hibernate-mapping>

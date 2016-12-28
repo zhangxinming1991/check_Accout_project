@@ -18,6 +18,8 @@ import org.apache.logging.log4j.Logger;
 import org.apache.xml.resolver.apps.resolver;
 import org.hibernate.SessionFactory;
 
+import check_Asys.WeixinPush_Service.Push_Template;
+
 import com.sun.org.apache.bcel.internal.generic.NEW;
 import com.sun.org.apache.xml.internal.resolver.helpers.PublicId;
 
@@ -65,6 +67,10 @@ public class Person_Manage {
 	public Weixinba_Dao weixinba_Dao;
 	/*连接数据库表的dao*/
 	
+	/*微信推送服务*/
+	private WeixinPush_Service wp_ser;
+	/*微信推送服务*/
+	
 	/*查看资源的定义*/
 	public static final String REG_CP = "reg_cp";//等待审核的对账联系人注册请求,cp(connect person)
 	public static final String REG_AS = "reg_as";//等待审核的财务人员注册请求,as(assistance)
@@ -91,6 +97,8 @@ public class Person_Manage {
 		bUp_Dao = new BackUp_Dao(mFactory);
 		weixinbc_Dao = new Weixinbc_Dao(mFactory);
 		weixinba_Dao = new Weixinba_Dao(mFactory);
+		
+		 wp_ser = new WeixinPush_Service();
 	}
 	
 	/**
@@ -283,6 +291,11 @@ public class Person_Manage {
 			ConnectPerson cPerson = cDao.findById(ConnectPerson.class, id);
 			cPerson.setFlag(ctlflag);
 			cDao.update(cPerson);
+		}
+		else if(ctltype.equals("am")){
+			Assistance assistance = aS_Dao.findById(Assistance.class, id);
+			assistance.setFlag(ctlflag);
+			aS_Dao.update(assistance);
 		}
 		return true;
 	}
@@ -533,14 +546,14 @@ public class Person_Manage {
 		}
 		
 		//注册选择
-		public JSONObject RgEnter_Select(Object reg_object,String reg_type){
+		public JSONObject RgEnter_Select(Object reg_object,String reg_type) throws Exception{
 			
 			JSONObject re_jobject = null;
 			switch (reg_type) {
 			case "cp"://对账联系人
 				re_jobject = Accept_CpRegisterRequest((ConnectPerson) reg_object);
 				break;
-			case "as"://代理商财务
+			case "as"://代理商职务
 				re_jobject = Accept_AsRegisterRequest((Assistance) reg_object);
 				break;
 			default:
@@ -555,13 +568,25 @@ public class Person_Manage {
 		}
 		
 		//接受并处理对账联系人注册请求
-		public JSONObject Accept_CpRegisterRequest(ConnectPerson re_cp){
+		public JSONObject Accept_CpRegisterRequest(ConnectPerson re_cp) throws Exception{
 			
 			re_cp.setFlag(reg_wait_check);
 			boolean result = cDao.add(re_cp);
 			JSONObject jsonObject = new JSONObject();
 			jsonObject.element("flag", -1);
 			if (result == true) {
+				// 微信推送注册成功通知
+				String url = wp_ser.pushoneUrl;
+				String userid = re_cp.getWeixinid();	
+				String username = re_cp.getUsername();
+				String password = re_cp.getPassword();
+				Date date = new Date();
+				SimpleDateFormat sFormat = new SimpleDateFormat("yyyy年MM月dd日 HH:mm:ss");
+				String dates = sFormat.format(date);
+				Push_Template pushMessage = wp_ser.new Push_Template();
+				pushMessage.Create_RegNoteTemplate(userid,username, password, dates);
+				wp_ser.Push_OpSelect(url,WeixinPush_Service.REGISTER_NOTE, pushMessage);
+				
 				jsonObject.element("flag", 0);
 				jsonObject.element("errmsg", "等待处理");
 			}
@@ -634,6 +659,14 @@ public class Person_Manage {
 				re_cp.setFlag(flag);
 				cDao.update(re_cp);
 				result = 0;
+				// 微信推送注册审核通过消息
+				String url = wp_ser.pushoneUrl;
+				String userid = re_cp.getWeixinid();	
+				String username = re_cp.getUsername();
+				Push_Template pushMessage = wp_ser.new Push_Template();
+				pushMessage.Create_RegCheck_Template(userid, username, "审核已完成");
+				wp_ser.Push_OpSelect(url,WeixinPush_Service.REGISTE_CHECK, pushMessage);
+				
 				re_jObject.element("flag", 0);
 				re_jObject.element("errmsg", "操作成功");
 			}
@@ -766,6 +799,17 @@ public class Person_Manage {
 			}
 			else {
 				if(weixinbc_Dao.delete(fwxbc)){
+					// 微信推送解绑成功消息
+					ConnectPerson person = cDao.findById(ConnectPerson.class, username);
+					String openId = person.getWeixinid();
+					Date date = new Date();
+					SimpleDateFormat sFormat = new SimpleDateFormat("yyyy年MM月dd日 HH:mm:ss");
+					String looseTime = sFormat.format(date);
+					
+					Push_Template pushMessage = wp_ser.new Push_Template();
+					pushMessage.Create_LooseAccout_Template(openId, username, looseTime);
+					wp_ser.Push_OpSelect(wp_ser.pushoneUrl,WeixinPush_Service.LOOSE_ACCOUT, pushMessage);
+					
 					re_json.element("flag", 0);
 					re_json.element("errmsg", "已删除相应的对账联系人信息");					
 				}
@@ -790,7 +834,18 @@ public class Person_Manage {
 				WeixinBindConnectPerson in_wxc = new WeixinBindConnectPerson();
 				in_wxc.setUsername(username);
 				in_wxc.setWeixinid(weixinid);
-				if(weixinbc_Dao.add(in_wxc)){
+				if(weixinbc_Dao.add(in_wxc)){	
+					// 微信推送绑定成功消息
+					ConnectPerson person = cDao.findById(ConnectPerson.class, username);
+					String openId = person.getWeixinid();
+					Date date = new Date();
+					SimpleDateFormat sFormat = new SimpleDateFormat("yyyy年MM月dd日 HH:mm:ss");
+					String looseTime = sFormat.format(date);
+					
+					Push_Template pushMessage = wp_ser.new Push_Template();
+					pushMessage.Create_BingAccout_Template(openId, username, looseTime);
+					wp_ser.Push_OpSelect(wp_ser.pushoneUrl,WeixinPush_Service.BING_ACCOUT, pushMessage);
+					
 					re_json.element("flag", 0);
 					re_json.element("errmsg", "添加微信绑定对账联系人记录成功");	
 				}
@@ -823,7 +878,8 @@ public class Person_Manage {
 	 */
 	public String ChangeAgentToChinese(String agent) {
 		String chinese_agent = null;
-		if (agent.equals("gd0001")) {
+
+		/*if (agent.equals("gd0001")) {
 			chinese_agent = "广东代理商";
 			
 		}
@@ -857,7 +913,15 @@ public class Person_Manage {
 		}
 		else {
 			chinese_agent = "未知代理商";
-			
+
+		}*/
+		
+		Agent fAgent = agent_Dao.findById(Agent.class, agent);
+		if (fAgent != null) {
+			chinese_agent = fAgent.getAgentName();
+		}
+		else{
+			chinese_agent = "未知代理商";
 		}
 		
 		return chinese_agent;

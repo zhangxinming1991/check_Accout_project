@@ -11,6 +11,7 @@ import java.util.List;
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.ObjectUtils.Null;
 import org.apache.commons.lang.Validate;
 import org.apache.commons.logging.impl.Log4JLogger;
 import org.apache.logging.log4j.LogManager;
@@ -25,6 +26,7 @@ import com.sun.org.apache.regexp.internal.recompile;
 import com.sun.org.apache.xml.internal.resolver.helpers.PublicId;
 
 import check_Asys.CheckAcManage.Watch_Object;
+import check_Asys.WeixinPush_Service.Push_Template;
 import dao.Agent_Dao;
 import dao.AllPayRecord_Dao;
 import dao.Assistance_Dao;
@@ -74,6 +76,7 @@ public class CheckAcManage {
 	public Dao_List dao_List;
 	public FormProduce formProduce;
 	public byte m_op;
+	private ConnectPerson_Dao connectPersonDao;
 	public static final String IMPORT = "import";//导入(最好采用十六进制表示)
 	public static final String WATCH = "watch";//查看
 	public static final String CHECK = "check";//审阅
@@ -100,6 +103,7 @@ public class CheckAcManage {
 	public CheckAcManage(SessionFactory wFactory) {
 		// TODO Auto-generated constructor stub
 		  dao_List = new Dao_List(wFactory);
+		  connectPersonDao = new ConnectPerson_Dao(wFactory);
 		  auccount = new AutoCheckAuccount(dao_List.bDao,dao_List.pDao,dao_List.tDao,dao_List.sDao
 				  ,dao_List.pHDao,dao_List.cDao,dao_List.pCDao
 				  ,dao_List.cPerson_Dao,dao_List.oUp_Dao
@@ -259,21 +263,44 @@ public class CheckAcManage {
 				Date date = new Date();
 				Timestamp time = new Timestamp(date.getTime());
 				in_sr.setTime(time);
-				in_sr.setDescription("匹配通过，获得积分");
-				
+		
 				Integer status = 2;
 				in_sr.setStatus(status.byteValue());
-				int source = ChangeMoneyTosource(pRecord.getPayMoney(),0.001);
+				int source = ChangeMoneyTosource(pRecord.getPayMoney(),0.0005);
 				in_sr.setIncreaseScore(source);
+				StringBuffer descriptionBuffer = new StringBuffer();
+				descriptionBuffer.append("匹配").append(pRecord.getPayMoney())
+													.append("元付款记录,增加").append(source).append("积分");
+				in_sr.setDescription(descriptionBuffer.toString());
 				dao_List.sRc_Dao.add(in_sr);
 				/*插入积分*/
+				// 微信推送积分变更消息
+				WeixinPush_Service wp_ser = new WeixinPush_Service();
+				ConnectPerson connectPerson = connectPersonDao.findById(ConnectPerson.class,  connectp);
+				String url = wp_ser.pushoneUrl;
+				String userid = connectPerson.getWeixinid();	
+				String totalSource = connectPerson.getScore().toString();
+				Push_Template pushMessage = wp_ser.new Push_Template();
+				String[] changeState = in_sr.getDescription().split(",");
+				pushMessage.Create_ChangeScore_Template(connectp, userid, changeState[0], changeState[1], totalSource);
+				wp_ser.Push_OpSelect(url,WeixinPush_Service.CHANGE_SCORE, pushMessage);
 			}
 		}
 	}
 	
-	/**/
+	/**
+	 * ChangeMoneyTosource 将积分兑换成金钱
+	 * @param pay_money 付款金额
+	 * @param coefficient 系数
+	 * @return
+	 */
 	public int ChangeMoneyTosource(Double pay_money,Double coefficient){
-		return (int) (pay_money * coefficient);
+		Double threshold = 6000.0;
+		if (pay_money < threshold) {
+			return 3;
+		}
+		else
+			return (int) (pay_money * coefficient);
 	}
 	
 	/*进入对账模式*/
@@ -949,6 +976,13 @@ public class CheckAcManage {
 		public Owner() {
 	}
 		// TODO Auto-generated constructor stub
+	}
+	public String getWeiXinId(String username){
+		ConnectPerson connectPerson = connectPersonDao.findById(ConnectPerson.class, username);
+		if(connectPerson != null)
+			return connectPerson.getWeixinid();
+		else
+			return null;
 	}
 }
 	

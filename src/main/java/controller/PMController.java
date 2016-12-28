@@ -777,9 +777,10 @@ public class PMController {
      * @param request
      * @param response
      * @author zhangxinming
+     * @throws Exception 
      */
     @RequestMapping(value="/as_register")
-    public void Assistance_register(HttpServletRequest request,HttpServletResponse response){
+    public void Assistance_register(HttpServletRequest request,HttpServletResponse response) throws Exception{
     	logger.info("Get as_register request");
     	JSONObject re_jsonobject = new JSONObject();
     	
@@ -846,9 +847,10 @@ public class PMController {
      * @param request
      * @param response
      * @author zhangxinming
+     * @throws Exception 
      */
     @RequestMapping(value="/conectp_register")
-    public void Conectp_register(HttpServletRequest request,HttpServletResponse response){
+    public void Conectp_register(HttpServletRequest request,HttpServletResponse response) throws Exception{
     	logger.info("***Get Conectp_register request***");
     	try {
 			request.setCharacterEncoding("utf-8");
@@ -869,6 +871,7 @@ public class PMController {
     	String email = null;
     	String contractMes = null;
     	String cardid = null;
+    	String weixinid = null;
     	
 		try {
 			username = AES.aesDecrypt(request.getParameter("username"),AES.key);
@@ -883,6 +886,8 @@ public class PMController {
 	    	email = AES.aesDecrypt(request.getParameter("email"),AES.key);//邮箱
 	    	contractMes = AES.aesDecrypt(request.getParameter("contract_mes"),AES.key);//有效凭证
 	    	cardid = AES.aesDecrypt(request.getParameter("cardid"),AES.key);//对账联系人身份证
+	    	weixinid = AES.aesDecrypt(request.getParameter("weixinid"),AES.key);//
+	    	logger.info("weixinid:" + weixinid);
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -903,6 +908,7 @@ public class PMController {
     	inConnectPerson.setEmail(email);
     	inConnectPerson.setContractMes(contractMes);
     	inConnectPerson.setCardid(cardid);
+    	inConnectPerson.setWeixinid(weixinid);
     	inConnectPerson.setScore(0);
     	
     	Register_Manage register_Manage = pManage.new Register_Manage();

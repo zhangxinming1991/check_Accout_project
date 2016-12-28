@@ -10,6 +10,7 @@ import org.hibernate.Transaction;
 import org.hibernate.query.Query;
 
 import entity.Gift;
+import entity.LogisticInfo;
 import entity.ScoreExchangeRecord;
 
 /**
@@ -249,6 +250,23 @@ public class ScoreExchangeRecord_Dao {
 			System.out.println("update status  failed");
 			return 0;
 		}
+	}
+	
+	public ScoreExchangeRecord getInfoByRandKey(String randKey){
+		ScoreExchangeRecord scoreExchangeRecord = null;
+		try{
+			beginTransaction();
+			String sqlString = "from ScoreExchangeRecord where randKey = :randKey";
+			@SuppressWarnings({ "unchecked", "deprecation" })
+			List<ScoreExchangeRecord> resultList = session.createQuery(sqlString)
+																	.setParameter("randKey", randKey)
+																	.list();
+			scoreExchangeRecord = resultList.isEmpty() ? null : resultList.get(0);
+			endTransaction();
+		}catch(RuntimeException e){
+			System.out.println(e);
+		}
+		return scoreExchangeRecord;
 	}
 	
 	

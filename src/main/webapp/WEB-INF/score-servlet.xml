@@ -24,4 +24,6 @@
             <value></value>
         </property>
     </bean>
+	<bean id="multipartResolver" class="org.springframework.web.multipart.commons.CommonsMultipartResolver">       
+	</bean>
 </beans>

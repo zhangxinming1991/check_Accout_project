@@ -34,19 +34,23 @@ import com.sun.org.apache.bcel.internal.generic.NEW;
 
 import check_Asys.AutoCheckAuccount;
 import check_Asys.CheckAcManage;
+import check_Asys.WeixinPush_Service;
 import check_Asys.CheckAcManage.Export_CAResObject;
 import check_Asys.CheckAcManage.Import_Object;
 import check_Asys.CheckAcManage.Map_Object;
 import check_Asys.CheckAcManage.Owner;
 import check_Asys.CheckAcManage.Watch_CAResObject;
 import check_Asys.CheckAcManage.Watch_Object;
+import check_Asys.WeixinPush_Service.Push_Template;
 import check_Asys.OpLog_Service;
 import controller.FormManagerController.OwerAtr;
 import en_de_code.ED_Code;
 import encrypt_decrpt.AES;
+import entity.Agent;
 import entity.Assistance;
 import entity.BankInput;
 import entity.CaresultHistory;
+import entity.ConnectPerson;
 import entity.CusSecondstore;
 import entity.OriOrder;
 import entity.OriOrderId;
@@ -470,6 +474,18 @@ public class Check_MainController {
 			pRecord.setCheckResult(op_result.charAt(0));
 			cOp.dao_List.pDao.update(pRecord);
 			
+			// 微信推送审核付款记录结果消息
+			WeixinPush_Service wp_ser = new WeixinPush_Service();
+			String url = wp_ser.pushoneUrl;
+			String username = pRecord.getConnPerson();
+			String weixinId = cOp.getWeiXinId(username);	
+			Date date = new Date();
+			SimpleDateFormat sFormat = new SimpleDateFormat("yyyy年MM月dd日 HH:mm:ss");
+			String opTime = sFormat.format(date);
+			Push_Template pushMessage = wp_ser.new Push_Template();
+			pushMessage.Create_MapPayMes_Template(weixinId, username, pRecord.getCheckResult().toString(), opTime);
+			wp_ser.Push_OpSelect(url,WeixinPush_Service.Map_PayMes, pushMessage);
+			
 			jsonObject.element("flag", 0);
 			jsonObject.element("errmsg", "审阅成功");
 			OneKeyData_return(response, jsonObject, "checkResult", String.valueOf(op_result.charAt(0)));
@@ -574,7 +590,8 @@ public class Check_MainController {
 		String date = caid.substring(0, 8);
 		String owner = caid.substring(8);
 		String chinese_owner = null;
-		if (owner.equals("gd0001")) {
+
+/*		if (owner.equals("gd0001")) {
 			chinese_owner = "广东代理商";
 			caid = date + chinese_owner;
 		}
@@ -606,11 +623,37 @@ public class Check_MainController {
 			chinese_owner = "新疆代理商";
 			caid = date + chinese_owner;
 		}
+		else if (owner.equals("fj0001")) {
+			chinese_owner = "福建代理商";
+			caid = date + chinese_owner;
+		}
+		else if (owner.equals("sx0001")) {
+			chinese_owner = "陕西代理商";
+			caid = date + chinese_owner;
+		}
+		else if (owner.equals("qz0001")) {
+			chinese_owner = "青藏代理商";
+			caid = date + chinese_owner;
+		}
+		else if (owner.equals("zj0001")) {
+			chinese_owner = "浙江代理商";
+			caid = date + chinese_owner;
+		}
 		else {
 			chinese_owner = "未知代理商";
 			caid = date + chinese_owner;
-		}
+		}*/
 		
+		Agent agent = cOp.dao_List.agent_Dao.findById(Agent.class, owner);
+		if (agent != null) {
+			chinese_owner = agent.getAgentName();
+			caid = date + chinese_owner;
+		}
+		else {
+			logger_error.error("未知代理商");
+			chinese_owner = "未知代理商";
+			caid = date + chinese_owner;
+		}
 		return caid;
 	}
 	

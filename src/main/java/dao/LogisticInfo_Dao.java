@@ -68,18 +68,21 @@ public class LogisticInfo_Dao {
 		return logisticInfo;
 	}
 	
-	public void upload(LogisticInfo logisticInfo){
+	public int upload(LogisticInfo logisticInfo){
+		int result = -1;
 		try{
 			beginTransaction();
 			session.save(logisticInfo);
 			String sqlString = "update ScoreExchangeRecord set status = 2  where randKey = :randKey";
-			int result = session.createQuery(sqlString)
+			result = session.createQuery(sqlString)
 																	.setParameter("randKey", logisticInfo.getRandKey())
 																	.executeUpdate();
 			endTransaction();
 		}catch(RuntimeException e){
 			System.out.println(e);
+			logger.error("更新物流信息失败，流水号" + logisticInfo.getRandKey());
 		}
+		return result;
 	}
 	
 	public void Close_Connect(){
