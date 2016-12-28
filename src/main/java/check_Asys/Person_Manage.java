@@ -312,6 +312,11 @@ public class Person_Manage {
 			cPerson.setFlag(ctlflag);
 			cDao.update(cPerson);
 		}
+		else if(ctltype.equals("am")){
+			Assistance assistance = aS_Dao.findById(Assistance.class, id);
+			assistance.setFlag(ctlflag);
+			aS_Dao.update(assistance);
+		}
 		return true;
 	}
 	
@@ -900,7 +905,8 @@ public class Person_Manage {
 	 */
 	public String ChangeAgentToChinese(String agent) {
 		String chinese_agent = null;
-		if (agent.equals("gd0001")) {
+
+		/*if (agent.equals("gd0001")) {
 			chinese_agent = "广东代理商";
 			
 		}
@@ -965,6 +971,14 @@ public class Person_Manage {
 			chinese_agent = "甘肃代理商";
 		}
 		else {
+			chinese_agent = "未知代理商";
+		}*/
+		
+		Agent fAgent = agent_Dao.findById(Agent.class, agent);
+		if (fAgent != null) {
+			chinese_agent = fAgent.getAgentName();
+		}
+		else{
 			chinese_agent = "未知代理商";
 		}
 		

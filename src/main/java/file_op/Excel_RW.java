@@ -228,7 +228,7 @@ public class Excel_RW {
 			cell_body.setCellValue(order.getNum());
 			SetCellStyle(wXssfWorkbook,cell_body);
 			
-			cell_body = row_body.createCell(NameToValue_Ori("contract"));//分期销售设备编号/按揭、融资合同号
+	//		cell_body = row_body.createCell(NameToValue_Ori("contract"));//分期销售设备编号/按揭、融资合同号
 			cell_body.setCellValue(order.getOrderNum());
 			SetCellStyle(wXssfWorkbook,cell_body);
 			
@@ -252,11 +252,11 @@ public class Excel_RW {
 			cell_body.setCellValue(order.getId().getCuscompanyid());
 			SetCellStyle(wXssfWorkbook,cell_body);
 			
-			cell_body = row_body.createCell(NameToValue_Ori("productTime"));//发货时间
+//			cell_body = row_body.createCell(NameToValue_Ori("productTime"));//发货时间
 			cell_body.setCellValue(order.getProductTime());
 			SetCellStyle(wXssfWorkbook,cell_body);
 			
-			cell_body = row_body.createCell(NameToValue_Ori("paymentOwner"));//货款主体
+//			cell_body = row_body.createCell(NameToValue_Ori("paymentOwner"));//货款主体
 			cell_body.setCellValue(order.getOwnerProduct());
 			SetCellStyle(wXssfWorkbook,cell_body);
 			
@@ -567,9 +567,9 @@ public class Excel_RW {
 		order.setId(orderId);
 		order.setClient(clientName);//设置客户名称
 		//order.setCuscompanyid(re_row.list.get(Ori_Excel_Format.cusCompanyid.compareTo(Ori_Excel_Format.num)));//设置客户身份证或者组织机构代码证
-		order.setOrderNum(re_row.list.get(Ori_Excel_Format.contract.compareTo(Ori_Excel_Format.num)));//设置合同号
-		order.setProductTime(re_row.list.get(Ori_Excel_Format.productTime.compareTo(Ori_Excel_Format.num)));//发货时间
-		order.setOwnerProduct(re_row.list.get(Ori_Excel_Format.paymentOwner.compareTo(Ori_Excel_Format.num)));//货款主体
+		//order.setOrderNum(re_row.list.get(Ori_Excel_Format.contract.compareTo(Ori_Excel_Format.num)));//设置合同号
+		//order.setProductTime(re_row.list.get(Ori_Excel_Format.productTime.compareTo(Ori_Excel_Format.num)));//发货时间
+		//order.setOwnerProduct(re_row.list.get(Ori_Excel_Format.paymentOwner.compareTo(Ori_Excel_Format.num)));//货款主体
 		
 		String totalMoney = re_row.list.get(Ori_Excel_Format.totalMoney.compareTo(Ori_Excel_Format.num));
 		String debetMoney = re_row.list.get(Ori_Excel_Format.debetMoney.compareTo(Ori_Excel_Format.num));
@@ -644,7 +644,7 @@ public class Excel_RW {
 		
 		bInput.setPayer(eRow.list.get(NameToValue_BankInput("client")));//设置付款人名称
 	//	bInput.setCuscompanyid(eRow.list.get(NameToValue_BankInput("cuscompanyid")));//客户码
-		bInput.setPayerAccount(eRow.list.get(NameToValue_BankInput("outAccount")));//设置付款人帐号
+	//	bInput.setPayerAccount(eRow.list.get(NameToValue_BankInput("outAccount")));//设置付款人帐号
 		bInput.setPaymentNature(eRow.list.get(NameToValue_BankInput("paymentNature")));
 		bInput.setStatus(false);
 		bInput.setIsConnect(false);
@@ -707,7 +707,7 @@ public class Excel_RW {
 		public static final int input = 15;//本月回款
 	}*/
 	
-	public enum Ori_Excel_Format{
+/*	public enum Ori_Excel_Format{
 		num,//序号
 		province,//省份
 		clientName,//客户名称
@@ -726,6 +726,17 @@ public class Excel_RW {
 		payway,//付款方式
 		inputMonth,//本月回款
 		inputClient//客户回款
+	}*/
+	
+	public enum Ori_Excel_Format{
+		num,//序号
+		province,//省份
+		clientName,//客户名称
+		cusCompanyid,//客户id
+		paymentNature,//货款性质
+		totalMoney,//合同总额
+		debetMoney,//在外金额
+		inputMonth,//本月回款
 	}
 	
 	public static int NameToValue_Ori(String name){
@@ -748,7 +759,6 @@ public class Excel_RW {
 		num,//序号
 		province,//省份
 		inAccountName,//收款账户
-		outAccount,//付款账户
 		actualPayer,//实际付款人
 		inTime,//到帐日期
 		inWay,//付款方式
@@ -756,7 +766,6 @@ public class Excel_RW {
 		inMoney,//收款金额
 		client,//法定客户名称
 		paymentNature,//货款性质
-		partMoney,//拆分金额
 		remark//收款摘要
 	}
 	

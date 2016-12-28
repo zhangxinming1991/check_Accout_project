@@ -980,6 +980,7 @@ public class PMController {
 	    	contractMes = AES.aesDecrypt(request.getParameter("contract_mes"),AES.key);//有效凭证
 	    	cardid = AES.aesDecrypt(request.getParameter("cardid"),AES.key);//对账联系人身份证
 	    	weixinid = AES.aesDecrypt(request.getParameter("weixinid"),AES.key);//
+	    	logger.info("weixinid:" + weixinid);
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
