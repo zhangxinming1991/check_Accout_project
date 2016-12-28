@@ -286,24 +286,27 @@ public class Assistance_Dao {
 		}
 		
 	}
-	
 	public boolean checkExistBu(String agentId, int flag){
-		boolean result = false;
-		try {
-			beginTransaction();
-			String sqlString = "select count(*) from Assistance where agentid = :agentId and flag = :flag";
-			Query query =   session.createQuery(sqlString).setParameter("agentId", agentId).setParameter("flag", flag);
-			int num = ((Long)query.uniqueResult()).intValue();
-			if(num != 0)
-				result = true;
-			endTransaction();
-		} catch (RuntimeException e) {
-			logger.error("检查代理商财务状态失败");
-			// TODO: handle exception
-		}
-		return result;
+			boolean result = false;
+			try {
+					beginTransaction();
+					String sqlString = "select count(*) from Assistance where agentid = :agentId and usertype = :usertype and flag = :flag";
+					Query query =   session.createQuery(sqlString)
+															.setParameter("agentId", agentId)
+															.setParameter("usertype", "bu")
+															.setParameter("flag", flag);
+					@SuppressWarnings("deprecation")
+					int num = ((Long)query.uniqueResult()).intValue();
+					if(num != 0)
+						result = true;
+					endTransaction();
+				} catch (RuntimeException e) {
+					logger.error("检查存在可用的代理商财务失败: " + e);
+					// TODO: handle exception
+				}
+				return result;
 	}
-	
+
 	public void Close_Connect(){
 		
 	/*	try {

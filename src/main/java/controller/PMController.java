@@ -52,6 +52,7 @@ import dao.ConnectPerson_Dao;
 import en_de_code.ED_Code;
 import encrypt_decrpt.AES;
 import entity.Agent;
+import encrypt_decrpt.CreateMD5;
 import entity.Assistance;
 import entity.Backup;
 import entity.ConnectPerson;
@@ -69,7 +70,7 @@ import javax.mail.internet.*;
 import javax.activation.*;
 
 /**
- * PMController ÈËÔ±¹ÜÀí½Ó¿ÚÀà £¬Ìá¹©µÄ½Ó¿Ú°üÀ¨ÓÃ»§×¢²á£¬¿ØÖÆÓÃ»§È¨ÏŞ,²Ù×÷ÈÕÖ¾²é¿´£¬Êı¾İ¿â±¸·İ
+ * PMController äººå‘˜ç®¡ç†æ¥å£ç±» ï¼Œæä¾›çš„æ¥å£åŒ…æ‹¬ç”¨æˆ·æ³¨å†Œï¼Œæ§åˆ¶ç”¨æˆ·æƒé™,æ“ä½œæ—¥å¿—æŸ¥çœ‹ï¼Œæ•°æ®åº“å¤‡ä»½
  * @author zhangxinming
  * @modify LinLi
  * @version 1.1.0
@@ -85,7 +86,98 @@ public class PMController {
 	private static AES ase = new AES();
 	
 	/**
-	 * GetResetPwdVerifyCode »ñÈ¡ÖØÉèÃÜÂëµÄÑéÖ¤Âë
+	 * ModifyClientMes å®¢æˆ·ä¿®æ”¹ä¸ªäººä¿¡æ¯
+	 * @param request
+	 * @param response
+	 */
+	@RequestMapping(value="/modifyAssistanceMes")
+	public void ModifyAssistanceMes(HttpServletRequest request,HttpServletResponse response){
+		logger.info("***Get modifyClientMes request***");
+		
+		JSONObject re_jsonobject = new JSONObject();
+		
+    	String workId = null;
+    	String name = null;
+    	String phone = null;
+    	String email = null;
+    	String agentid = null;
+    	String agentname = null;
+        try {
+			String request_s = IOUtils.toString(request.getInputStream());
+			String request_s_de = AES.aesDecrypt(request_s, AES.key);
+			logger.info("receive" + request_s_de);
+			JSONObject jstr = JSONObject.fromObject(request_s_de);
+			workId = jstr.getString("username");//è·å–ç™»å½•id
+			name = jstr.getString("name");//è·å–ç™»å½•å¯†ç 
+			phone = jstr.getString("phone");
+			email = jstr.getString("email");
+		//	agentid = jstr.getString("agentid");
+			agentname = jstr.getString("agentname");
+
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			logger_error.error("è·å–æäº¤å‚æ•°å¤±è´¥" + e);
+			e.printStackTrace();
+			
+			
+			re_jsonobject.element("flag", -1);
+			re_jsonobject.element("errmsg", "è·å–æäº¤å‚æ•°å¤±è´¥");
+			Common_return_en(response,re_jsonobject);
+			return;
+		}
+        
+        Assistance mf_assis = new Assistance();
+        mf_assis.setWorkId(workId);
+        mf_assis.setName(name);
+        mf_assis.setPhone(phone);
+        mf_assis.setEmail(email);
+        
+        re_jsonobject = pManage.ModifyAssistanceMes(mf_assis);
+        if (re_jsonobject.getInt("flag") == 0) {
+			re_jsonobject.element("flag", 0);
+			re_jsonobject.element("errmsg", "ä¿®æ”¹ä¸ªäººä¿¡æ¯æˆåŠŸ");
+			Common_return_en(response,re_jsonobject);
+			oLog_Service.AddLog(ChangeUsertypeToChinses(re_jsonobject.getString("usertype")), workId, OpLog_Service.MODIFY_MES, OpLog_Service.result_success);
+			return;
+		}
+        else if (re_jsonobject.getInt("flag") == -1) {
+			oLog_Service.AddLog(ChangeUsertypeToChinses(re_jsonobject.getString("usertype")), workId, OpLog_Service.MODIFY_MES, OpLog_Service.result_success);
+			re_jsonobject.element("flag", -1);
+			re_jsonobject.element("errmsg", "ä¿®æ”¹ä¸ªäººä¿¡æ¯å¤±è´¥");
+			Common_return_en(response,re_jsonobject);
+			return;
+		}
+        else {
+			oLog_Service.AddLog(ChangeUsertypeToChinses(re_jsonobject.getString("usertype")), workId, OpLog_Service.MODIFY_MES, OpLog_Service.result_success);
+			re_jsonobject.element("flag", -1);
+			re_jsonobject.element("errmsg", "ç”¨æˆ·åä¸å­˜åœ¨");
+			Common_return_en(response,re_jsonobject);
+			return;
+		}
+	}
+	
+	/**
+	 * è½¬æ¢ç”¨æˆ·ç±»å‹ä¸ºå¯¹åº”ä¸­æ–‡
+	 * @param usertype
+	 * @return
+	 */
+	public String ChangeUsertypeToChinses(String usertype){
+		if (usertype.equals("bm")) {
+			return "è¶…çº§ç®¡ç†å‘˜";
+		}
+		else if (usertype.equals("bu")) {
+			return "ä»£ç†å•†è´¢åŠ¡";
+		}
+		else if (usertype.equals("ba")) {
+			return "ä»£ç†å•†ç®¡ç†å‘˜";
+		}
+		else {
+			return "æœªçŸ¥ç”¨æˆ·ç±»å‹";
+		}
+	}
+	
+	/**
+	 * GetResetPwdVerifyCode è·å–é‡è®¾å¯†ç çš„éªŒè¯ç 
 	 */
 	@RequestMapping(value="/getresetpwdverifycode")
 	public void  GetResetPwdVerifyCode(HttpServletRequest request,HttpServletResponse response) {
@@ -103,37 +195,37 @@ public class PMController {
 			String request_s_de = AES.aesDecrypt(request_s, AES.key);
 			logger.info("receive" + request_s_de);
 			JSONObject jstr = JSONObject.fromObject(request_s_de);
-			username = jstr.getString("username");//»ñÈ¡µÇÂ¼id
-			verify_way = jstr.getString("verify_way");//»ñÈ¡µÇÂ¼ÃÜÂë
+			username = jstr.getString("username");//è·å–ç™»å½•id
+			verify_way = jstr.getString("verify_way");//è·å–ç™»å½•å¯†ç 
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
-			logger_error.error("»ñÈ¡Ìá½»²ÎÊıÊ§°Ü" + e);
+			logger_error.error("è·å–æäº¤å‚æ•°å¤±è´¥" + e);
 			e.printStackTrace();
 			
 			
 			re_jsonobject.element("flag", -1);
-			re_jsonobject.element("errmsg", "»ñÈ¡Ìá½»²ÎÊıÊ§°Ü");
+			re_jsonobject.element("errmsg", "è·å–æäº¤å‚æ•°å¤±è´¥");
 			Common_return_en(response,re_jsonobject);
 		}
         
-		//ÅĞ¶ÏÓÃ»§ÊÇ·ñ´æÔÚ
+		//åˆ¤æ–­ç”¨æˆ·æ˜¯å¦å­˜åœ¨
 		Assistance fAssistance = pManage.aS_Dao.findById(Assistance.class, username);
 		if (fAssistance == null) {
-			logger_error.error("ÓÃ»§Ãû²»´æÔÚ");
+			logger_error.error("ç”¨æˆ·åä¸å­˜åœ¨");
 			re_jsonobject.element("flag", -1);
-			re_jsonobject.element("errmsg", "ÓÃ»§Ãû²»´æÔÚ");
+			re_jsonobject.element("errmsg", "ç”¨æˆ·åä¸å­˜åœ¨");
 			Common_return_en(response,re_jsonobject);
 		}
 		
-		//ÅĞ¶Ï»ñÈ¡ÑéÖ¤ÂëµÄ·½Ê½
+		//åˆ¤æ–­è·å–éªŒè¯ç çš„æ–¹å¼
 		if (verify_way.equals("mobile")) {
-			logger.warn("ÔİÊ±²»Ö§³ÖÊÖ»ú»ñÈ¡ÑéÖ¤ÂëµÄ·½Ê½");
+			logger.warn("æš‚æ—¶ä¸æ”¯æŒæ‰‹æœºè·å–éªŒè¯ç çš„æ–¹å¼");
 			re_jsonobject.element("flag", -1);
-			re_jsonobject.element("errmsg", "ÔİÊ±²»Ö§³ÖÊÖ»ú»ñÈ¡ÑéÖ¤ÂëµÄ·½Ê½");
+			re_jsonobject.element("errmsg", "æš‚æ—¶ä¸æ”¯æŒæ‰‹æœºè·å–éªŒè¯ç çš„æ–¹å¼");
 			Common_return_en(response,re_jsonobject);
 		}
 		
-		//Éú³ÉÑéÖ¤Âë¼°Ê±¼äµã
+		//ç”ŸæˆéªŒè¯ç åŠæ—¶é—´ç‚¹
 		String verify_code = RandomCreate.createRandomString(6);
 		Double timepoint = Double.parseDouble(new SimpleDateFormat("yyyyMMddHHmmss").format(new Date()));
 		
@@ -157,14 +249,14 @@ public class PMController {
 	      properties.put("mail.store.protocol", "pop3");
 	      properties.put("mail.transport.protocol", "smtp");
 	      properties.put("mail.user", "simon_nudt@sina.com");
-	        // ·ÃÎÊSMTP·şÎñÊ±ĞèÒªÌá¹©µÄÃÜÂë
+	        // è®¿é—®SMTPæœåŠ¡æ—¶éœ€è¦æä¾›çš„å¯†ç 
 	      properties.put("mail.password", "ABCD1234");
 	      
-	        // ¹¹½¨ÊÚÈ¨ĞÅÏ¢£¬ÓÃÓÚ½øĞĞSMTP½øĞĞÉí·İÑéÖ¤
+	        // æ„å»ºæˆæƒä¿¡æ¯ï¼Œç”¨äºè¿›è¡ŒSMTPè¿›è¡Œèº«ä»½éªŒè¯
 	        Authenticator authenticator = new Authenticator() {
 	            @Override
 	            protected PasswordAuthentication getPasswordAuthentication() {
-	                // ÓÃ»§Ãû¡¢ÃÜÂë
+	                // ç”¨æˆ·åã€å¯†ç 
 	                String userName = "simon_nudt@sina.com";
 	                String password = "ABCD1234";
 	                return new PasswordAuthentication(userName, password);
@@ -184,10 +276,10 @@ public class PMController {
 	          message.addRecipient(Message.RecipientType.TO, new InternetAddress(to_test_1));
 
 	          // Set Subject: header field
-	          message.setSubject("ÖØÖÃÃÜÂëËùĞèµÄÑéÖ¤Âë");
+	          message.setSubject("é‡ç½®å¯†ç æ‰€éœ€çš„éªŒè¯ç ");
 	          
 	          // Send the actual HTML message, as big as you like
-	          String show = "<h1>ÖØÖÃÃÜÂëËùĞèµÄÑéÖ¤ÂëÈçÏÂ:<h1></br>";
+	          String show = "<h1>é‡ç½®å¯†ç æ‰€éœ€çš„éªŒè¯ç å¦‚ä¸‹:<h1></br>";
 	          show = "<h1>" + verify_code + "<h1></br>";
 	          message.setContent(show, " text/html;charset=UTF-8");
 	          
@@ -203,12 +295,12 @@ public class PMController {
 	      }
 	      
 			re_jsonobject.element("flag", 0);
-			re_jsonobject.element("errmsg", "ÑéÖ¤ÂëÒÑ¾­·¢µ½ÓÊÏä£¬ÓÊ¼şÓĞ¿ÉÄÜ±»µ±³ÉÀ¬»øÓÊ¼ş£¬Çë×¢Òâ!");
+			re_jsonobject.element("errmsg", "éªŒè¯ç å·²ç»å‘åˆ°é‚®ç®±ï¼Œé‚®ä»¶æœ‰å¯èƒ½è¢«å½“æˆåƒåœ¾é‚®ä»¶ï¼Œè¯·æ³¨æ„!");
 			Common_return_en(response,re_jsonobject);
 	}
 	
 	/**
-	 * ResetPwd ÖØÉèÃÜÂë
+	 * ResetPwd é‡è®¾å¯†ç 
 	 * @param request
 	 * @param response
 	 */
@@ -227,9 +319,9 @@ public class PMController {
 		
 		Assistance fAssistance = pManage.aS_Dao.findById(Assistance.class, username);
 		if (fAssistance == null) {
-			logger_error.error("ÓÃ»§²»´æÔÚ");
+			logger_error.error("ç”¨æˆ·ä¸å­˜åœ¨");
 			try {
-				response.getWriter().write("ÖØÖÃÊ§°Ü");
+				response.getWriter().write("é‡ç½®å¤±è´¥");
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -238,9 +330,9 @@ public class PMController {
 		}
 		
 		if (!fAssistance.getResetId().equals(resetid)) {
-			logger_error.error("ÖØÖÃÊ§°Ü,resetidÎŞĞ§");
+			logger_error.error("é‡ç½®å¤±è´¥,resetidæ— æ•ˆ");
 			try {
-				response.getWriter().write("ÖØÖÃÊ§°Ü");
+				response.getWriter().write("é‡ç½®å¤±è´¥");
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -252,11 +344,12 @@ public class PMController {
 		String pwd_again = request.getParameter("pwd_again");
 		logger.info(username + ":" + pwd);
 		if (!pwd.equals(pwd_again)) {
-			logger_error.error("ÃÜÂë²»Ò»ÖÂ");
+			logger_error.error("å¯†ç ä¸ä¸€è‡´");
 			return;
 		}
 		
-		fAssistance.setPassword(pwd);
+		String md5_pwd = CreateMD5.getMd5(pwd);
+		fAssistance.setPassword(md5_pwd);
 		fAssistance.setResetId("****");
 		pManage.aS_Dao.update(fAssistance);
 		
@@ -278,7 +371,7 @@ public class PMController {
 		Weixin_Managr wManagr = pManage.new Weixin_Managr();
 		String action = null;
 		action = request.getParameter("action");
-		logger.info("action£º" + action);
+		logger.info("actionï¼š" + action);
 		
 		if (action.equals("query")) {
 			String weixinid = null;
@@ -288,9 +381,9 @@ public class PMController {
 			} catch (Exception e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
-				logger_error.error("»ñÈ¡Î¢ĞÅ²ÎÊıÊ§°Ü:" + e);
+				logger_error.error("è·å–å¾®ä¿¡å‚æ•°å¤±è´¥:" + e);
 				re_json.element("flag", -1);
-				re_json.element("errmsg", "»ñÈ¡Î¢ĞÅ²ÎÊıÊ§°Ü:" + e);
+				re_json.element("errmsg", "è·å–å¾®ä¿¡å‚æ•°å¤±è´¥:" + e);
 				response.addHeader("Access-Control-Allow-Origin", "*");	
 				Common_return(response,re_json);
 				return;
@@ -298,23 +391,23 @@ public class PMController {
 			
 /*			List<WeixinBindConnectPerson> fwxbc = pManage.weixinbc_Dao.FindBySpeElement_S("weixinid", weixinid);
 			if (fwxbc.size() == 0) {
-				logger.warn("Î¢ĞÅÎŞĞ§£¬Ã»ÓĞÕÒµ½ÏàÓ¦µÄÎ¢ĞÅ°ó¶¨¶ÔÕËÁªÏµÈËĞÅÏ¢");
+				logger.warn("å¾®ä¿¡æ— æ•ˆï¼Œæ²¡æœ‰æ‰¾åˆ°ç›¸åº”çš„å¾®ä¿¡ç»‘å®šå¯¹è´¦è”ç³»äººä¿¡æ¯");
 				re_json.element("flag", -1);
-				re_json.element("errmsg", "Î¢ĞÅÎŞĞ§£¬Ã»ÓĞÕÒµ½ÏàÓ¦µÄÎ¢ĞÅ°ó¶¨¶ÔÕËÁªÏµÈËĞÅÏ¢");
+				re_json.element("errmsg", "å¾®ä¿¡æ— æ•ˆï¼Œæ²¡æœ‰æ‰¾åˆ°ç›¸åº”çš„å¾®ä¿¡ç»‘å®šå¯¹è´¦è”ç³»äººä¿¡æ¯");
 				Common_return(response,re_json);
 			}
 			else {
 				String cp_username = fwxbc.get(0).getUsername();
 				ConnectPerson fPerson = pManage.cDao.findById(ConnectPerson.class, cp_username);
 				if (fPerson == null) {
-					logger.error("ÓÃ»§ÃûÎŞĞ§£¬ÕÒ²»µ½ÏàÓ¦¶ÔÕËÁªÏµÈË");
+					logger.error("ç”¨æˆ·åæ— æ•ˆï¼Œæ‰¾ä¸åˆ°ç›¸åº”å¯¹è´¦è”ç³»äºº");
 					re_json.element("flag", -1);
-					re_json.element("errmsg", "ÓÃ»§ÃûÎŞĞ§£¬Ã»ÓĞÕÒµ½ÏàÓ¦µÄ¶ÔÕËÁªÏµÈË");
+					re_json.element("errmsg", "ç”¨æˆ·åæ— æ•ˆï¼Œæ²¡æœ‰æ‰¾åˆ°ç›¸åº”çš„å¯¹è´¦è”ç³»äºº");
 					Common_return(response,re_json);
 				}
 				else {
 					re_json.element("flag", 0);
-					re_json.element("errmsg", "ÕÒµ½¶ÔÓ¦µÄ¶ÔÕËÁªÏµÈË");
+					re_json.element("errmsg", "æ‰¾åˆ°å¯¹åº”çš„å¯¹è´¦è”ç³»äºº");
 					OneKeyData_return_enData(response, re_json, "connectp", fPerson);
 				}
 			}*/
@@ -330,10 +423,10 @@ public class PMController {
 			} catch (Exception e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
-				logger_error.error("»ñÈ¡²ÎÊıÊ§°Ü" + e);
+				logger_error.error("è·å–å‚æ•°å¤±è´¥" + e);
 				
 				re_json.element("flag", -1);
-				re_json.element("errmsg", "»ñÈ¡²ÎÊıÊ§°Ü" + e);
+				re_json.element("errmsg", "è·å–å‚æ•°å¤±è´¥" + e);
 				response.addHeader("Access-Control-Allow-Origin", "*");	
 				Common_return(response,re_json);
 				return;
@@ -341,20 +434,20 @@ public class PMController {
 		
 		/*	WeixinBindConnectPerson fwxbc = pManage.weixinbc_Dao.findById(WeixinBindConnectPerson.class, username);
 			if (fwxbc == null) {
-				logger_error.error("ÎŞ·¨¶¨Î»Î¢ĞÅ°ó¶¨¶ÔÕËÁªÏµÈËĞÅÏ¢");
+				logger_error.error("æ— æ³•å®šä½å¾®ä¿¡ç»‘å®šå¯¹è´¦è”ç³»äººä¿¡æ¯");
 				re_json.element("flag", -1);
-				re_json.element("errmsg", "ÎŞ·¨¶¨Î»Î¢ĞÅ°ó¶¨¶ÔÕËÁªÏµÈËĞÅÏ¢");
+				re_json.element("errmsg", "æ— æ³•å®šä½å¾®ä¿¡ç»‘å®šå¯¹è´¦è”ç³»äººä¿¡æ¯");
 				Common_return(response,re_json);
 			}
 			else {
 				if(pManage.weixinbc_Dao.delete(fwxbc)){
 					re_json.element("flag", 0);
-					re_json.element("errmsg", "ÒÑÉ¾³ıÏàÓ¦µÄ¶ÔÕËÁªÏµÈËĞÅÏ¢");
+					re_json.element("errmsg", "å·²åˆ é™¤ç›¸åº”çš„å¯¹è´¦è”ç³»äººä¿¡æ¯");
 					Common_return(response,re_json);					
 				}
 				else {
 					re_json.element("flag", -1);
-					re_json.element("errmsg", "É¾³ıÊ§°Ü");
+					re_json.element("errmsg", "åˆ é™¤å¤±è´¥");
 					Common_return(response,re_json);	
 				}
 			}*/
@@ -373,9 +466,9 @@ public class PMController {
 			} catch (Exception e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
-				logger_error.error("»ñÈ¡²ÎÊıÊ§°Ü" + e);
+				logger_error.error("è·å–å‚æ•°å¤±è´¥" + e);
 				re_json.element("flag", -1);
-				re_json.element("errmsg", "ÒÑÉ¾³ıÏàÓ¦µÄ¶ÔÕËÁªÏµÈËĞÅÏ¢");
+				re_json.element("errmsg", "å·²åˆ é™¤ç›¸åº”çš„å¯¹è´¦è”ç³»äººä¿¡æ¯");
 				response.addHeader("Access-Control-Allow-Origin", "*");	
 				Common_return(response,re_json);	
 				return;
@@ -383,18 +476,18 @@ public class PMController {
 			
 	/*		WeixinBindConnectPerson fwxbc = pManage.weixinbc_Dao.findById(WeixinBindConnectPerson.class, username);
 			if (fwxbc == null) {
-				logger.info("Î¢ĞÅ°ó¶¨ÓÃ»§ĞÅÏ¢²»´æÔÚ");
+				logger.info("å¾®ä¿¡ç»‘å®šç”¨æˆ·ä¿¡æ¯ä¸å­˜åœ¨");
 				WeixinBindConnectPerson in_wxc = new WeixinBindConnectPerson();
 				in_wxc.setUsername(username);
 				in_wxc.setWeixinid(weixinid);
 				if(pManage.weixinbc_Dao.add(in_wxc)){
 					re_json.element("flag", 0);
-					re_json.element("errmsg", "Ìí¼ÓÎ¢ĞÅ°ó¶¨¶ÔÕËÁªÏµÈË¼ÇÂ¼³É¹¦");
+					re_json.element("errmsg", "æ·»åŠ å¾®ä¿¡ç»‘å®šå¯¹è´¦è”ç³»äººè®°å½•æˆåŠŸ");
 					Common_return(response,re_json);	
 				}
 				else {
 					re_json.element("flag", -1);
-					re_json.element("errmsg", "Ìí¼ÓÎ¢ĞÅ°ó¶¨¶ÔÕËÁªÏµÈË¼ÇÂ¼Ê§°Ü");
+					re_json.element("errmsg", "æ·»åŠ å¾®ä¿¡ç»‘å®šå¯¹è´¦è”ç³»äººè®°å½•å¤±è´¥");
 					Common_return(response,re_json);	
 				}
 			}
@@ -403,12 +496,12 @@ public class PMController {
 				fwxbc.setWeixinid(weixinid);
 				if(pManage.weixinbc_Dao.update(fwxbc)){
 					re_json.element("flag", 0);
-					re_json.element("errmsg", "¸üĞÂÎ¢ĞÅ°ó¶¨¶ÔÕËÁªÏµÈË³É¹¦");
+					re_json.element("errmsg", "æ›´æ–°å¾®ä¿¡ç»‘å®šå¯¹è´¦è”ç³»äººæˆåŠŸ");
 					Common_return(response,re_json);					
 				}
 				else {
 					re_json.element("flag", -1);
-					re_json.element("errmsg", "¸üĞÂÎ¢ĞÅ°ó¶¨¶ÔÕËÁªÏµÈËÊ§°Ü");
+					re_json.element("errmsg", "æ›´æ–°å¾®ä¿¡ç»‘å®šå¯¹è´¦è”ç³»äººå¤±è´¥");
 					Common_return(response,re_json);	
 				}
 			}*/
@@ -417,14 +510,14 @@ public class PMController {
 			Common_return(response, re_json);
 		}
 		else {
-			logger_error.error("Î´Öªaction:¡¾" + action + "¡¿");
+			logger_error.error("æœªçŸ¥action:ã€" + action + "ã€‘");
 			
 		}
 		
 	}
 	
 	/**
-	 * ResetPwdLink ½ÓÊÜÖØÉèÃÜÂëµÄÇëÇó£¬²¢ÇÒ×ª·¢ÇëÇóµ½ÖØÉèÃÜÂëÒ³Ãæ
+	 * ResetPwdLink æ¥å—é‡è®¾å¯†ç çš„è¯·æ±‚ï¼Œå¹¶ä¸”è½¬å‘è¯·æ±‚åˆ°é‡è®¾å¯†ç é¡µé¢
 	 * @param request
 	 * @param response
 	 */
@@ -442,13 +535,13 @@ public class PMController {
 		String username = request.getParameter("username");
 		logger.info(username + ":" + resetid);
 		
-		//ÅĞ¶ÏÖØÖÃidÊÇ·ñÓĞĞ§
+		//åˆ¤æ–­é‡ç½®idæ˜¯å¦æœ‰æ•ˆ
 		Assistance fAssistance = pManage.aS_Dao.findById(Assistance.class, username);
 		if (fAssistance == null) {
-			logger_error.error("ÓÃ»§Ãû²»´æÔÚ");
+			logger_error.error("ç”¨æˆ·åä¸å­˜åœ¨");
 			try {
 				response.setCharacterEncoding("utf-8");
-				response.getWriter().write("ÓÃ»§Ãû´æÔÚ");
+				response.getWriter().write("ç”¨æˆ·åå­˜åœ¨");
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -457,10 +550,10 @@ public class PMController {
 		}
 		
 		if (!fAssistance.getResetId().equals(resetid)) {
-			logger_error.error("ÑéÖ¤³ö´í£¬ÎŞ·¨ÖØÖÃÃÜÂë");
+			logger_error.error("éªŒè¯å‡ºé”™ï¼Œæ— æ³•é‡ç½®å¯†ç ");
 			try {
 				response.setCharacterEncoding("utf-8");
-				response.getWriter().write("ÑéÖ¤³ö´í£¬ÎŞ·¨ÖØÖÃÃÜÂë");
+				response.getWriter().write("éªŒè¯å‡ºé”™ï¼Œæ— æ³•é‡ç½®å¯†ç ");
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -470,10 +563,10 @@ public class PMController {
 		
 		Double curtime = Double.parseDouble(new SimpleDateFormat("yyyyMMddHHmmss").format(new Date()));
 		if(curtime - fAssistance.getTimepoint() > 60){
-			logger_error.error("ÑéÖ¤Á´½ÓÒÑ¾­¹ıÆÚ");
+			logger_error.error("éªŒè¯é“¾æ¥å·²ç»è¿‡æœŸ");
 			try {
 				response.setCharacterEncoding("utf-8");
-				response.getWriter().write("ÑéÖ¤Á´½ÓÒÑ¾­¹ıÆÚ");
+				response.getWriter().write("éªŒè¯é“¾æ¥å·²ç»è¿‡æœŸ");
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -494,7 +587,7 @@ public class PMController {
 	
 	
 	/**
-	 * ForgetAndResetPwd Íü¼ÇÃÜÂë
+	 * ForgetAndResetPwd å¿˜è®°å¯†ç 
 	 */
 	@RequestMapping(value="/forgetandsendmail")
 	public void ForgetandSendmail(HttpServletRequest request,HttpServletResponse response){
@@ -502,7 +595,7 @@ public class PMController {
 		if (user_session == null) {
 			JSONObject jsonObject = new JSONObject();
 			jsonObject.element("flag", -1);
-			jsonObject.element("errmsg", "µÇÂ¼³¬Ê±£¬ÇëÖØĞÂµÇÂ¼");
+			jsonObject.element("errmsg", "ç™»å½•è¶…æ—¶ï¼Œè¯·é‡æ–°ç™»å½•");
 			Common_return_en(response,jsonObject);
 			return;
 		}*/
@@ -520,16 +613,16 @@ public class PMController {
 			String request_s_de = AES.aesDecrypt(request_s, AES.key);
 			logger.info("receive" + request_s_de);
 			JSONObject jstr = JSONObject.fromObject(request_s_de);
-			username = jstr.getString("username");//»ñÈ¡µÇÂ¼id
-			verify_code = jstr.getString("verify_code");//»ñÈ¡µÇÂ¼ÃÜÂë
+			username = jstr.getString("username");//è·å–ç™»å½•id
+			verify_code = jstr.getString("verify_code");//è·å–ç™»å½•å¯†ç 
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
-			logger_error.error("»ñÈ¡Ìá½»²ÎÊıÊ§°Ü" + e);
+			logger_error.error("è·å–æäº¤å‚æ•°å¤±è´¥" + e);
 			e.printStackTrace();
 			
 			
 			re_jsonobject.element("flag", -1);
-			re_jsonobject.element("errmsg", "»ñÈ¡Ìá½»²ÎÊıÊ§°Ü");
+			re_jsonobject.element("errmsg", "è·å–æäº¤å‚æ•°å¤±è´¥");
 			Common_return_en(response,re_jsonobject);
 			return;
 		}
@@ -537,26 +630,26 @@ public class PMController {
 		 // Recipient's email ID needs to be mentioned.
         Assistance fAssistance = pManage.aS_Dao.findById(Assistance.class, username);
         if (fAssistance == null) {
-        	logger_error.error("ÓÃ»§²»´æÔÚ");
+        	logger_error.error("ç”¨æˆ·ä¸å­˜åœ¨");
 			re_jsonobject.element("flag", -1);
-			re_jsonobject.element("errmsg", "ÓÃ»§²»´æÔÚ");
+			re_jsonobject.element("errmsg", "ç”¨æˆ·ä¸å­˜åœ¨");
 			Common_return_en(response,re_jsonobject);
 			return;
 		}
         
         if (!fAssistance.getVerifyCode().equals(verify_code)) {
-        	logger_error.error("ÑéÖ¤Âë´íÎó");
+        	logger_error.error("éªŒè¯ç é”™è¯¯");
 			re_jsonobject.element("flag", -1);
-			re_jsonobject.element("errmsg", "ÑéÖ¤Âë´íÎó");
+			re_jsonobject.element("errmsg", "éªŒè¯ç é”™è¯¯");
 			Common_return_en(response,re_jsonobject);
 			return;
 		}
         
 		Double curtime = Double.parseDouble(new SimpleDateFormat("yyyyMMddHHmmss").format(new Date()));
 		if((curtime - fAssistance.getTimepoint()) > 60*3){
-			logger_error.error("ÑéÖ¤Á´½ÓÒÑ¾­¹ıÆÚ");
+			logger_error.error("éªŒè¯é“¾æ¥å·²ç»è¿‡æœŸ");
 			re_jsonobject.element("flag", -1);
-			re_jsonobject.element("errmsg", "»ñÈ¡Ìá½»²ÎÊıÊ§°Ü");
+			re_jsonobject.element("errmsg", "è·å–æäº¤å‚æ•°å¤±è´¥");
 			Common_return_en(response,re_jsonobject);
 			return;
 		}
@@ -579,14 +672,14 @@ public class PMController {
 	      properties.put("mail.store.protocol", "pop3");
 	      properties.put("mail.transport.protocol", "smtp");
 	      properties.put("mail.user", "simon_nudt@sina.com");
-	        // ·ÃÎÊSMTP·şÎñÊ±ĞèÒªÌá¹©µÄÃÜÂë
+	        // è®¿é—®SMTPæœåŠ¡æ—¶éœ€è¦æä¾›çš„å¯†ç 
 	      properties.put("mail.password", "ABCD1234");
 	      
-	        // ¹¹½¨ÊÚÈ¨ĞÅÏ¢£¬ÓÃÓÚ½øĞĞSMTP½øĞĞÉí·İÑéÖ¤
+	        // æ„å»ºæˆæƒä¿¡æ¯ï¼Œç”¨äºè¿›è¡ŒSMTPè¿›è¡Œèº«ä»½éªŒè¯
 	        Authenticator authenticator = new Authenticator() {
 	            @Override
 	            protected PasswordAuthentication getPasswordAuthentication() {
-	                // ÓÃ»§Ãû¡¢ÃÜÂë
+	                // ç”¨æˆ·åã€å¯†ç 
 	                String userName = "simon_nudt@sina.com";
 	                String password = "ABCD1234";
 	                return new PasswordAuthentication(userName, password);
@@ -606,10 +699,10 @@ public class PMController {
 	          message.addRecipient(Message.RecipientType.TO, new InternetAddress(to));
 
 	          // Set Subject: header field
-	          message.setSubject("ÃÜÂëÖØÉèÌáÊ¾");
+	          message.setSubject("å¯†ç é‡è®¾æç¤º");
 	          
 	          // Send the actual HTML message, as big as you like
-	          String show = "<h1>Çëµã»÷ÏÂÃæµÄÁ´½Ó½øĞĞÃÜÂëÖØÉè<h1></br>";
+	          String show = "<h1>è¯·ç‚¹å‡»ä¸‹é¢çš„é“¾æ¥è¿›è¡Œå¯†ç é‡è®¾<h1></br>";
 	          String resetid = RandomCreate.createRandomString(10);
 	   //       String link_mes = "http://119.29.235.201:8080/check_Accout/PMController/resetpwdlink?" + "username=" + username + "&resetid=" + RandomCreate.createRandomString(10);
 	          String link_mes = "http://119.29.235.201:8080/check_Accout/PMController/resetpwdlink?" + "username=" + username + "&resetid=" + resetid;
@@ -624,7 +717,7 @@ public class PMController {
 	          logger.info("Sent message successfully....");
 	          
 				re_jsonobject.element("flag", 0);
-				re_jsonobject.element("errmsg", "ÑéÖ¤ÂëÒÑ¾­·¢µ½ÓÊÏä£¬ÓÊ¼şÓĞ¿ÉÄÜ±»µ±³ÉÀ¬»øÓÊ¼ş£¬Çë×¢Òâ!");
+				re_jsonobject.element("errmsg", "éªŒè¯ç å·²ç»å‘åˆ°é‚®ç®±ï¼Œé‚®ä»¶æœ‰å¯èƒ½è¢«å½“æˆåƒåœ¾é‚®ä»¶ï¼Œè¯·æ³¨æ„!");
 				fAssistance.setVerifyCode("****");
 				fAssistance.setTimepoint(curtime);
 				fAssistance.setResetId(resetid);
@@ -637,8 +730,8 @@ public class PMController {
 	}
 		
 	/**
-	 * Signout ×¢ÏúµÇÂ¼
-	 * @category ËùÓĞÓÃ»§½Ó¿Ú
+	 * Signout æ³¨é”€ç™»å½•
+	 * @category æ‰€æœ‰ç”¨æˆ·æ¥å£
 	 * @param request
 	 * @param response
 	 * @author zhangxinming
@@ -652,39 +745,38 @@ public class PMController {
 		HttpSession session = request.getSession(false);
 		if (session == null) {
 			re_jsonobject.element("flag", -1);
-			re_jsonobject.element("errmsg", "µÇÂ¼³¬Ê±");
+			re_jsonobject.element("errmsg", "ç™»å½•è¶…æ—¶");
 			Common_return_en(response,re_jsonobject);
 			return;
 		}
 		
 		String usertype = (String) session.getAttribute("usertype");
 		String username  = (String) session.getAttribute("workId");
-		if (usertype.equals("bu")) {//¶ÔÕËÁªÏµÈË
+		if (usertype.equals("bu")) {//å¯¹è´¦è”ç³»äºº
 			oLog_Service.AddLog(OpLog_Service.utype_as, username, OpLog_Service.SIGNOUT, OpLog_Service.result_success);
 			re_jsonobject.element("flag", 0);
-			re_jsonobject.element("errmsg", "×¢Ïú³É¹¦");
+			re_jsonobject.element("errmsg", "æ³¨é”€æˆåŠŸ");
 			
 		}
-		else if (usertype.equals("bm")) {//¹ÜÀíÈËÔ±
+		else if (usertype.equals("bm")) {//ç®¡ç†äººå‘˜
 			oLog_Service.AddLog(OpLog_Service.utype_ma, username, OpLog_Service.SIGNOUT, OpLog_Service.result_success);
 			re_jsonobject.element("flag", 0);
-			re_jsonobject.element("errmsg", "×¢Ïú³É¹¦");
+			re_jsonobject.element("errmsg", "æ³¨é”€æˆåŠŸ");
 			
 		}
 		else{
-			logger_error.error("Î´ÖªÓÃ»§ÀàĞÍ");
+			logger_error.error("æœªçŸ¥ç”¨æˆ·ç±»å‹");
 			re_jsonobject.element("flag", -1);
-			re_jsonobject.element("errmsg", "×¢ÏúÊ§°Ü£¬Î´ÖªÓÃ»§ÀàĞÍ");
+			re_jsonobject.element("errmsg", "æ³¨é”€å¤±è´¥ï¼ŒæœªçŸ¥ç”¨æˆ·ç±»å‹");
 		}
 		Common_return_en(response,re_jsonobject);
 	//	Signout_return(response);
 
 	}
-	
 
 	/**
-	 * Asssistance_login ´úÀíÉÌ²ÆÎñµÇÂ¼
-	 * @category ´úÀíÉÌ²ÆÎñ½Ó¿Ú
+	 * Asssistance_login ä»£ç†å•†è´¢åŠ¡ç™»å½•
+	 * @category ä»£ç†å•†è´¢åŠ¡æ¥å£
 	 * @param as
 	 * @param model
 	 * @param request
@@ -706,30 +798,32 @@ public class PMController {
 			String request_s_de = AES.aesDecrypt(request_s, AES.key);
 			logger.info("receive" + request_s_de);
 			JSONObject jstr = JSONObject.fromObject(request_s_de);
-			work_id = jstr.getString("uid");//»ñÈ¡µÇÂ¼id
-			password = jstr.getString("upwd");//»ñÈ¡µÇÂ¼ÃÜÂë
+			work_id = jstr.getString("uid");//è·å–ç™»å½•id
+			password = jstr.getString("upwd");//è·å–ç™»å½•å¯†ç 
 			//lgtype = jstr.getString("from"); 
 
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
-			logger_error.error("»ñÈ¡Ìá½»²ÎÊıÊ§°Ü" + e);
+			logger_error.error("è·å–æäº¤å‚æ•°å¤±è´¥" + e);
 			e.printStackTrace();
 			
 			JSONObject re_jsonobject = new JSONObject();
 			re_jsonobject.element("flag", -1);
-			re_jsonobject.element("errmsg", "»ñÈ¡Ìá½»²ÎÊıÊ§°Ü");
+			re_jsonobject.element("errmsg", "è·å–æäº¤å‚æ•°å¤±è´¥");
 			Common_return_en(response,re_jsonobject);
+			return;
 		}
         
         Login_Mange login_Mange = pManage.new Login_Mange();
         
         JSONObject jsonObject = login_Mange.LgEnter_Select(work_id, password);
         int isillegal = jsonObject.getInt("flag");
-        String role = jsonObject.getString("role");
+        
         
         if (isillegal == 0) {
+        	String role = jsonObject.getString("role");
         	String agentid = (String) pManage.aS_Dao.findById(Assistance.class, work_id).getAgentid();
-        	HttpSession session = request.getSession();//´´½¨session
+        	HttpSession session = request.getSession();//åˆ›å»ºsession
     		System.out.println("login success");
 			session.setAttribute("usertype", role);
     		session.setAttribute("workId", work_id);
@@ -754,8 +848,8 @@ public class PMController {
     		
 		}
         else{
-        	Asssistance_login_return(isillegal,work_id,password,role,newpay_num,response);
-    		if (role.equals("bu")) {
+        	Asssistance_login_return(isillegal,work_id,password,null,newpay_num,response);
+    	/*	if (role.equals("bu")) {
     			oLog_Service.AddLog(OpLog_Service.utype_as, work_id, OpLog_Service.Log, OpLog_Service.result_failed);
 			}
     		else if (role.equals("bm")) {
@@ -766,14 +860,13 @@ public class PMController {
     		}
     		else{
     			oLog_Service.AddLog(OpLog_Service.utype_un, work_id, OpLog_Service.Log, OpLog_Service.result_failed);
-			}
+			}*/
         }  	
     }
-    
-    
+        
     /**
-     * Assistance_register ²ÆÎñÈËÔ±×¢²á
-     * @category ´úÀíÉÌ²ÆÎñÈËÔ±×¢²á½Ó¿Ú
+     * Assistance_register è´¢åŠ¡äººå‘˜æ³¨å†Œ
+     * @category ä»£ç†å•†è´¢åŠ¡äººå‘˜æ³¨å†Œæ¥å£
      * @param request
      * @param response
      * @author zhangxinming
@@ -788,9 +881,9 @@ public class PMController {
 		String request_s_en = null;
 		
 		//JSONObject jstr = JSONObject.fromObject(request_s_en);
-    	String work_id = null;//ÓÃ»§
-    	String name = null;//ÕæÊµĞÕÃû
-    	String phone = null;//µç»°ºÅÂë
+    	String work_id = null;//ç”¨æˆ·
+    	String name = null;//çœŸå®å§“å
+    	String phone = null;//ç”µè¯å·ç 
     	String email = null;
     	String password = null;
     	String usertype = null;
@@ -807,9 +900,9 @@ public class PMController {
 				logger.info("receive:" + request_s_en);
 				
 				JSONObject jstr = JSONObject.fromObject(request_s_en);
-		    	work_id = jstr.getString("username");//ÓÃ»§
-		    	name = jstr.getString("name");//ÕæÊµĞÕÃû
-		    	phone = jstr.getString("phone");//µç»°ºÅÂë
+		    	work_id = jstr.getString("username");//ç”¨æˆ·
+		    	name = jstr.getString("name");//çœŸå®å§“å
+		    	phone = jstr.getString("phone");//ç”µè¯å·ç 
 		    	email = jstr.getString("email");
 		    	password = jstr.getString("password");
 		    	usertype = jstr.getString("role");
@@ -817,10 +910,10 @@ public class PMController {
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-			logger_error.error("»ñÈ¡Ìá½»²ÎÊıÊ§°Ü" + e);			
+			logger_error.error("è·å–æäº¤å‚æ•°å¤±è´¥" + e);			
 			
 			re_jsonobject.element("flag", -1);
-			re_jsonobject.element("errmsg", "»ñÈ¡Ìá½»²ÎÊıÊ§°Ü" + e);
+			re_jsonobject.element("errmsg", "è·å–æäº¤å‚æ•°å¤±è´¥" + e);
 			Common_return_en(response,re_jsonobject);
 			return;
 		}
@@ -831,7 +924,7 @@ public class PMController {
     	assistance.setPhone(phone);
     	assistance.setEmail(email);
     	assistance.setPassword(password);
-    	// Ç°¶ËÖ±½Ó´«ÓÃ»§Éí·İ¶ÔÓ¦µÄ±àÂë£º´úÀíÉÌ²ÆÎñ=bu ´úÀíÉÌ¹ÜÀíÔ±=bam
+    	// å‰ç«¯ç›´æ¥ä¼ ç”¨æˆ·èº«ä»½å¯¹åº”çš„ç¼–ç ï¼šä»£ç†å•†è´¢åŠ¡=bu ä»£ç†å•†ç®¡ç†å‘˜=bam
     	assistance.setUsertype(usertype);
     	assistance.setAgentid(agentid);
   
@@ -843,7 +936,7 @@ public class PMController {
     }
       
     /**
-     * Conectp_register ¶ÔÕËÁªÏµÈË×¢²á  ¿Í»§×¢²á½Ó¿Ú
+     * Conectp_register å¯¹è´¦è”ç³»äººæ³¨å†Œ  å®¢æˆ·æ³¨å†Œæ¥å£
      * @param request
      * @param response
      * @author zhangxinming
@@ -875,23 +968,22 @@ public class PMController {
     	
 		try {
 			username = AES.aesDecrypt(request.getParameter("username"),AES.key);
-	    	phone =  AES.aesDecrypt(request.getParameter("phone"),AES.key);//µç»°
-	    	company =  new String(AES.aesDecrypt(request.getParameter("company"),AES.key).getBytes("GBK"),"GBK");//¹«Ë¾Ãû³Æ
-	    	agent = AES.aesDecrypt(request.getParameter("agent"),AES.key);//ËùÊô´úÀíÉÌid
-	    	real_name = new String(AES.aesDecrypt(request.getParameter("real_name"),AES.key).getBytes("GBK"),"GBK");//ÕæÊµĞÕÃû
-	    	register_way = AES.aesDecrypt(request.getParameter("register_way"),AES.key);//×¢²á·½Ê½
-	    	weixin = AES.aesDecrypt(request.getParameter("weixin"),AES.key);//Î¢ĞÅºÅ
-	    	companyid = AES.aesDecrypt(request.getParameter("companyid"),AES.key);//¹«Ë¾id
-	    	password = AES.aesDecrypt(request.getParameter("password"),AES.key);//ÃÜÂë
-	    	email = AES.aesDecrypt(request.getParameter("email"),AES.key);//ÓÊÏä
-	    	contractMes = AES.aesDecrypt(request.getParameter("contract_mes"),AES.key);//ÓĞĞ§Æ¾Ö¤
-	    	cardid = AES.aesDecrypt(request.getParameter("cardid"),AES.key);//¶ÔÕËÁªÏµÈËÉí·İÖ¤
+	    	phone =  AES.aesDecrypt(request.getParameter("phone"),AES.key);//ç”µè¯
+	    	company =  new String(AES.aesDecrypt(request.getParameter("company"),AES.key).getBytes("GBK"),"GBK");//å…¬å¸åç§°
+	    	agent = AES.aesDecrypt(request.getParameter("agent"),AES.key);//æ‰€å±ä»£ç†å•†id
+	    	real_name = new String(AES.aesDecrypt(request.getParameter("real_name"),AES.key).getBytes("GBK"),"GBK");//çœŸå®å§“å
+	    	register_way = AES.aesDecrypt(request.getParameter("register_way"),AES.key);//æ³¨å†Œæ–¹å¼
+	    	weixin = AES.aesDecrypt(request.getParameter("weixin"),AES.key);//å¾®ä¿¡å·
+	    	companyid = AES.aesDecrypt(request.getParameter("companyid"),AES.key);//å…¬å¸id
+	    	password = AES.aesDecrypt(request.getParameter("password"),AES.key);//å¯†ç 
+	    	email = AES.aesDecrypt(request.getParameter("email"),AES.key);//é‚®ç®±
+	    	contractMes = AES.aesDecrypt(request.getParameter("contract_mes"),AES.key);//æœ‰æ•ˆå‡­è¯
+	    	cardid = AES.aesDecrypt(request.getParameter("cardid"),AES.key);//å¯¹è´¦è”ç³»äººèº«ä»½è¯
 	    	weixinid = AES.aesDecrypt(request.getParameter("weixinid"),AES.key);//
-	    	logger.info("weixinid:" + weixinid);
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-		}//ÓÃ»§Ãû
+		}//ç”¨æˆ·å
 
     	
     	ConnectPerson inConnectPerson = new ConnectPerson();
@@ -904,7 +996,7 @@ public class PMController {
     	inConnectPerson.setPhone(phone);
     	inConnectPerson.setCompanyid(companyid);
     	inConnectPerson.setRegisterWay(register_way);
-    	inConnectPerson.setFlag(Person_Manage.REG_NEW);//ÉèÖÃ×¢²á×´Ì¬ÎªµÈ´ıÉóÔÄ
+    	inConnectPerson.setFlag(Person_Manage.REG_NEW);//è®¾ç½®æ³¨å†ŒçŠ¶æ€ä¸ºç­‰å¾…å®¡é˜…
     	inConnectPerson.setEmail(email);
     	inConnectPerson.setContractMes(contractMes);
     	inConnectPerson.setCardid(cardid);
@@ -920,7 +1012,7 @@ public class PMController {
     }
     
     /**
-     * Verify_Register ÏµÍ³¹ÜÀíÔ±¶Ô×¢²áÇëÇó½øĞĞÈ·ÈÏ  ÏµÍ³¹ÜÀíÔ±½Ó¿Ú
+     * Verify_Register ç³»ç»Ÿç®¡ç†å‘˜å¯¹æ³¨å†Œè¯·æ±‚è¿›è¡Œç¡®è®¤  ç³»ç»Ÿç®¡ç†å‘˜æ¥å£
      * @param request
      * @param response
      * @author zhangxinming
@@ -933,7 +1025,7 @@ public class PMController {
 		HttpSession session = request.getSession(false);
 		if (session == null) {
 			re_jsonobject.element("flag", -1);
-			re_jsonobject.element("errmsg", "µÇÂ¼³¬Ê±");
+			re_jsonobject.element("errmsg", "ç™»å½•è¶…æ—¶");
 			Common_return_en(response,re_jsonobject);
 			return;
 		}
@@ -957,7 +1049,7 @@ public class PMController {
     	//	username = request.getParameter("workId");
     		username = jstr.getString("id");
 		}
-    	else{//¶ÔÕËÁªÏµÈË
+    	else{//å¯¹è´¦è”ç³»äºº
     		    		//username = request.getParameter("username");
     		username = jstr.getString("id");
     	}
@@ -973,8 +1065,8 @@ public class PMController {
     }
 
     /**
-     * Control_Power ÏµÍ³¹ÜÀíÔ±¶ÔÓÃ»§È¨ÏŞ½øĞĞ¿ØÖÆ 
-     * @author ÏµÍ³¹ÜÀíÔ±½Ó¿Ú 
+     * Control_Power ç³»ç»Ÿç®¡ç†å‘˜å¯¹ç”¨æˆ·æƒé™è¿›è¡Œæ§åˆ¶ 
+     * @author ç³»ç»Ÿç®¡ç†å‘˜æ¥å£ 
      * @param request
      * @param response
      * @author zhangxinming
@@ -988,7 +1080,7 @@ public class PMController {
 		HttpSession session = request.getSession(false);
 		if (session == null) {
 			re_jsonobject.element("flag", -1);
-			re_jsonobject.element("errmsg", "µÇÂ¼³¬Ê±");
+			re_jsonobject.element("errmsg", "ç™»å½•è¶…æ—¶");
 			Common_return_en(response,re_jsonobject);
 			return;
 		}
@@ -1005,31 +1097,30 @@ public class PMController {
 		}
 		
 		JSONObject jstr = JSONObject.fromObject(request_s_en);
-		String control_type = jstr.getString("control_type");//¿ØÖÆÀàĞÍ£¬as:´úÀíÉÌ²ÆÎñ  cp:¶ÔÕËÁªÏµÈË
-		int ctlflag = jstr.getInt("ctlflag"); //¿ØÖÆµÄ½á¹û  0£ºÕı³£  -3£ºËø¶¨ 
-		String id = jstr.getString("id");//¿ØÖÆ¶ÔÏóµÄid
+		String control_type = jstr.getString("control_type");//æ§åˆ¶ç±»å‹ï¼Œas:ä»£ç†å•†è´¢åŠ¡  cp:å¯¹è´¦è”ç³»äºº
+		int ctlflag = jstr.getInt("ctlflag"); //æ§åˆ¶çš„ç»“æœ  0ï¼šæ­£å¸¸  -3ï¼šé”å®š
+		String id = jstr.getString("id");//æ§åˆ¶å¯¹è±¡çš„id
 		
 		boolean existAS = false;
 		if(ctlflag == 0)
 			existAS = pManage.checkExistAS(id);
 		if(existAS == true){
 			re_jsonobject.element("flag", -1);
-			re_jsonobject.element("errmsg", "¸Ã´úÀíÉÌÒÑ´æÔÚ¿ÉÓÃ²ÆÎñ£¬²»ÄÜ½âËø");
+			re_jsonobject.element("errmsg", "ä»£ç†å•†å·²ç»‘å®šè´¢åŠ¡");
 			Common_return_en(response,re_jsonobject);
 			return;
 		}
 		
-		pManage.Control_Power(control_type,ctlflag,id);//µ÷ÓÃÈ¨ÏŞ¿ØÖÆ´¦Àí
+		pManage.Control_Power(control_type,ctlflag,id);//è°ƒç”¨æƒé™æ§åˆ¶å¤„ç†
 		
 		re_jsonobject.element("flag", 0);
-		re_jsonobject.element("errmsg", "¿ØÖÆÈ¨ÏŞ³É¹¦");
+		re_jsonobject.element("errmsg", "æ§åˆ¶æƒé™æˆåŠŸ");
 		Common_return_en(response,re_jsonobject);
     }
    
-   
     /**
-     * Connectp_login ¶ÔÕËÁªÏµÈËµÇÂ¼ 
-     * @author  ¿Í»§½Ó¿Ú
+     * Connectp_login å¯¹è´¦è”ç³»äººç™»å½• 
+     * @author  å®¢æˆ·æ¥å£
      * @param request
      * @param response
      * @author zhangxinming
@@ -1055,36 +1146,36 @@ public class PMController {
 		
 		if (isllegal == 0) {
 			re_jsonobject.element("status", isllegal);
-			re_jsonobject.element("errmsg", "µÇÂ¼³É¹¦");
+			re_jsonobject.element("errmsg", "ç™»å½•æˆåŠŸ");
 			OneKeyData_return_enData(response, re_jsonobject, "connectp", pManage.cDao.findById(ConnectPerson.class, username));
 		}
-		else if (isllegal == -1) {//ÓÃ»§Ãû²»´æÔÚ
-			logger_error.error("µÇÂ¼Ê§°Ü");
+		else if (isllegal == -1) {//ç”¨æˆ·åä¸å­˜åœ¨
+			logger_error.error("ç™»å½•å¤±è´¥");
 			re_jsonobject.element("status", isllegal);
-			re_jsonobject.element("errmsg", "ÓÃ»§Ãû²»´æÔÚ");
+			re_jsonobject.element("errmsg", "ç”¨æˆ·åä¸å­˜åœ¨");
 			Common_return(response, re_jsonobject);
 		}
 		else if (isllegal == -3) {
 			re_jsonobject.element("status", -1);
-			re_jsonobject.element("errmsg", "×¢²áÉóÔÄÖĞ");
+			re_jsonobject.element("errmsg", "æ³¨å†Œå®¡é˜…ä¸­");
 			Common_return(response, re_jsonobject);
 		}
 		else if (isllegal == -4) {
 			re_jsonobject.element("status", -1);
-			re_jsonobject.element("errmsg", "ÓÃ»§ÒÑ¾­±»Ëø¶¨£¬ÇëÁªÏµ¹ÜÀíÔ±");
+			re_jsonobject.element("errmsg", "ç”¨æˆ·å·²ç»è¢«é”å®šï¼Œè¯·è”ç³»ç®¡ç†å‘˜");
 			Common_return(response, re_jsonobject);
 		}
-		else {//ÃÜÂë´íÎó
-			logger_error.error("ÃÜÂë´íÎó");
+		else {//å¯†ç é”™è¯¯
+			logger_error.error("å¯†ç é”™è¯¯");
 			re_jsonobject.element("status", isllegal);
-			re_jsonobject.element("errmsg", "ÃÜÂë´íÎó");
+			re_jsonobject.element("errmsg", "å¯†ç é”™è¯¯");
 			Common_return(response, re_jsonobject);
 		}
     }
   
     /**
-     * get_agentcodeAname »ñÈ¡´úÀíÉÌµÄid¼°Ãû×Ö 
-     * @category  ¶ÔÕËÁªÏµÈË×¢²á½Ó¿Ú
+     * get_agentcodeAname è·å–ä»£ç†å•†çš„idåŠåå­— 
+     * @category  å¯¹è´¦è”ç³»äººæ³¨å†Œæ¥å£
      * @param request
      * @param response
      * @author zhangxinming
@@ -1095,18 +1186,18 @@ public class PMController {
     	
     	JSONObject re_jsonobject = new JSONObject();
     	
-    	JSONArray re_jarry = pManage.Get_AgentCAN();//½øÈë»ñÈ¡ĞÅÏ¢´¦Àí
+    	JSONArray re_jarry = pManage.Get_AgentCAN();//è¿›å…¥è·å–ä¿¡æ¯å¤„ç†
     	
-    	/*·µ»ØÊı¾İµ½Ç°Ì¨*/
+    	/*è¿”å›æ•°æ®åˆ°å‰å°*/
     	re_jsonobject.element("flag", 0);
-    	re_jsonobject.element("errmsg", "»ñÈ¡´úÀíÉÌ¼°id³É¹¦");
+    	re_jsonobject.element("errmsg", "è·å–ä»£ç†å•†åŠidæˆåŠŸ");
     	OneKeyData_return_enall(response, re_jsonobject, "data", re_jarry);
-    	/*·µ»ØÊı¾İµ½Ç°Ì¨*/
+    	/*è¿”å›æ•°æ®åˆ°å‰å°*/
     }
     
     /**
-     * Watch ºóÌ¨¹ÜÀíÏµÍ³µÄ²é¿´¹¦ÄÜ
-     * @category ¹ÜÀíÔ±½Ó¿Ú
+     * Watch åå°ç®¡ç†ç³»ç»Ÿçš„æŸ¥çœ‹åŠŸèƒ½
+     * @category ç®¡ç†å‘˜æ¥å£
      * @param request
      * @param response
      * @author zhangxinming
@@ -1120,7 +1211,7 @@ public class PMController {
 		HttpSession session = request.getSession(false);
 		if (session == null) {
 			re_jsonobject.element("flag", -1);
-			re_jsonobject.element("errmsg", "µÇÂ¼³¬Ê±");
+			re_jsonobject.element("errmsg", "ç™»å½•è¶…æ—¶");
 			Common_return_en(response,re_jsonobject);
 			return;
 		}
@@ -1133,33 +1224,34 @@ public class PMController {
 		String agent_id = session.getAttribute("agentid").toString();
 		try {
 				request_s = IOUtils.toString(request.getInputStream());
-				request_s_de = AES.aesDecrypt(request_s, AES.key);//½âÃÜÊı¾İ
+				request_s_de = AES.aesDecrypt(request_s, AES.key);//è§£å¯†æ•°æ®
 				logger.info("received content:" + request_s_de);
 				JSONObject jstr = JSONObject.fromObject(request_s_de);
-				watch_type = jstr.getString("watch_type");//¾ßÌå²é¿´µÄÀàĞÍ
+				watch_type = jstr.getString("watch_type");//å…·ä½“æŸ¥çœ‹çš„ç±»å‹
 				pagenum = jstr.getInt("pagenum");
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-			logger_error.error("²é¿´Ê§°Ü" + e);
+			logger_error.error("æŸ¥çœ‹å¤±è´¥" + e);
 		}
 		
 		int pagesize = 10;
 		int offset = (pagenum-1)*10;
 		
-		re_jsonobject = pManage.Watch(watch_type,offset,pagesize, user_type, agent_id);//½øÈë²é¿´´¦Àí
+		re_jsonobject = pManage.Watch(watch_type,offset,pagesize, user_type, agent_id);//è¿›å…¥æŸ¥çœ‹å¤„ç†
     	//int num = pManage.opLog_Dao.GetOpLogTb_Num();
-    	/*·µ»ØÊı¾İµ½Ç°Ì¨*/
+    	/*è¿”å›æ•°æ®åˆ°å‰å°*/
     	re_jsonobject.element("flag", 0);
-    	re_jsonobject.element("errmsg", "²é¿´³É¹¦");
+    	re_jsonobject.element("errmsg", "æŸ¥çœ‹æˆåŠŸ");
     	//re_jsonobject.element("totalpage", 2);
     	//OneKeyData_return_enall(response, re_jsonobject, "data", re_list);
     	Common_return_en(response, re_jsonobject);
-    	/*·µ»ØÊı¾İµ½Ç°Ì¨*/
+    	/*è¿”å›æ•°æ®åˆ°å‰å°*/
+    	return;
     }
     
     /**
-     * BackUpDatabase ±¸·İÊı¾İ¿â
+     * BackUpDatabase å¤‡ä»½æ•°æ®åº“
      * @param request
      * @param response
      */
@@ -1172,7 +1264,7 @@ public class PMController {
 		HttpSession session = request.getSession(false);
 		if (session == null) {
 			re_jsonobject.element("flag", -1);
-			re_jsonobject.element("errmsg", "µÇÂ¼³¬Ê±");
+			re_jsonobject.element("errmsg", "ç™»å½•è¶…æ—¶");
 			Common_return_en(response,re_jsonobject);
 			return;
 		}
@@ -1184,12 +1276,12 @@ public class PMController {
     	dOperator.BackUp_db(savedir, filename);
     	
     	re_jsonobject.element("flag", 0);
-    	re_jsonobject.element("errmsg", "±¸·İ³É¹¦");
+    	re_jsonobject.element("errmsg", "å¤‡ä»½æˆåŠŸ");
     	Common_return_en(response, re_jsonobject);
     }
     
     /**
-     * Verify_Restore Ìá½»»Ö¸´sqlÈ·¶¨
+     * Verify_Restore æäº¤æ¢å¤sqlç¡®å®š
      * @param request
      * @param response
      */
@@ -1202,7 +1294,7 @@ public class PMController {
 		HttpSession session = request.getSession(false);
 		if (session == null) {
 			re_jsonobject.element("flag", -1);
-			re_jsonobject.element("errmsg", "µÇÂ¼³¬Ê±");
+			re_jsonobject.element("errmsg", "ç™»å½•è¶…æ—¶");
 			Common_return_en(response,re_jsonobject);
 			return;
 		}
@@ -1213,7 +1305,7 @@ public class PMController {
 				String request_s_de = AES.aesDecrypt(request_s, AES.key);
 				logger.info("receive" + request_s_de);
 				JSONObject jstr = JSONObject.fromObject(request_s_de);
-				backupid = jstr.getInt("id");//»ñÈ¡µÇÂ¼id
+				backupid = jstr.getInt("id");//è·å–ç™»å½•id
 			} catch (Exception e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -1224,18 +1316,18 @@ public class PMController {
     	
     	if (flag == -1) {
 	    	re_jsonobject.element("flag", -1);
-	    	re_jsonobject.element("errmsg", "»Ö¸´Ê§°Ü");
+	    	re_jsonobject.element("errmsg", "æ¢å¤å¤±è´¥");
 		}
     	else {
 	    	re_jsonobject.element("flag", 0);
-	    	re_jsonobject.element("errmsg", "»Ö¸´³É¹¦");
+	    	re_jsonobject.element("errmsg", "æ¢å¤æˆåŠŸ");
 		}
 
     	Common_return_en(response, re_jsonobject);
     }
     
     /**
-     * Choose_Restore Ñ¡Ôñ»Ö¸´µÄsql
+     * Choose_Restore é€‰æ‹©æ¢å¤çš„sql
      * @param request
      * @param response
      */
@@ -1248,7 +1340,7 @@ public class PMController {
 		HttpSession session = request.getSession(false);
 		if (session == null) {
 			re_jsonobject.element("flag", -1);
-			re_jsonobject.element("errmsg", "µÇÂ¼³¬Ê±");
+			re_jsonobject.element("errmsg", "ç™»å½•è¶…æ—¶");
 			Common_return_en(response,re_jsonobject);
 			return;
 		}
@@ -1256,50 +1348,50 @@ public class PMController {
 		List<Backup> fBackups = pManage.bUp_Dao.GetTolTb();
 		if (fBackups != null) {
 	    	re_jsonobject.element("flag", 0);
-	    	re_jsonobject.element("errmsg", "²Ù×÷³É¹¦");
+	    	re_jsonobject.element("errmsg", "æ“ä½œæˆåŠŸ");
 	    	
 	    	OneKeyData_return_enall(response,re_jsonobject,"data",fBackups);
 		}
 		else{
 			re_jsonobject.element("flag", -1);
-			re_jsonobject.element("errmsg", "²Ù×÷Ê§°Ü");
+			re_jsonobject.element("errmsg", "æ“ä½œå¤±è´¥");
 			Common_return_en(response,re_jsonobject);
 		}
     }
     
     /**
-     * Asssistance_login_return ²ÆÎñÈËÔ±µÇÂ¼·µ»Ø
+     * Asssistance_login_return è´¢åŠ¡äººå‘˜ç™»å½•è¿”å›
      * @param flag
-     * @param username ÓÃ»§Ãû
-     * @param password ÃÜÂë
-     * @param role ÓÃ»§ÀàĞÍ
-     * @param newpay_num ĞÂµÄ¸¶¿îĞÅÏ¢ÊıÄ¿
+     * @param username ç”¨æˆ·å
+     * @param password å¯†ç 
+     * @param role ç”¨æˆ·ç±»å‹
+     * @param newpay_num æ–°çš„ä»˜æ¬¾ä¿¡æ¯æ•°ç›®
      * @param response
      * @author zhangxinming
      */
     public void Asssistance_login_return(int flag,String username,String password,String role,int newpay_num,HttpServletResponse response){
 		response.setCharacterEncoding("utf-8");
-		JSONObject userJ =  new JSONObject();//´«µİ²ÎÊıÖĞµÄ×îÍâ²ã¶ÔÏó
+		JSONObject userJ =  new JSONObject();//ä¼ é€’å‚æ•°ä¸­çš„æœ€å¤–å±‚å¯¹è±¡
 		JSONObject resJ=new JSONObject();
-		if (flag == -1) {//ÓÃ»§²»´æÔÚ
+		if (flag == -1) {//ç”¨æˆ·ä¸å­˜åœ¨
 				resJ.put("flag", -1);
-				resJ.put("errmsg", "ÓÃ»§Ãû»òÃÜÂë´íÎó");
+				resJ.put("errmsg", "ç”¨æˆ·åæˆ–å¯†ç é”™è¯¯");
 		}
 		else if (flag == -2) {
 			resJ.put("flag", -1);
-			resJ.put("errmsg", "ÓÃ»§Ãû»òÃÜÂë´íÎó");
+			resJ.put("errmsg", "ç”¨æˆ·åæˆ–å¯†ç é”™è¯¯");
 		}
 		else if(flag == -3){
 			resJ.put("flag", -3);
-			resJ.put("errmsg", "×¢²áÉóºËÖĞ");
+			resJ.put("errmsg", "æ³¨å†Œå®¡æ ¸ä¸­");
 		}
 		else if (flag == -4) {
 			resJ.put("flag", -4);
-			resJ.put("errmsg", "¸ÃÕËºÅÒÑ±»Ëø¶¨£¬ÇëÁªÏµÏµÍ³¹ÜÀíÔ±");
+			resJ.put("errmsg", "è¯¥è´¦å·å·²è¢«é”å®šï¼Œè¯·è”ç³»ç³»ç»Ÿç®¡ç†å‘˜");
 		}
 		else {
 				Assistance fAssistance = pManage.aS_Dao.findById(Assistance.class, username);
-				userJ.element("role", role);//½«Êı×éÌí¼Óµ½¶ÔÏóÖĞ
+				userJ.element("role", role);//å°†æ•°ç»„æ·»åŠ åˆ°å¯¹è±¡ä¸­
 				userJ.element("uid", username);
 				userJ.element("upwd", password);
 				userJ.element("name", fAssistance.getName());
@@ -1311,7 +1403,7 @@ public class PMController {
 					if(agentInfo != null)
 						userJ.element("agentname", agentInfo.getAgentName());
 					else 
-						userJ.element("agentname","Î´Öª´úÀíÉÌ");
+						userJ.element("agentname","æœªçŸ¥ä»£ç†å•†");
 				}
 				
 				if (newpay_num > 0) {
@@ -1340,19 +1432,19 @@ public class PMController {
     }
 
     /**
-     * OneKeyData_return ´øÒ»¸ö¾ßÌåÊı¾İµÄÇ°Ì¨·µ»Ø
+     * OneKeyData_return å¸¦ä¸€ä¸ªå…·ä½“æ•°æ®çš„å‰å°è¿”å›
      * @param response
-     * @param re_json ²Ù×÷½á¹û¼°¾ßÌåĞÅÏ¢
-     * @param key ¾ßÌåĞÅÏ¢µÄkey
-     * @param data ¾ßÌåĞÅÏ¢
-     * @category¹ÜÀíÔ±½Ó¿Ú
+     * @param re_json æ“ä½œç»“æœåŠå…·ä½“ä¿¡æ¯
+     * @param key å…·ä½“ä¿¡æ¯çš„key
+     * @param data å…·ä½“ä¿¡æ¯
+     * @categoryç®¡ç†å‘˜æ¥å£
      */
     public void OneKeyData_return_enall(HttpServletResponse response,JSONObject re_json,String key,Object data){
 		response.setCharacterEncoding("utf-8");
-    	JSONObject re_object =  re_json;//´«µİ²ÎÊıÖĞµÄ×îÍâ²ã¶ÔÏó
+    	JSONObject re_object =  re_json;//ä¼ é€’å‚æ•°ä¸­çš„æœ€å¤–å±‚å¯¹è±¡
 		re_object.element(key, data);
 		
-		/*´«µİjsonÊı¾İ¸øÇ°Ì¨*/
+		/*ä¼ é€’jsonæ•°æ®ç»™å‰å°*/
 		try {
 			logger.info("send content:" + re_object.toString());
 			Writer writer = response.getWriter();
@@ -1362,25 +1454,25 @@ public class PMController {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		/*´«µİjsonÊı¾İ¸øÇ°Ì¨*/
+		/*ä¼ é€’jsonæ•°æ®ç»™å‰å°*/
     }
     
     /**
-     * OneKeyData_return_enData ´øÒ»¸ö¾ßÌå¼ÓÃÜĞÅÏ¢µÄ·µ»Ø£¬Ö»¼ÓÃÜ¾ßÌåĞÅÏ¢
+     * OneKeyData_return_enData å¸¦ä¸€ä¸ªå…·ä½“åŠ å¯†ä¿¡æ¯çš„è¿”å›ï¼ŒåªåŠ å¯†å…·ä½“ä¿¡æ¯
      * @param response
-     * @param re_json ²Ù×÷½á¹û¼°¾ßÌåĞÅÏ¢
-     * @param key ¾ßÌåĞÅÏ¢µÄkey
-     * @param data ¾ßÌåĞÅÏ¢
-     * @¿Í»§·µ»Ø½Ó¿Ú
+     * @param re_json æ“ä½œç»“æœåŠå…·ä½“ä¿¡æ¯
+     * @param key å…·ä½“ä¿¡æ¯çš„key
+     * @param data å…·ä½“ä¿¡æ¯
+     * @å®¢æˆ·è¿”å›æ¥å£
      */
     public void OneKeyData_return_enData(HttpServletResponse response,JSONObject re_json,String key,Object data){
 		response.setCharacterEncoding("utf-8");
-    	JSONObject re_object =  re_json;//´«µİ²ÎÊıÖĞµÄ×îÍâ²ã¶ÔÏó
+    	JSONObject re_object =  re_json;//ä¼ é€’å‚æ•°ä¸­çš„æœ€å¤–å±‚å¯¹è±¡
     	
 
 		JSONObject aes_object = JSONObject.fromObject(data);
 		String aes_object_s = aes_object.toString();
-		logger.info("Before £º[aesEncrypt],context is:" + aes_object_s);
+		logger.info("Before ï¼š[aesEncrypt],context is:" + aes_object_s);
 		String en_s = null;
 		try {
 			en_s = AES.aesEncrypt(aes_object_s,AES.key);
@@ -1390,30 +1482,30 @@ public class PMController {
 		}
 		re_object.element(key, en_s);
 		
-		/*´«µİjsonÊı¾İ¸øÇ°Ì¨*/
+		/*ä¼ é€’jsonæ•°æ®ç»™å‰å°*/
 		try {
-			logger.info("send content£º" + re_object.toString());
+			logger.info("send contentï¼š" + re_object.toString());
 			Writer writer = response.getWriter();
 			writer.write(re_object.toString());
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		/*´«µİjsonÊı¾İ¸øÇ°Ì¨*/
+		/*ä¼ é€’jsonæ•°æ®ç»™å‰å°*/
     }
     
     /**
-     * Common_return ²»´ø¾ßÌåĞÅÏ¢µÄ·µ»Ø
+     * Common_return ä¸å¸¦å…·ä½“ä¿¡æ¯çš„è¿”å›
      * @param response
-     * @param re_json ²Ù×÷½á¹û¼°ĞÅÏ¢
+     * @param re_json æ“ä½œç»“æœåŠä¿¡æ¯
      * @author zhangxinming
      */
     public void Common_return(HttpServletResponse response,JSONObject re_json){
 		response.setCharacterEncoding("utf-8");
 	//	response.addHeader("Access-Control-Allow-Origin", "*");	
-    	JSONObject re_object =  re_json;//´«µİ²ÎÊıÖĞµÄ×îÍâ²ã¶ÔÏó
+    	JSONObject re_object =  re_json;//ä¼ é€’å‚æ•°ä¸­çš„æœ€å¤–å±‚å¯¹è±¡
 		
-		/*´«µİjsonÊı¾İ¸øÇ°Ì¨*/
+		/*ä¼ é€’jsonæ•°æ®ç»™å‰å°*/
 		logger.info(re_object.toString());
 		try {
 			Writer writer = response.getWriter();
@@ -1422,21 +1514,21 @@ public class PMController {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		/*´«µİjsonÊı¾İ¸øÇ°Ì¨*/
+		/*ä¼ é€’jsonæ•°æ®ç»™å‰å°*/
     }
 
     /**
-     * Common_return_en ²»´ø¾ßÌåĞÅÏ¢µÄ¼ÓÃÜ·µ»Ø
+     * Common_return_en ä¸å¸¦å…·ä½“ä¿¡æ¯çš„åŠ å¯†è¿”å›
      * @param response
-     * @param re_json ²Ù×÷½á¹û¼°ĞÅÏ¢
+     * @param re_json æ“ä½œç»“æœåŠä¿¡æ¯
      * @author zhangxinming
      */
     public void Common_return_en(HttpServletResponse response,JSONObject re_json){
 		response.setCharacterEncoding("utf-8");
-    	JSONObject re_object =  re_json;//´«µİ²ÎÊıÖĞµÄ×îÍâ²ã¶ÔÏó
+    	JSONObject re_object =  re_json;//ä¼ é€’å‚æ•°ä¸­çš„æœ€å¤–å±‚å¯¹è±¡
 		
     	String en_s = null;
-		/*´«µİjsonÊı¾İ¸øÇ°Ì¨*/
+		/*ä¼ é€’jsonæ•°æ®ç»™å‰å°*/
 		logger.info(re_object.toString());
 		try {
 			Writer writer = response.getWriter();
@@ -1446,7 +1538,7 @@ public class PMController {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		/*´«µİjsonÊı¾İ¸øÇ°Ì¨*/
+		/*ä¼ é€’jsonæ•°æ®ç»™å‰å°*/
     }
 }
 

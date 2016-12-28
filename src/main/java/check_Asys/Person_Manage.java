@@ -11,7 +11,6 @@ import java.util.List;
 
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpSession;
-import javax.swing.text.StyledEditorKit.BoldAction;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -33,6 +32,7 @@ import dao.PayRecordCache_Dao;
 import dao.Weixinba_Dao;
 import dao.Weixinbc_Dao;
 import encrypt_decrpt.AES;
+import encrypt_decrpt.CreateMD5;
 import entity.Agent;
 import entity.Assistance;
 import entity.Backup;
@@ -42,7 +42,6 @@ import entity.WeixinBindConnectPerson;
 import file_op.AnyFile_Op;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
-import sun.util.logging.resources.logging;
 
 /**
  * Person_Manage 人员管理服务，管理包括注册审阅，权限控制，操作日志，数据库备份等
@@ -102,6 +101,39 @@ public class Person_Manage {
 	}
 	
 	/**
+	 * ModifyAssistanceMes 修改代理商财务个人信息
+	 */
+	public JSONObject ModifyAssistanceMes(Assistance mf_assis){
+		JSONObject re_jsonobject = new JSONObject();
+		
+		String username = mf_assis.getWorkId();
+		Assistance fAssistance  = aS_Dao.findById(Assistance.class, username);
+		if (fAssistance != null) {
+	//		fAssistance.setAgentid(mf_assis.getAgentid());
+			fAssistance.setName(mf_assis.getName());
+			fAssistance.setPhone(mf_assis.getPhone());
+			fAssistance.setEmail(mf_assis.getEmail());
+			
+			if (aS_Dao.update(fAssistance)) {
+				re_jsonobject.element("flag", 0);
+				re_jsonobject.element("errmsg", "修改个人信息成功");
+				re_jsonobject.element("usertype", fAssistance.getUsertype());
+				return re_jsonobject;
+			}
+			else {
+				re_jsonobject.element("flag", -1);
+				re_jsonobject.element("errmsg", "修改个人信息失败");
+				re_jsonobject.element("usertype", fAssistance.getUsertype());
+				return re_jsonobject;
+			}
+		}
+		else {
+			re_jsonobject.element("flag", -2);
+			re_jsonobject.element("errmsg", "修改个人信息失败");
+			return re_jsonobject;
+		}
+	}
+	/**
 	 * Get_AgentCAN 获取所有代理商的id及名字，用于注册时提供给用户选择
 	 * @return
 	 * @author zhangxinming
@@ -154,7 +186,6 @@ public class Person_Manage {
 				ConnectPerson cPerson = (ConnectPerson) re_list.get(i);
 				cPerson.setAgent(ChangeAgentToChinese(cPerson.getAgent()));
 				cPerson.setRegisterWay(ChangeRegTypeToChinese(cPerson.getRegisterWay()));
-				cPerson.setPassword("");
 				re_list_new.add(cPerson);
 			}
 		}
@@ -165,7 +196,6 @@ public class Person_Manage {
 			for (int i = 0; i < re_list.size(); i++) {
 				Assistance cPerson = (Assistance) re_list.get(i);
 				cPerson.setAgentid((ChangeAgentToChinese(cPerson.getAgentid())));
-				cPerson.setPassword("");
 				re_list_new.add(cPerson);
 			}
 			num = aS_Dao.GetTotalTbByElement_Num_ByPage_ByUserType("flag", REG_NEW, "bu");
@@ -176,7 +206,6 @@ public class Person_Manage {
 			for (int i = 0; i < re_list.size(); i++) {
 				Assistance cPerson = (Assistance) re_list.get(i);
 				cPerson.setAgentid((ChangeAgentToChinese(cPerson.getAgentid())));
-				cPerson.setPassword("");
 				re_list_new.add(cPerson);
 			}
 			num = aS_Dao.GetTotalTbByElement_Num_ByPage_ByUserType("flag", REG_NEW, "ba");
@@ -201,7 +230,6 @@ public class Person_Manage {
 				ConnectPerson cPerson = (ConnectPerson) re_list.get(i);
 				cPerson.setAgent(ChangeAgentToChinese(cPerson.getAgent()));
 				cPerson.setRegisterWay(ChangeRegTypeToChinese(cPerson.getRegisterWay()));
-				cPerson.setPassword("");
 				re_list_new.add(cPerson);
 			}
 			
@@ -222,7 +250,6 @@ public class Person_Manage {
 			for (int i = 0; i < re_list.size(); i++) {
 				Assistance cPerson = (Assistance) re_list.get(i);
 				cPerson.setAgentid((ChangeAgentToChinese(cPerson.getAgentid())));
-				cPerson.setPassword("");
 				re_list_new.add(cPerson);
 			}
 			
@@ -239,7 +266,6 @@ public class Person_Manage {
 			for (int i = 0; i < re_list.size(); i++) {
 				Assistance cPerson = (Assistance) re_list.get(i);
 				cPerson.setAgentid((ChangeAgentToChinese(cPerson.getAgentid())));
-				cPerson.setPassword("");
 				re_list_new.add(cPerson);
 			}
 		}
@@ -247,7 +273,8 @@ public class Person_Manage {
 			logger.info("查看操作日志");
 		//	re_list = opLog_Dao.GetOpLogTb();
 			
-			re_list = opLog_Dao.GetOpLogTb_ByPage(offset, pagesize);
+			//re_list = opLog_Dao.GetOpLogTb_ByPage(offset, pagesize);
+			re_list = opLog_Dao.GetOpLogTb_InvertedOrder_ByPage(offset,pagesize);
 			num = opLog_Dao.GetOpLogTb_Num();
 			re_list_new.addAll(re_list);
 		}
@@ -273,6 +300,7 @@ public class Person_Manage {
 			result = aS_Dao.checkExistBu(assistance.getAgentid(), 0);
 		return result;
 	}
+	
 	/**
 	 * Control_Power 权限控制
 	 * @param ctltype 控制用户类型 as:财务人员  cp:对账联系人
@@ -292,11 +320,6 @@ public class Person_Manage {
 			cPerson.setFlag(ctlflag);
 			cDao.update(cPerson);
 		}
-		else if(ctltype.equals("am")){
-			Assistance assistance = aS_Dao.findById(Assistance.class, id);
-			assistance.setFlag(ctlflag);
-			aS_Dao.update(assistance);
-		}
 		return true;
 	}
 	
@@ -307,7 +330,7 @@ public class Person_Manage {
 		public static final String restore_cmd_wd = "cmd /c start e:/restore.bat";
 		public static final String dirname = "backup_database";
 		public static final String db_name = "check_a_db";
-		public static final String db_passwd = "1234";
+		public static final String db_passwd = "";
 		public static final String db_user = "root";
 		/**
 		 * BackUp_db 备份数据库
@@ -491,12 +514,15 @@ public class Person_Manage {
 					logger.info("用户被锁定");
 					jsonObject.element("flag", -4);
 					//return -1;
+					jsonObject.element("role", f_as.getUsertype());
 					return jsonObject;
 				}
 				else{
 					
 					f_as.setLastLogTime(cur_time);
-					if (f_as.getPassword().equals(password)){
+					//String md5_pwd = CreateMD5.getMd5(password);
+					String md5_pwd = password;
+					if (f_as.getPassword().equals(md5_pwd)){
 						f_as.setLogNum(0);				
 						jsonObject.element("flag", 0);
 						jsonObject.element("role", f_as.getUsertype());
@@ -510,6 +536,7 @@ public class Person_Manage {
 							f_as.setLogLock(true);
 							aS_Dao.update(f_as);
 							jsonObject.element("flag", -4);
+							jsonObject.element("role", f_as.getUsertype());
 							//return -1;
 							return jsonObject;
 						}
@@ -520,6 +547,7 @@ public class Person_Manage {
 						
 						jsonObject.element("flag", -2);
 						//return -1;
+						jsonObject.element("role", f_as.getUsertype());
 						return jsonObject;
 					}						
 				}
@@ -620,6 +648,10 @@ public class Person_Manage {
 				re_as.setFlag(reg_wait_check);
 				re_as.setLogLock(false);
 				re_as.setLastLogTime(Double.parseDouble(new SimpleDateFormat("yyyyMMddHHmmss").format(new Date())));
+				
+				String md5_pwd = CreateMD5.getMd5(re_as.getPassword());
+				re_as.setPassword(md5_pwd);
+				
 				int add_result = aS_Dao.add(re_as);
 				if (add_result == 0) {//注册成功,等待审核
 					jsonObject.element("flag", 0);
@@ -676,7 +708,7 @@ public class Person_Manage {
 				Agent agent = agent_Dao.findById(Agent.class, agentid);
 				boolean exitAS  = aS_Dao.checkExistBu(agentid, 0);
 				if (flag == 0) {
-					if (agent_Dao.findById(Agent.class, agentid).getIsregister() == true && exitAS == true) {
+					if (agent_Dao.findById(Agent.class, agentid).getIsregister() == true && exitAS == true){
 						logger.error("代理商已经绑定财务人员");
 						
 						re_jObject.element("flag", -1);
@@ -878,8 +910,7 @@ public class Person_Manage {
 	 */
 	public String ChangeAgentToChinese(String agent) {
 		String chinese_agent = null;
-
-		/*if (agent.equals("gd0001")) {
+		if (agent.equals("gd0001")) {
 			chinese_agent = "广东代理商";
 			
 		}
@@ -909,18 +940,41 @@ public class Person_Manage {
 		}
 		else if (agent.equals("xj0001")) {
 			chinese_agent = "新疆代理商";
-			
+		}
+		else if (agent.equals("bj0001")) {
+			chinese_agent = "北京/天津代理商";
+		}
+		else if (agent.equals("cq0001")) {
+			chinese_agent = "重庆代理商";
+		}
+		else if (agent.equals("nm0001")) {
+			chinese_agent = "内蒙古代理商";
+		}
+		else if (agent.equals("hn0001")) {
+			chinese_agent = "湖南代理商";
+		}
+		else if (agent.equals("js0001")) {
+			chinese_agent = "江苏代理商";
+		}
+		else if (agent.equals("gz0001")) {
+			chinese_agent = "贵州代理商";
+		}
+		else if (agent.equals("ln0001")) {
+			chinese_agent = "辽宁代理商";
+		}
+		else if (agent.equals("hainan0001")) {
+			chinese_agent = "海南代理商";
+		}
+		else if (agent.equals("hebei0001")) {
+			chinese_agent = "河北代理商";
+		}
+		else if (agent.equals("hl0001")) {
+			chinese_agent = "黑龙江代理商";
+		}
+		else if (agent.equals("gs0001")) {
+			chinese_agent = "甘肃代理商";
 		}
 		else {
-			chinese_agent = "未知代理商";
-
-		}*/
-		
-		Agent fAgent = agent_Dao.findById(Agent.class, agent);
-		if (fAgent != null) {
-			chinese_agent = fAgent.getAgentName();
-		}
-		else{
 			chinese_agent = "未知代理商";
 		}
 		
