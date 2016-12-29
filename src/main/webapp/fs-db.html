@@ -8,16 +8,18 @@
                 <a class="btn btn-primary text-center " ng-click="backupDB()">备份数据库</a>
             </div>
         </uib-tab>
-        <uib-tab select="restorePoints()">
+        <uib-tab>
             <uib-tab-heading>恢复</uib-tab-heading>
             <div>
                 <!--<p class="text-center h3">数据库恢复操作</p>-->
                 <br>
                 <div>
                     <div>
-                        <table st-table="dispItems" st-safe-src="items" class="table table-bordered table-striped">
+                        <table st-table="dispItems" st-pipe="refreshGrid" class="table table-bordered table-striped"
+                               align="center" style="width: 50%;">
                             <!--<caption class="caption h3 text-center" title="">已备份时间点
                             </caption>-->
+                            <col width="50px">
                             <thead>
                             <!--<tr>
                                 <th></th>
@@ -62,6 +64,10 @@
                             </tbody>
 
                             <tfoot>
+                            <tr>
+                                <td class="text-center" st-pagination="" colspan="20">
+                                </td>
+                            </tr>
                             </tfoot>
                         </table>
                     </div>

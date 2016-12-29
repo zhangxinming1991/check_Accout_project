@@ -2,7 +2,7 @@
 
 // 检测后端告知请求是否成功
 function isOkResBody(resBody) {
-    return resBody.flag === 0 || (resBody.flag === undefined && resBody.data !== undefined);
+    return resBody && (resBody.flag === 0 || (resBody.flag === undefined && resBody.data !== undefined));
 }
 
 Object.defineProperty(
@@ -51,10 +51,10 @@ app.factory('HttpReqService', ['$http', '$q', function (http, Q) {
             http.post(url, /*reqbody*/ encoded).then(function (resPkg) {
                 // console.debug('recvd:',resPkg.data);
                 resPkg.data = Decrypt(resPkg.data);
-                // console.debug('Decrypted:', resPkg.data);
-                resPkg.data = resPkg === undefined ? undefined : JSON.parse(resPkg.data);
+                // console.debug('response recved(decrypted,string):', resPkg.data);
+                resPkg.data = resPkg.data ? JSON.parse(resPkg.data) : undefined;
                 var resbody = resPkg.data;
-                console.debug('req recvd(parsed as json) Decrypted:', angular.copy(resPkg.data));
+                console.debug('response recved (decrypted,json):', angular.copy(resPkg.data));
                 if (isOkResBody(resbody)) {
                     (function preExtractData(resbody) {
                         if ($.isArray(resbody.data) && !resbody.items) {
@@ -80,7 +80,7 @@ app.factory('HttpReqService', ['$http', '$q', function (http, Q) {
                 } else {
                     console.debug('negative resbody:', resbody);
                     errfnc = errfnc || function (resbody) {
-                            return {msg: resbody.errmsg || '网络请求错误'};
+                            return {msg: resbody && resbody.errmsg || '网络请求错误'};
                         };
                     deferred.reject(errfnc(resbody));
                 }
@@ -413,7 +413,7 @@ app.factory('AccountService', ['$rootScope', '$cookies', '$q', 'HttpReqService',
             });
             return resbody;
         });
-    }
+    };
 
 // 锁定对账联系人
     svc.lockNotifier = function (id) {
@@ -543,8 +543,10 @@ app.factory('FncRmindService', ['$q', 'HttpReqService', function (Q, Req) {
 
     function notifTransFnc2(resbody) {
         for (var idx = 0; idx < resbody.data.length; idx++) {
-            resbody.data[idx].renameProperty("id", "idObj");
-            $.extend(resbody.data[idx], resbody.data[idx].idObj);
+            if (angular.isObject(resbody.data[idx].id)) {
+                resbody.data[idx].renameProperty("id", "idObj");
+                $.extend(resbody.data[idx], resbody.data[idx].idObj);
+            }
         }
         return resbody;
     }
@@ -821,14 +823,17 @@ app.factory('MgmtSvc', ['HttpReqService', function (Req) {
         return Req.req(ReqUrl.backupdb);
     };
 
-    svc.getDBBackups = function () {
-        return Req.req(ReqUrl.dbbackups, undefined, function (resbody) {
+    svc.getDBBackups = function (reqParams) {
+        return Req.req(ReqUrl.dbbackups, reqParams, function (resbody) {
             var resdata = resbody.data;
             resdata.forEach(function (ele) {
-                var tm = ele.filename.substr(0, ele.filename.indexOf('.sql')).split('_');
-                ele.timeStr = tm[0] + '年' + tm[1] + '月' + tm[2] + '日 ' + tm[3] + '时' + tm[4] + '分' + tm[5] + '秒';
+                var tm = ele.filename.substr(0, ele.filename.indexOf('.sql'));
+                // tm=tm.split('_');
+                // ele.timeStr = tm[0] + '年' + tm[1] + '月' + tm[2] + '日 ' + tm[3] + '时' + tm[4] + '分' + tm[5] + '秒';
+                ele.timeStr = moment(tm, "YYYY_M_D_H_m_s").format(appConf.tmFmtLongMoment);
             });
-            return resdata;
+            // return resdata;
+            return resbody;
         });
     };
 

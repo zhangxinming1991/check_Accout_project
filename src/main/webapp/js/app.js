@@ -124,12 +124,13 @@ var ReqUrl = {
     , uploadGiftCat: '/ScoreController/upload_gift'
 };
 
-(function () {
-    var backendReqPrefix = '/check_Accout';
+var prefix = '/check_Accout';
+(function configBackendUrl(backendReqPrefix) {
     for (var k in ReqUrl) {
-        ReqUrl[k] = backendReqPrefix + ReqUrl[k];
+        if (ReqUrl.hasOwnProperty(k))
+            ReqUrl[k] = backendReqPrefix + ReqUrl[k];
     }
-})();
+})(prefix);
 
 
 // string format
@@ -170,7 +171,9 @@ var appConf = {
     //关账时间，月初5号
     checkClosingDate: 5,
     tmFmtLong: 'yyyy-MM-dd HH:mm:ss',
+    tmFmtLongMoment: 'YYYY-MM-DD HH:mm:ss',
     tmFmtYMD: 'yyyy-MM-dd',
+    tmFmtYMDMoment: 'YYYY-MM-DD',
     // numberPerPage: 10 ,
     opLogResultTypes: ['成功', '失败'],
     opLogUserRoles: ['客户', '管理员', '代理商财务', '代理商管理'],
@@ -179,7 +182,7 @@ var appConf = {
     scoreStatusInTable: ['兑换中', '正常'],
     // 兑换类型
     exchangeTypes: ['红包', '礼品'],
-    regEmailDomainRestrict: ['sanygroup.com','s.com'],
+    regEmailDomainRestrict: ['@sanygroup.com'],
     mappings: {
         scoreStatus: {
             '0': '已提交'

@@ -62,7 +62,11 @@
         <ul class="progress-indicator">
             <li ng-class="{completed:checkProgress.step>=1}"><span class="bubble"></span>上传数据</li>
             <li ng-class="{completed:checkProgress.step>=2}"><span class="bubble"></span>处理数据</li>
-            <li ng-class="{completed:checkProgress.step>=3}"><span class="bubble"></span>对账操作</li>
+            <li ng-class="{completed:checkProgress.step>=3}"><span class="bubble"></span>对账操作
+                <!--<button class="btn btn-primary" ng-click="checkCashing()" title="执行对账操作（请在匹配完所有可用数据后操作）"
+                        ng-hide="checkInoperable"><span class="glyphicon glyphicon-play"></span>对账……
+                </button>-->
+            </li>
             <li ng-class="{completed:checkProgress.step>=4}"><span class="bubble"></span>对账结果</li>
         </ul>
     </div>

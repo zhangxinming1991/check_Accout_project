@@ -140,7 +140,7 @@ function validEmail(email) {
     if (!email)return false;
     var domainIdx = email.indexOf('@');
     if (domainIdx < 0)return false;
-    var domain = email.substr(domainIdx + 1);
+    var domain = email.substr(domainIdx);
     return appConf.regEmailDomainRestrict && appConf.regEmailDomainRestrict.length ? appConf.regEmailDomainRestrict.indexOf(domain) > -1 : true;
 }
 
@@ -1631,7 +1631,8 @@ var fscmCtrl = ['$scope', '$timeout', 'AccountService', '$uibModal', '$filter',
     }];
 app.controller('fscmCtrl', fscmCtrl);
 
-var fsdCtrl = ['$scope', '$timeout', 'MgmtSvc', '$uibModal', function (sgop, timeout, MgmtSvc, msgbox) {
+var fsdCtrl = ['$scope', '$timeout', 'MgmtSvc', '$uibModal','$filter',
+    function (sgop, timeout, MgmtSvc, msgbox,$filter) {
     sgop.backupDB = function () {
         var msgcfg = {
             msgbox: msgbox,
@@ -1653,7 +1654,11 @@ var fsdCtrl = ['$scope', '$timeout', 'MgmtSvc', '$uibModal', function (sgop, tim
         });
     };
 
-    sgop.restorePoints = refreshGridFnc(MgmtSvc.getDBBackups, sgop);
+    // sgop.restorePoints = refreshGridFnc(MgmtSvc.getDBBackups, sgop);
+
+        sgop.refreshGrid = function (tableState) {
+            gridPage(sgop, tableState, $filter, MgmtSvc.getDBBackups);
+        };
 
     sgop.restoreDB = function (item) {
         var msgConfirm = {
@@ -1911,7 +1916,7 @@ var fssmCtrl = ['$scope', '$filter', 'ScoreService', '$uibModal', '$timeout', 'U
                 }, function (evt) {
                     // console.debug('evt', evt);
                     var total = parseInt(evt.total) || 1;
-                    scoreCfg.shipUpload.progress = parseInt(evt.loaded) / total;
+                    sgop.scoreCfg.shipUpload.progress = parseInt(evt.loaded) / total;
                 }).catch(function (ex) {
                     console.error(ex);
                     failReport('未知原因');

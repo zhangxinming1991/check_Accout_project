@@ -1,16 +1,21 @@
 <div>
-    <table st-table="dispItems" st-pipe="refreshGrid"
+    <button class="btn btn-primary" ng-click="checkCashing()" title="执行对账操作（请在匹配完所有可用数据后操作）"
+            ng-hide="checkInoperable"><span class="glyphicon glyphicon-play"></span>对账……
+    </button>
+    <table st-table="dispItems" st-pipe="refreshGrid" align="center"
            class="table table-bordered table-striped">
         <!--st-pipe="refreshGrid"-->
-        <button class="btn btn-primary" ng-click="checkCashing()" title="执行对账操作（请在匹配完所有可用数据后操作）"
-                ng-hide="checkInoperable"><span class="glyphicon glyphicon-play"></span>对账……
-        </button>
         <!--<caption class="caption h3 text-center" title="用户上传的数据">&lt;!&ndash;<strong class="text-primary">待审核</strong>的&ndash;&gt;付款通知表
         </caption>-->
+        <col width="50px" ng-show="checkInoperable">
+        <col width="60px" ng-hide="checkInoperable">
+        <col>
+        <col>
+        <col width="120px">
         <thead>
         <tr>
             <th ng-show="checkInoperable"></th>
-            <th ng-hide="checkInoperable"><input st-search="id" placeholder="流水号" type="search" class="input-sm form-control"></th>
+            <th ng-hide="checkInoperable" style="max-width: 20px"><input st-search="id" placeholder="流水号" type="search" class="input-sm form-control"></th>
             <th><input st-search="payer" placeholder="终端用户" type="search" class="input-sm form-control"></th>
             <th><input st-search="actualPayer" placeholder="实际付款人" type="search" class="input-sm form-control"></th>
             <th>
@@ -192,10 +197,12 @@
             <div class="modal-body" id="assocPanelBody">
                 关联<span class="text-info">付款通知</span>：
                 <table class="table table-bordered">
+                    <col width="45px">
                     <thead>
                     <tr>
                         <!--为了与下表的对应列对齐，便于对比信息-->
-                        <th style="visibility: hidden;">选择</th>
+                        <!--<span style="visibility: hidden;">选择</span>-->
+                        <th></th>
                         <!--<th>订单号</th>-->
                         <th>付款人</th>
                         <th>付款金额（元）</th>
@@ -209,7 +216,7 @@
                     </thead>
                     <tbody>
                     <tr>
-                        <td style="visibility: hidden;"></td>
+                        <td></td>
                         <!--<td>{{ctrl.r.orderNum}}</td>-->
                         <td>{{ctrl.r.payer}}</td>
                         <td>{{ctrl.r.payMoney}}</td>
@@ -227,6 +234,8 @@
 
                 <div>
                     <table st-table="dispItems" st-safe-src="ctrl.trans" class="table table-bordered">
+                        <col width="45px">
+
                         <thead>
                         <tr>
                             <th>选择</th>

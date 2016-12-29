@@ -2,25 +2,50 @@
     var successfulEcho = true;
     console.debug('检测是否有后台服务器……');
     $.ajax({
-        url: ReqUrl.rstPwdSendvc
-        , type: 'post'
-        , timeout: 2000
-        , async: false
+        url: ReqUrl.rstPwdSendvc,
+        type: 'post',
+        timeout: 2000,
+        async: false,
+        // headers: {
+        //     'Access-Control-Allow-Origin': '*'
+        // },
         // , crossDomain: true
         // , dataType: 'jsonp'      // jsonp not support sync operation
-        , cache: false
-        , global: false
-        , success: function (data, status) {
-        }
-        , error: function (res, status, err) {
+        cache: false,
+        global: false,
+        success: function (data, status) {
+        },
+        error: function (res, status, err) {
             if (res.status > 0 && res.status == 404) {
                 successfulEcho = false;
             }
-        }
+        },
     });
+
+
+    function easyTestSetting() {
+        // 为开发版简便测试设置的东西
+        ['@qq.com', '@163.com'].forEach(function (item) {
+            appConf.regEmailDomainRestrict.push(item);
+        });
+    }
+
+    easyTestSetting();
+
     // no mock
     if (successfulEcho) {
         console.info('检测到后台服务器，NO mocking');
+
+        app.config(function ($httpProvider) {
+            // $httpProvider.defaults.headers.common['Access-Control-Allow-Origin'] = '*';
+            /* // 指定允许其他域名访问
+             header('Access-Control-Allow-Origin:*');
+             // 响应类型
+             header('Access-Control-Allow-Methods:POST');
+             // 响应头设置
+             header('Access-Control-Allow-Headers:x-requested-with,content-type');*/
+        });
+
         return;
     }
 
@@ -319,12 +344,12 @@
             var items = [];
             for (var i = 0; i < itemCount; i++) {
                 var item = {
-                    "id": {
+                    // "id": {
                         "actualPayTime": "2016-12-07",
                         "actualPayer": "手表一",
                         "bankinputId": 0,
                         "caid": "2016-12-gd0001",
-                        "checkResult": randIn(['Y', 'W', 'V', 'N']),
+                        "checkResult": randIn(['Y', 'W', 'N']),
                         "connPerson": "dengfa",
                         "contractNum": "",
                         "freeback": 0,
@@ -337,13 +362,12 @@
                         "payAccount": "444",
                         "payMoney": 1547,
                         "payWay": "现金",
-                        "payer": "安福县名骏商品混凝土有限责任公司",
+                        "payer": "公司",// "安福县名骏商品混凝土有限责任公司",
                         "paymentNature": [{"contract": "主机款", "money": "1547"}],
                         "receiver": "sb",
                         "uploadTime": "2016年12月09日15:48:30",
                         "vicePayer": ""
-                    }
-                    ,
+                    // },
                 };
                 items.push(item);
             }
@@ -1031,18 +1055,29 @@
             console.debug('mock backend->备份数据库');
             return [200, {flag: failOrNot()}];
         });
-        bkd.whenPOST(ReqUrl.dbbackups).respond(function () {
-            console.debug('mock backend->数据库备份文件列表');
-            var resdata = [];
-            for (i = 1; i <= 12; i++) {
+        function mockDbBackups(itemCount) {
+            var items = [];
+            for (var i = 1; i <= itemCount; i++) {
                 var t = {
                     id: uuid()
                     ,
                     filename: '2016_' + randInRange(1, 12) + '_' + randInRange(1, 31) + '_' + randInRange(0, 23) + '_' + randInRange(0, 59) + '_' + randInRange(0, 59) + '.sql'
                 };
-                resdata.push(t);
+                items.push(t);
             }
+            return items;
+        }
+
+        var dbBackups;
+        bkd.whenPOST(ReqUrl.dbbackups).respond(function (method, url, reqbody) {
+            console.debug('mock backend->数据库备份文件列表');
+            // no pagination
+            var resdata = mockDbBackups(randInRange(0, 30));
             return [200, {flag: failOrNot(), data: resdata}];
+
+            // with pagination
+            // dbBackups = dbBackups || mockDbBackups(randInRange(0, 50));
+            // return [200, resPage(reqbody.pagenum, dbBackups, {}, reqbody)];
         });
         bkd.whenPOST(ReqUrl.restoredb).respond(function (method, url, reqbody) {
             console.debug('mock backend->恢复数据库', reqbody);
